@@ -122,3 +122,4 @@ projects/client/Unit*/TestResult.xml
 .sw?
 .*.sw?
 rabbit.snk
+/TestResults

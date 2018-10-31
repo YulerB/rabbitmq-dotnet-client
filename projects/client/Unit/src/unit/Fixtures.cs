@@ -80,9 +80,9 @@ namespace RabbitMQ.Client.Unit
             {
                 Model.Close();
             }
-            if(Conn.IsOpen)
+            if (Conn != null && Conn.IsOpen)
             {
-                Conn.Close();
+                Conn?.Close();
             }
 
             ReleaseResources();

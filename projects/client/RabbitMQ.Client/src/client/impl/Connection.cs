@@ -70,22 +70,21 @@ namespace RabbitMQ.Client.Framing.Impl
         ///<summary>Heartbeat frame for transmission. Reusable across connections.</summary>
         private readonly EmptyOutboundFrame m_heartbeatFrame = new EmptyOutboundFrame();
 
-        private ManualResetEvent m_appContinuation = new ManualResetEvent(false);
-        private EventHandler<CallbackExceptionEventArgs> m_callbackException;
-        private EventHandler<EventArgs> m_recoverySucceeded;
-        private EventHandler<ConnectionRecoveryErrorEventArgs> connectionRecoveryFailure;
-
+        private ManualResetEventSlim m_appContinuation = new ManualResetEventSlim(false);
         private IDictionary<string, object> m_clientProperties;
 
         private volatile ShutdownEventArgs m_closeReason = null;
         private volatile bool m_closed = false;
 
+        private EventHandler<CallbackExceptionEventArgs> m_callbackException;
+        private EventHandler<EventArgs> m_recoverySucceeded;
+        private EventHandler<ConnectionRecoveryErrorEventArgs> connectionRecoveryFailure;
         private EventHandler<ConnectionBlockedEventArgs> m_connectionBlocked;
         private EventHandler<ShutdownEventArgs> m_connectionShutdown;
         private EventHandler<EventArgs> m_connectionUnblocked;
 
         private IConnectionFactory m_factory;
-        private IFrameHandler m_frameHandler;
+        private readonly IFrameHandler m_frameHandler;
 
         private Guid m_id = Guid.NewGuid();
         private ModelBase m_model0;
@@ -463,9 +462,9 @@ namespace RabbitMQ.Client.Framing.Impl
             }
 
 #if NETFX_CORE
-            var receivedSignal = m_appContinuation.WaitOne(BlockingCell<object>.validatedTimeout(timeout));
+            var receivedSignal = m_appContinuation.Wait(BlockingCell<object>.validatedTimeout(timeout));
 #else
-            var receivedSignal = m_appContinuation.WaitOne(BlockingCell<object>.validatedTimeout(timeout));
+            var receivedSignal = m_appContinuation.Wait(BlockingCell<object>.validatedTimeout(timeout));
 #endif
 
             if (!receivedSignal)
@@ -514,7 +513,7 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        public Command ConnectionCloseWrapper(ushort reasonCode, string reasonText)
+        private Command ConnectionCloseWrapper(ushort reasonCode, string reasonText)
         {
             Command request;
             ushort replyClassId;
@@ -592,7 +591,7 @@ namespace RabbitMQ.Client.Framing.Impl
             LogCloseError("Unexpected connection closure: " + reason, new Exception(reason.ToString()));
         }
 
-        public bool HardProtocolExceptionHandler(HardProtocolException hpe)
+        private bool HardProtocolExceptionHandler(HardProtocolException hpe)
         {
             if (SetCloseReason(hpe.ShutdownReason))
             {
@@ -999,7 +998,7 @@ entry.ToString());
             newSession.Transmit(ChannelCloseWrapper(pe.ReplyCode, pe.Message));
         }
 
-        public bool SetCloseReason(ShutdownEventArgs reason)
+        private bool SetCloseReason(ShutdownEventArgs reason)
         {
             lock (m_eventLock)
             {
@@ -1297,6 +1296,9 @@ entry.ToString());
                 {
                     MaybeStopHeartbeatTimers();
                     Abort();
+                    m_frameHandler?.Dispose();
+                    m_appContinuation?.Dispose();
+                    m_heartbeatRead?.Dispose();
                 }
                 catch (OperationInterruptedException)
                 {
@@ -1304,10 +1306,15 @@ entry.ToString());
                 }
                 finally
                 {
+                    connectionRecoveryFailure = null;
+                    m_connectionBlocked = null;
+                    m_connectionUnblocked = null;
                     m_callbackException = null;
                     m_recoverySucceeded = null;
                     m_connectionShutdown = null;
                     m_connectionUnblocked = null;
+                    m_appContinuation = null;
+                    m_heartbeatRead=null;
                 }
             }
 
@@ -1335,12 +1342,18 @@ entry.ToString());
             m_frameHandler.ReadTimeout = (int)m_factory.HandshakeContinuationTimeout.TotalMilliseconds;
             m_frameHandler.SendHeader();
 
-            var connectionStart = connectionStartCell.WaitForValue();
+            connectionStartCell.ContinueUsingValue += OnConnectionStarted;
+            connectionStartCell.WaitForValue();
 
-            if (connectionStart == null)
-            {
-                throw new IOException("connection.start was never received, likely due to a network timeout");
-            }
+            // unreachable code
+            //if (connectionStart == null)
+            //{
+            //    throw new IOException("connection.start was never received, likely due to a network timeout");
+            //}
+        }
+
+        private void OnConnectionStarted(object sender, ConnectionStartDetails connectionStart)
+        {
 
             ServerProperties = connectionStart.m_serverProperties;
 
@@ -1431,8 +1444,8 @@ entry.ToString());
 
             // now we can start heartbeat timers
             MaybeStartHeartbeatTimers();
-        }
 
+        }
         private static uint NegotiatedMaxValue(uint clientValue, uint serverValue)
         {
             return (clientValue == 0 || serverValue == 0) ?

@@ -60,11 +60,11 @@ namespace RabbitMQ.Client.Unit
             {
                 if (rand.Next(2) == 0)
                 {
-                    int a = intAllocator.Allocate();
-                    if (a > -1)
+                    int? a = intAllocator.Allocate();
+                    if (a.HasValue)
                     {
-                        Assert.False(allocated.Contains(a));
-                        allocated.Add(a);
+                        Assert.False(allocated.Contains(a.Value));
+                        allocated.Add(a.Value);
                     }
                 }
                 else if (allocated.Count > 0)
@@ -84,10 +84,10 @@ namespace RabbitMQ.Client.Unit
             IntAllocator intAllocator = new IntAllocator(0, range);
             for (int i=0; i <= range; i++)
             {
-                int a = intAllocator.Allocate();
-                Assert.AreNotEqual(-1, a);
-                Assert.False(allocated.Contains(a));
-                allocated.Add(a);
+                int? a = intAllocator.Allocate();
+                Assert.AreNotEqual(default(int?), a);
+                Assert.False(allocated.Contains(a.Value));
+                allocated.Add(a.Value);
             }
         }
     }

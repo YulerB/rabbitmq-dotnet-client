@@ -43,7 +43,7 @@ using System.Collections.Generic;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class ConnectionStartDetails
+    public class ConnectionStartDetails : EventArgs
     {
         public byte[] m_locales;
         public byte[] m_mechanisms;

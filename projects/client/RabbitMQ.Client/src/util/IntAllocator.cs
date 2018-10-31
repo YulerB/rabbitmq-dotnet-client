@@ -75,11 +75,11 @@ namespace RabbitMQ.Util
         }
 
         /**
-     * Allocate a fresh integer from the range, or return -1 if no more integers
+     * Allocate a fresh integer from the range, or return null if no more integers
      * are available. This operation is guaranteed to run in O(1)
      */
 
-        public int Allocate()
+        public int? Allocate()
         {
             if (unsortedCount > 0)
             {
@@ -100,7 +100,7 @@ namespace RabbitMQ.Util
             }
             else
             {
-                return -1;
+                return null;
             }
         }
 

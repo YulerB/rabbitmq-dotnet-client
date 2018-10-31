@@ -44,7 +44,7 @@ using System.Net;
 
 namespace RabbitMQ.Client.Impl
 {
-    public interface IFrameHandler
+    public interface IFrameHandler : IDisposable
     {
         AmqpTcpEndpoint Endpoint { get; }
 

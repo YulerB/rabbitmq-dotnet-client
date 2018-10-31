@@ -131,12 +131,12 @@ namespace RabbitMQ.Client.Impl
         {
             lock (m_sessionMap)
             {
-                int channelNumber = Ints.Allocate();
-                if (channelNumber == -1)
+                int? channelNumber = Ints.Allocate();
+                if (!channelNumber.HasValue)
                 {
                     throw new ChannelAllocationException();
                 }
-                return CreateInternal(channelNumber);
+                return CreateInternal(channelNumber.Value);
             }
         }
 

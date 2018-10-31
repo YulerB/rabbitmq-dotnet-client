@@ -293,16 +293,17 @@ namespace RabbitMQ.Client.Content
 
         public static string ReadUntypedString(NetworkBinaryReader reader)
         {
-            BinaryWriter buffer = NetworkBinaryWriter.TemporaryBinaryWriter(256);
+            MemoryStream ms = new MemoryStream(256);
+
             while (true)
             {
                 byte b = reader.ReadByte();
                 if (b == 0)
                 {
-                    byte[] temporaryContents = NetworkBinaryWriter.TemporaryContents(buffer);
-                    return Encoding.UTF8.GetString(temporaryContents, 0, temporaryContents.Length);
+                    var segment = RabbitMQ.Client.Impl.ExtensionMethods.GetBufferSegment(ms);
+                    return Encoding.UTF8.GetString(segment.Array, segment.Offset, segment.Count);
                 }
-                buffer.Write(b);
+                ms.WriteByte(b);
             }
         }
 

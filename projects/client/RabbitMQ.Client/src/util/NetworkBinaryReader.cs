@@ -41,6 +41,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace RabbitMQ.Util
 {
@@ -68,22 +69,7 @@ namespace RabbitMQ.Util
         public NetworkBinaryReader(Stream input) : base(input)
         {
         }
-
-        /// <summary>
-        /// Construct a NetworkBinaryReader over the given input
-        /// stream, reading strings using the given encoding.
-        /// </summary>
-        public NetworkBinaryReader(Stream input, Encoding encoding) : base(input, encoding)
-        {
-        }
-
-        ///<summary>Helper method for constructing a temporary
-        ///BinaryReader over a byte[].</summary>
-        public static BinaryReader TemporaryBinaryReader(byte[] bytes)
-        {
-            return new BinaryReader(new MemoryStream(bytes));
-        }
-
+        
         /// <summary>
         /// Override BinaryReader's method for network-order.
         /// </summary>
@@ -102,7 +88,7 @@ namespace RabbitMQ.Util
             temp = bytes[3];
             bytes[3] = bytes[4];
             bytes[4] = temp;
-            return TemporaryBinaryReader(bytes).ReadDouble();
+            return BitConverter.ToDouble(bytes, 0);
         }
 
         /// <summary>
@@ -155,7 +141,7 @@ namespace RabbitMQ.Util
             temp = bytes[1];
             bytes[1] = bytes[2];
             bytes[2] = temp;
-            return TemporaryBinaryReader(bytes).ReadSingle();
+            return BitConverter.ToSingle(bytes, 0);
         }
 
         /// <summary>

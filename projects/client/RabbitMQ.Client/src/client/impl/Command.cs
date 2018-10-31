@@ -82,10 +82,14 @@ namespace RabbitMQ.Client.Impl
 
         public static void CheckEmptyFrameSize()
         {
-            var f = new EmptyOutboundFrame();
             var stream = new MemoryStream();
-            var writer = new NetworkBinaryWriter(stream);
-            f.WriteTo(writer);
+            {
+                var writer = new NetworkBinaryWriter(stream);
+                {
+                    var f = new EmptyOutboundFrame();
+                    f.WriteTo(writer);
+                }
+            }
             long actualLength = stream.Length;
 
             if (EmptyFrameSize != actualLength)
@@ -125,7 +129,8 @@ namespace RabbitMQ.Client.Impl
 
                 frames.Add(new HeaderOutboundFrame(channelNumber, Header, body.Length));
                 var frameMax = (int)Math.Min(int.MaxValue, connection.FrameMax);
-                var bodyPayloadMax = (frameMax == 0) ? body.Length : frameMax - EmptyFrameSize;
+                var frameMaxEqualsZero = frameMax == 0;
+                var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - EmptyFrameSize;
                 for (int offset = 0; offset < body.Length; offset += bodyPayloadMax)
                 {
                     var remaining = body.Length - offset;
@@ -140,8 +145,9 @@ namespace RabbitMQ.Client.Impl
 
         public static List<OutboundFrame> CalculateFrames(int channelNumber, Connection connection, IList<Command> commands)
         {
+            var frameMax = (int)Math.Min(int.MaxValue, connection.FrameMax);
             var frames = new List<OutboundFrame>();
-
+            var frameMaxEqualsZero = frameMax == 0;
             foreach (var cmd in commands)
             {
                 frames.Add(new MethodOutboundFrame(channelNumber, cmd.Method));
@@ -150,8 +156,7 @@ namespace RabbitMQ.Client.Impl
                     var body = cmd.Body;
 
                     frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header, body.Length));
-                    var frameMax = (int)Math.Min(int.MaxValue, connection.FrameMax);
-                    var bodyPayloadMax = (frameMax == 0) ? body.Length : frameMax - EmptyFrameSize;
+                    var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - EmptyFrameSize;
                     for (int offset = 0; offset < body.Length; offset += bodyPayloadMax)
                     {
                         var remaining = body.Length - offset;

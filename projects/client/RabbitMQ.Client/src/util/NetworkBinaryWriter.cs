@@ -64,29 +64,6 @@ namespace RabbitMQ.Util
         {
         }
 
-        /// <summary>
-        /// Construct a NetworkBinaryWriter over the given input
-        /// stream, reading strings using the given encoding.
-        /// </summary>
-        public NetworkBinaryWriter(Stream output, Encoding encoding) : base(output, encoding)
-        {
-        }
-
-        ///<summary>Helper method for constructing a temporary
-        ///BinaryWriter streaming into a fresh MemoryStream
-        ///provisioned with the given initialSize.</summary>
-        public static BinaryWriter TemporaryBinaryWriter(int initialSize)
-        {
-            return new BinaryWriter(new MemoryStream(initialSize));
-        }
-
-        ///<summary>Helper method for extracting the byte[] contents
-        ///of a BinaryWriter over a MemoryStream, such as constructed
-        ///by TemporaryBinaryWriter.</summary>
-        public static byte[] TemporaryContents(BinaryWriter w)
-        {
-            return ((MemoryStream)w.BaseStream).ToArray();
-        }
 
         /// <summary>
         /// Override BinaryWriter's method for network-order.
@@ -155,13 +132,8 @@ namespace RabbitMQ.Util
         /// </summary>
         public override void Write(float f)
         {
-            BinaryWriter w = TemporaryBinaryWriter(4);
-            w.Write(f);
-            byte[] wrongBytes = TemporaryContents(w);
-            Write(wrongBytes[3]);
-            Write(wrongBytes[2]);
-            Write(wrongBytes[1]);
-            Write(wrongBytes[0]);
+            var bytes = BitConverter.GetBytes(f);
+            Write(new byte[4] { bytes[3], bytes[2], bytes[1], bytes[0] });
         }
 
         /// <summary>
@@ -169,17 +141,8 @@ namespace RabbitMQ.Util
         /// </summary>
         public override void Write(double d)
         {
-            BinaryWriter w = TemporaryBinaryWriter(8);
-            w.Write(d);
-            byte[] wrongBytes = TemporaryContents(w);
-            Write(wrongBytes[7]);
-            Write(wrongBytes[6]);
-            Write(wrongBytes[5]);
-            Write(wrongBytes[4]);
-            Write(wrongBytes[3]);
-            Write(wrongBytes[2]);
-            Write(wrongBytes[1]);
-            Write(wrongBytes[0]);
+            var bytes = BitConverter.GetBytes(d);
+            Write(new byte[8] { bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0] });
         }
     }
 }

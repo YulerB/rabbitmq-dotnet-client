@@ -67,17 +67,15 @@ namespace RabbitMQ.Client.Impl
         }
     }
 
-    public class SocketFrameHandler : IFrameHandler
+    public class SocketFrameHandler : IFrameHandler, IDisposable
     {
-        // Timeout in seconds to wait for a clean socket close.
-        private const int SOCKET_CLOSING_TIMEOUT = 1;
         // Socket poll timeout in ms. If the socket does not
         // become writeable in this amount of time, we throw
         // an exception.
         private int m_writeableStateTimeout = 30000;
-        private readonly NetworkBinaryReader m_reader;
-        private readonly ITcpClient m_socket;
-        private readonly NetworkBinaryWriter m_writer;
+        private NetworkBinaryReader m_reader;
+        private ITcpClient m_socket;
+        private NetworkBinaryWriter m_writer;
         private readonly object _semaphore = new object();
         private readonly object _sslStreamLock = new object();
         private bool _closed;
@@ -204,25 +202,22 @@ namespace RabbitMQ.Client.Impl
         private static readonly byte[] amqp = Encoding.ASCII.GetBytes("AMQP");
         public void SendHeader()
         {
-            var ms = new MemoryStream();
-            var nbw = new NetworkBinaryWriter(ms);
-            nbw.Write(amqp);
-            byte one = (byte)1;
-            if (Endpoint.Protocol.Revision != 0)
+            byte[] header = Endpoint.Protocol.Revision != 0 ? 
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)0, (byte)Endpoint.Protocol.MajorVersion,(byte)Endpoint.Protocol.MinorVersion, (byte)Endpoint.Protocol.Revision }
+                    : 
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)1, (byte)1,(byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion };
+
+            if (_ssl)
             {
-                nbw.Write((byte)0);
-                nbw.Write((byte)Endpoint.Protocol.MajorVersion);
-                nbw.Write((byte)Endpoint.Protocol.MinorVersion);
-                nbw.Write((byte)Endpoint.Protocol.Revision);
+                lock (_sslStreamLock)
+                {
+                    m_writer.Write(header);
+                }
             }
             else
             {
-                nbw.Write(one);
-                nbw.Write(one);
-                nbw.Write((byte)Endpoint.Protocol.MajorVersion);
-                nbw.Write((byte)Endpoint.Protocol.MinorVersion);
+                m_writer.Write(header);
             }
-            Write(ms.GetBufferSegment());
         }
 
         public void WriteFrame(OutboundFrame frame)
@@ -319,6 +314,41 @@ namespace RabbitMQ.Client.Impl
                 throw new ConnectFailureException("Connection failed", e);
             }
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    m_reader?.Dispose();
+                    m_writer?.Dispose();
+                    m_socket?.Dispose();
+                }
+                m_reader = null;
+                m_writer = null;
+                m_socket = null;
+
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~SocketFrameHandler() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion
     }
 }
 #endif

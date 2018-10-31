@@ -39,6 +39,7 @@
 //---------------------------------------------------------------------------
 
 using NUnit.Framework;
+using RabbitMQ.Client.Framing.Impl;
 using RabbitMQ.Client.Impl;
 using System;
 
@@ -47,6 +48,15 @@ namespace RabbitMQ.Client.Unit
     [TestFixture]
     public class TestRpcContinuationQueue
     {
+        [Test]
+        public void TestRpcContinuationReleaseWithoutQueue()
+        {
+            RpcContinuationQueue queue = new RpcContinuationQueue();
+            var outputContinuation = queue.Next();
+            outputContinuation.HandleCommand(new Command(new ConnectionCloseOk()));
+            outputContinuation.HandleModelShutdown(new ShutdownEventArgs(ShutdownInitiator.Application, 0, ""));
+        }
+
         [Test]
         public void TestRpcContinuationQueueEnqueueAndRelease()
         {
