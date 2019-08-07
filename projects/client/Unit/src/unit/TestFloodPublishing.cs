@@ -62,7 +62,34 @@ namespace RabbitMQ.Client.Unit
             Conn = connFactory.CreateConnection();
             Model = Conn.CreateModel();
         }
+        [Test, Category("LongRunning")]
+        public void TestUnthrottledBatchFloodPublishing()
+        {
+            Conn.ConnectionShutdown += (_, args) =>
+            {
+                if (args.Initiator != ShutdownInitiator.Application)
+                {
+                    Assert.Fail("Unexpected connection shutdown!");
+                }
+            };
 
+            bool elapsed = false;
+            var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1);
+
+            var batch = Model.CreateBasicPublishBatch();
+            for (int i = 0; i < 5000; i++)
+            {
+                batch.Add(string.Empty, string.Empty, false, Model.CreateBasicProperties(),  new byte[4096]);
+            }
+
+            while (!elapsed)
+            {
+                batch.Publish();
+            }
+
+            Assert.IsTrue(Conn.IsOpen);
+            t.Dispose();
+        }
         [Test, Category("LongRunning")]
         public void TestUnthrottledFloodPublishing()
         {
@@ -76,14 +103,10 @@ namespace RabbitMQ.Client.Unit
 
             bool elapsed = false;
             var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1);
-            /*
-            t.Elapsed += (_sender, _args) => { elapsed = true; };
-            t.AutoReset = false;
-            t.Start();
-*/
+
             while (!elapsed)
             {
-                Model.BasicPublish("", "", null, new byte[2048]);
+                Model.BasicPublish(string.Empty, string.Empty, null, new byte[2048]);
             }
             Assert.IsTrue(Conn.IsOpen);
             t.Dispose();

@@ -222,20 +222,24 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteFrame(OutboundFrame frame)
         {
-            var ms = new MemoryStream();
-            var nbw = new NetworkBinaryWriter(ms);
-            frame.WriteTo(nbw);
-            m_socket.Client.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
-            Write(ms.GetBufferSegment());
+            using (var ms = Pooler.MemoryStreamPool.GetObject())
+            {
+                var nbw = new NetworkBinaryWriter(ms.Instance);
+                frame.WriteTo(nbw);
+                m_socket.Client.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
+                Write(ms.Instance.GetBufferSegment());
+            }
         }
 
         public void WriteFrameSet(IList<OutboundFrame> frames)
         {
-            var ms = new MemoryStream();
-            var nbw = new NetworkBinaryWriter(ms);
-            foreach (var f in frames) f.WriteTo(nbw);
-            m_socket.Client.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
-            Write(ms.GetBufferSegment());
+            using (var ms = Pooler.MemoryStreamPool.GetObject())
+            {
+                var nbw = new NetworkBinaryWriter(ms.Instance);
+                foreach (var f in frames) f.WriteTo(nbw);
+                m_socket.Client.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
+                Write(ms.Instance.GetBufferSegment());
+            }
         }
 
         private void Write(ArraySegment<byte> bufferSegment)

@@ -82,15 +82,20 @@ namespace RabbitMQ.Client.Impl
 
         public static void CheckEmptyFrameSize()
         {
-            var stream = new MemoryStream();
+            long actualLength = 0;
             {
-                var writer = new NetworkBinaryWriter(stream);
+                using (var stream = Pooler.MemoryStreamPool.GetObject())
                 {
-                    var f = new EmptyOutboundFrame();
-                    f.WriteTo(writer);
+                    {
+                        var writer = new NetworkBinaryWriter(stream.Instance);
+                        {
+                            var f = new EmptyOutboundFrame();
+                            f.WriteTo(writer);
+                            actualLength = stream.Instance.Position;
+                        }
+                    }
                 }
             }
-            long actualLength = stream.Length;
 
             if (EmptyFrameSize != actualLength)
             {
