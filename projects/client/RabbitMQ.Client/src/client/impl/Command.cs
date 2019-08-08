@@ -89,11 +89,10 @@ namespace RabbitMQ.Client.Impl
                     {
                         var writer = new NetworkBinaryWriter(stream.Instance);
                         {
-                            var f = new EmptyOutboundFrame();
-                            f.WriteTo(writer);
-                            actualLength = stream.Instance.Position;
+                            new EmptyOutboundFrame().WriteTo(writer);
                         }
                     }
+                    actualLength = stream.Instance.Position;
                 }
             }
 
