@@ -61,9 +61,7 @@ namespace RabbitMQ.Client.Impl
 
         public virtual DisposableWrapper<T> GetObject()
         {
-            var d = new DisposableWrapper<T>(_objects.TryTake(out T item) ? item : _objectGenerator());
-            d.Disposing += D_Disposing;
-            return d;
+            return new DisposableWrapper<T>(_objects.TryTake(out T item) ? item : _objectGenerator(), D_Disposing);
         }
 
         private void D_Disposing(object sender, T e)

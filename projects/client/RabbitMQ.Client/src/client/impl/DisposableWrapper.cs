@@ -48,6 +48,11 @@ namespace RabbitMQ.Client.Impl
         {
             this.Instance = instance;
         }
+        public DisposableWrapper(T instance, EventHandler<T> @event)
+        {
+            this.Instance = instance;
+            Disposing += @event;
+        }
 
         public T Instance { get; private set; }
         
