@@ -44,23 +44,28 @@ namespace RabbitMQ.Client.Impl
 {
     public class DisposableWrapper<T>: IDisposable where T: class
     {
-        public T Instance { get; private set; }
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        public event EventHandler<T> Disposing;
-
         public DisposableWrapper(T instance)
         {
             this.Instance = instance;
         }
+
+        public T Instance { get; private set; }
+        
+        public event EventHandler<T> Disposing;
+        protected virtual void OnDisposing()
+        {
+            if (Disposing != null) Disposing(this, Instance);
+        }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 if (disposing)
                 {
-                    if (Disposing != null) Disposing(this, Instance);
+                    OnDisposing();
 
                     foreach (Delegate subscriber in Disposing.GetInvocationList())
                     {
@@ -74,10 +79,7 @@ namespace RabbitMQ.Client.Impl
         }
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
         }
         #endregion
     }

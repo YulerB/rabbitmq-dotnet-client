@@ -45,31 +45,25 @@ namespace RabbitMQ.Client.Impl
 {
     public class ObjectPool<T> where T : class
     {
-        private ConcurrentBag<T> _objects;
-        private Func<T> _objectGenerator;
-        private Action<T> _OnPut;
+        private readonly ConcurrentBag<T> _objects;
+        private readonly Func<T> _objectGenerator;
+        private readonly Action<T> _OnPut;
+
         public ObjectPool(Func<T> objectGenerator, Action<T> onPut)
         {
-            if (objectGenerator == null) throw new ArgumentNullException("objectGenerator");
+            if (objectGenerator == null) throw new ArgumentNullException(nameof(objectGenerator));
+            if (onPut == null) throw new ArgumentNullException(nameof(onPut));
+
             _objects = new ConcurrentBag<T>();
             _objectGenerator = objectGenerator;
             _OnPut = onPut;
         }
 
-        public DisposableWrapper<T> GetObject()
+        public virtual DisposableWrapper<T> GetObject()
         {
-            if (_objects.TryTake(out T item))
-            {
-                var d = new DisposableWrapper<T>(item);
-                d.Disposing += D_Disposing;
-                return d;
-            }
-            else
-            {
-                var d = new DisposableWrapper<T>(_objectGenerator());
-                d.Disposing += D_Disposing;
-                return d;
-            }
+            var d = new DisposableWrapper<T>(_objects.TryTake(out T item) ? item : _objectGenerator());
+            d.Disposing += D_Disposing;
+            return d;
         }
 
         private void D_Disposing(object sender, T e)

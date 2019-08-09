@@ -44,7 +44,7 @@ namespace RabbitMQ.Client.Impl
 {
     public static class Pooler
     {
-        public static ObjectPool<MemoryStream> MemoryStreamPool = new ObjectPool<MemoryStream>(
+        public static readonly ObjectPool<MemoryStream> MemoryStreamPool = new ObjectPool<MemoryStream>(
             () => new MemoryStream(),
             m =>
             {
