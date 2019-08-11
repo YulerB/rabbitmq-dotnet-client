@@ -41,6 +41,7 @@ using NUnit.Framework;
 using RabbitMQ.Client.Impl;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -75,6 +76,52 @@ namespace RabbitMQ.Client.Unit
                 };
             }
         }
+
+        [Test]
+        public void TestPoolVsNative()
+        {
+            long ticks1 = 0;
+            long ticks2 = 0;
+            Stopwatch sw1 = null;
+            Stopwatch sw2 = null;
+            Stack<DisposableWrapper<MemoryStream>> streams1 = new Stack<DisposableWrapper<MemoryStream>>();
+            Stack<MemoryStream> streams2 = new Stack<MemoryStream>();
+            ObjectPool<MemoryStream> pool = new ObjectPool<MemoryStream>(() => new MemoryStream(256), m => {
+                m.Position = 0;
+                m.SetLength(0);
+            });
+
+            {
+                sw1 = Stopwatch.StartNew();
+
+                for (int i = 0; i < 10000; i++)
+                {
+                    streams1.Push(pool.GetObject());
+                    if (i > 3) streams1.Pop().Dispose();  
+                }
+                streams1.Pop().Dispose(); streams1.Pop().Dispose(); streams1.Pop().Dispose();
+
+                ticks1 = sw1.ElapsedTicks;
+            }
+
+            {
+                sw2 = Stopwatch.StartNew();
+
+                for (int i = 0; i < 10000; i++)
+                {
+                    streams2.Push(new MemoryStream(256));
+                    if (i > 3) streams2.Pop().Dispose();
+                }
+                streams2.Pop().Dispose(); streams2.Pop().Dispose(); streams2.Pop().Dispose();
+
+                ticks2 = sw2.ElapsedTicks;
+            }
+
+            Console.WriteLine(ticks1);
+            Console.WriteLine(ticks2);
+            Assert.IsTrue(ticks1 < ticks2);
+        }
+
         [Test]
         public void TestPoolerPool()
         {
