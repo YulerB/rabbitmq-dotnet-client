@@ -49,56 +49,56 @@ namespace RabbitMQ.Client
             }
         }
 
-        class WorkPool
+    }
+    public class WorkPool
+    {
+        readonly ConcurrentQueue<Work> workQueue;
+        readonly TimeSpan waitTime;
+        readonly CancellationTokenSource tokenSource;
+        readonly ModelBase model;
+        TaskCompletionSource<bool> messageArrived;
+        private Task task;
+
+        public WorkPool(ModelBase model)
         {
-            readonly ConcurrentQueue<Work> workQueue;
-            readonly TimeSpan waitTime;
-            readonly CancellationTokenSource tokenSource;
-            readonly ModelBase model;
-            TaskCompletionSource<bool> messageArrived;
-            private Task task;
+            this.model = model;
+            workQueue = new ConcurrentQueue<Work>();
+            messageArrived = new TaskCompletionSource<bool>();
+            waitTime = TimeSpan.FromMilliseconds(100);
+            tokenSource = new CancellationTokenSource();
+        }
 
-            public WorkPool(ModelBase model)
-            {
-                this.model = model;
-                workQueue = new ConcurrentQueue<Work>();
-                messageArrived = new TaskCompletionSource<bool>();
-                waitTime = TimeSpan.FromMilliseconds(100);
-                tokenSource = new CancellationTokenSource();
-            }
+        public void Start()
+        {
+            task = Task.Run(Loop, CancellationToken.None);
+        }
 
-            public void Start()
-            {
-                task = Task.Run(Loop, CancellationToken.None);
-            }
+        public void Enqueue(Work work)
+        {
+            workQueue.Enqueue(work);
+            messageArrived.TrySetResult(true);
+        }
 
-            public void Enqueue(Work work)
+        async Task Loop()
+        {
+            while (tokenSource.IsCancellationRequested == false)
             {
-                workQueue.Enqueue(work);
-                messageArrived.TrySetResult(true);
-            }
-
-            async Task Loop()
-            {
-                while (tokenSource.IsCancellationRequested == false)
+                Work work;
+                while (workQueue.TryDequeue(out work))
                 {
-                    Work work;
-                    while (workQueue.TryDequeue(out work))
-                    {
-                        await work.Execute(model).ConfigureAwait(false);
-                    }
-
-                    await Task.WhenAny(Task.Delay(waitTime, tokenSource.Token), messageArrived.Task).ConfigureAwait(false);
-                    messageArrived.TrySetResult(true);
-                    messageArrived = new TaskCompletionSource<bool>();
+                    await work.Execute(model).ConfigureAwait(false);
                 }
-            }
 
-            public Task Stop()
-            {
-                tokenSource.Cancel();
-                return task;
+                await Task.WhenAny(Task.Delay(waitTime, tokenSource.Token), messageArrived.Task).ConfigureAwait(false);
+                messageArrived.TrySetResult(true);
+                messageArrived = new TaskCompletionSource<bool>();
             }
+        }
+
+        public Task Stop()
+        {
+            tokenSource.Cancel();
+            return task;
         }
     }
 }

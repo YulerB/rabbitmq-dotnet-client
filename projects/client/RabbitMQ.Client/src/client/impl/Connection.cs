@@ -531,7 +531,7 @@ namespace RabbitMQ.Client.Framing.Impl
             return m_sessionManager.Create();
         }
 
-        public ISession CreateSession(int channelNumber)
+        public ISession CreateSession(ushort channelNumber)
         {
             return m_sessionManager.Create(channelNumber);
         }
@@ -1383,8 +1383,7 @@ entry.ToString());
                 AuthMechanismFactory mechanismFactory = m_factory.AuthMechanismFactory(mechanisms);
                 if (mechanismFactory == null)
                 {
-                    throw new IOException("No compatible authentication mechanism found - " +
-                                          "server offered [" + mechanismsString + "]");
+                    throw new IOException("No compatible authentication mechanism found - server offered [" + mechanismsString + "]");
                 }
                 AuthMechanism mechanism = mechanismFactory.GetInstance();
                 byte[] challenge = null;
@@ -1426,7 +1425,7 @@ entry.ToString());
                     "Possibly caused by authentication failure", e);
             }
 
-            var channelMax = (ushort)NegotiatedMaxValue(m_factory.RequestedChannelMax,
+            var channelMax = NegotiatedMaxValue(m_factory.RequestedChannelMax,
                 connectionTune.m_channelMax);
             m_sessionManager = new SessionManager(this, channelMax);
 
@@ -1434,7 +1433,7 @@ entry.ToString());
                 connectionTune.m_frameMax);
             FrameMax = frameMax;
 
-            var heartbeat = (ushort)NegotiatedMaxValue(m_factory.RequestedHeartbeat,
+            var heartbeat = NegotiatedMaxValue(m_factory.RequestedHeartbeat,
                 connectionTune.m_heartbeat);
             Heartbeat = heartbeat;
 
@@ -1447,6 +1446,12 @@ entry.ToString());
 
         }
         private static uint NegotiatedMaxValue(uint clientValue, uint serverValue)
+        {
+            return (clientValue == 0 || serverValue == 0) ?
+                Math.Max(clientValue, serverValue) :
+                Math.Min(clientValue, serverValue);
+        }
+        private static ushort NegotiatedMaxValue(ushort clientValue, ushort serverValue)
         {
             return (clientValue == 0 || serverValue == 0) ?
                 Math.Max(clientValue, serverValue) :

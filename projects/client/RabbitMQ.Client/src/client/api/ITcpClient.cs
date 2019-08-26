@@ -4,6 +4,10 @@ using System.Threading.Tasks;
 
 using System.Net.Sockets;
 using System.Threading;
+using System.IO;
+using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 namespace RabbitMQ.Client
 {
@@ -14,14 +18,31 @@ namespace RabbitMQ.Client
     public interface ITcpClient : IDisposable
     {
         bool Connected { get; }
-
         int ReceiveTimeout { get; set; }
-
-        Socket Client { get; }
+        EndPoint ClientLocalEndPoint { get; }
+        EndPoint ClientRemoteEndPoint { get; }
+        int ClientReceiveBufferSize { get; }
+        int ClientSendTimeout{set;}
+        bool ClientPollCanWrite(int m_writeableStateTimeout);
+        Task ConnectAsync(string host, int port);
+        NetworkStream GetStream();
+        void Close();
+    }
+    public interface IHyperTcpClient : IDisposable
+    {
+        bool Connected { get; }
+        int ReceiveTimeout { get; set; }
+        EndPoint ClientLocalEndPoint { get; }
+        EndPoint ClientRemoteEndPoint { get; }
+        int ClientReceiveBufferSize { get; }
+        int ClientSendTimeout { set; }
+        bool ClientPollCanWrite(int m_writeableStateTimeout);
 
         Task ConnectAsync(string host, int port);
-
-        NetworkStream GetStream();
+        Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation);
+         
+        void Write(ArraySegment<byte> data);
+        event EventHandler<ArraySegment<byte>> Receive;
 
         void Close();
     }

@@ -48,7 +48,7 @@ namespace RabbitMQ.Client.Impl
     {
         private CommandAssembler m_assembler;
 
-        public Session(Connection connection, int channelNumber)
+        public Session(Connection connection, ushort channelNumber)
             : base(connection, channelNumber)
         {
             m_assembler = new CommandAssembler(connection.Protocol);
@@ -57,6 +57,13 @@ namespace RabbitMQ.Client.Impl
         public override void HandleFrame(InboundFrame frame)
         {
             Command cmd = m_assembler.HandleFrame(frame);
+#if(DEBUG)
+            if(cmd!=null && cmd.Header !=null && cmd.Header.ProtocolClassName!=null)
+                Console.Write(cmd.Header.ProtocolClassName);
+            Console.Write(".");
+            if (cmd != null && cmd.Method != null && cmd.Method.ProtocolMethodName != null)
+                Console.WriteLine(cmd.Method.ProtocolMethodName);
+#endif
             if (cmd != null)
             {
                 OnCommandReceived(cmd);

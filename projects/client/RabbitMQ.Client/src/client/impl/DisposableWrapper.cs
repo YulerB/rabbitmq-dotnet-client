@@ -39,48 +39,32 @@
 //---------------------------------------------------------------------------
 
 using System;
+using System.IO;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class DisposableWrapper<T>: IDisposable where T: class
+    public struct DisposableMemoryStreamWrapper : IDisposable
     {
-        public DisposableWrapper(T instance)
+        public DisposableMemoryStreamWrapper(MemoryStream instance, Action<MemoryStream> @event)
         {
-            this.Instance = instance;
+            disposedValue = false;
+            Instance = instance;
+            _event = @event;
         }
-        public DisposableWrapper(T instance, EventHandler<T> @event)
-        {
-            this.Instance = instance;
-            Disposing += @event;
-        }
-
-        public T Instance { get; private set; }
-        
-        public event EventHandler<T> Disposing;
-        protected virtual void OnDisposing()
-        {
-            if (Disposing != null) Disposing(this, Instance);
-        }
+        private Action<MemoryStream> _event;
+        public MemoryStream Instance { get; private set; }
+        private bool disposedValue; // To detect redundant calls
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                if (disposing)
-                {
-                    OnDisposing();
-
-                    foreach (Delegate subscriber in Disposing.GetInvocationList())
-                    {
-                        Disposing -= subscriber as EventHandler<T>;
-                    }
-                }
-                Disposing = null;
-                Instance = null;
-                disposedValue = true;
+                _event(Instance);
             }
+            _event = null;
+            Instance = null;
+            disposedValue = true;
         }
         public void Dispose()
         {
@@ -88,4 +72,5 @@ namespace RabbitMQ.Client.Impl
         }
         #endregion
     }
+
 }

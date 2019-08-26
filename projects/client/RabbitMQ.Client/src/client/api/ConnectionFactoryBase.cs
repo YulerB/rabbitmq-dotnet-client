@@ -57,6 +57,7 @@ namespace RabbitMQ.Client
         public Func<StreamSocket> SocketFactory = DefaultSocketFactory;
 #else
         public Func<AddressFamily, ITcpClient> SocketFactory = DefaultSocketFactory;
+        public Func<AddressFamily, IHyperTcpClient> HyperSocketFactory = DefaultHyperSocketFactory;
 #endif
 
 #if NETFX_CORE
@@ -83,6 +84,14 @@ namespace RabbitMQ.Client
                 NoDelay = true
             };
             return new TcpClientAdapter(socket);
+        }
+        public static IHyperTcpClient DefaultHyperSocketFactory(AddressFamily addressFamily)
+        {
+            var socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
+            {
+                NoDelay = true
+            };
+            return new HyperTcpClientAdapter(socket);
         }
 #endif
     }

@@ -63,7 +63,7 @@ namespace RabbitMQ.Client.Impl
         public ContentHeaderBase m_header;
         public MemoryStream m_bodyStream;
         public byte[] m_body;
-        public ProtocolBase m_protocol;
+        public readonly ProtocolBase m_protocol;
         public int m_remainingBodyBytes;
         public AssemblyState m_state;
       
@@ -127,6 +127,7 @@ namespace RabbitMQ.Client.Impl
                     return CompletedCommand();
                 }
                 case AssemblyState.Complete:
+
                 default:
 #if NETFX_CORE
                     Debug.WriteLine("Received frame in invalid state {0}; {1}", m_state, f);

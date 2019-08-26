@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Impl
     public class SessionManager
     {
         public readonly ushort ChannelMax;
-        private readonly IntAllocator Ints;
+        private readonly UIntAllocator UInts;
         private readonly Connection m_connection;
         private readonly IDictionary<int, ISession> m_sessionMap = new Dictionary<int, ISession>();
         private bool m_autoClose = false;
@@ -65,7 +65,7 @@ namespace RabbitMQ.Client.Impl
         {
             m_connection = connection;
             ChannelMax = (channelMax == 0) ? ushort.MaxValue : channelMax;
-            Ints = new IntAllocator(1, ChannelMax);
+            UInts = new UIntAllocator(1, ChannelMax);
         }
 
         [Obsolete("Please explicitly close connections instead.")]
@@ -131,7 +131,7 @@ namespace RabbitMQ.Client.Impl
         {
             lock (m_sessionMap)
             {
-                int? channelNumber = Ints.Allocate();
+                ushort? channelNumber = UInts.Allocate();
                 if (!channelNumber.HasValue)
                 {
                     throw new ChannelAllocationException();
@@ -140,11 +140,11 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public ISession Create(int channelNumber)
+        public ISession Create(ushort channelNumber)
         {
             lock (m_sessionMap)
             {
-                if (!Ints.Reserve(channelNumber))
+                if (!UInts.Reserve(channelNumber))
                 {
                     throw new ChannelAllocationException(channelNumber);
                 }
@@ -152,7 +152,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public ISession CreateInternal(int channelNumber)
+        public ISession CreateInternal(ushort channelNumber)
         {
             lock (m_sessionMap)
             {
@@ -169,7 +169,7 @@ namespace RabbitMQ.Client.Impl
             {
                 var session = (ISession) sender;
                 m_sessionMap.Remove(session.ChannelNumber);
-                Ints.Free(session.ChannelNumber);
+                UInts.Free(session.ChannelNumber);
                 CheckAutoClose();
             }
         }
@@ -189,7 +189,7 @@ namespace RabbitMQ.Client.Impl
         /// use, as if the slot is unused, you'll get a null pointer
         /// exception.
         ///</remarks>
-        public ISession Swap(int channelNumber, ISession replacement)
+        public ISession Swap(ushort channelNumber, ISession replacement)
         {
             lock (m_sessionMap)
             {

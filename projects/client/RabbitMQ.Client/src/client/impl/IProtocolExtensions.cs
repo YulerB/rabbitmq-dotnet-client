@@ -69,5 +69,20 @@ namespace RabbitMQ.Client.Framing.Impl
             return new SocketFrameHandler(endpoint, socketFactory,
                 connectionTimeout, readTimeout, writeTimeout);
         }
+        public static IFrameHandler CreateHyperFrameHandler(
+    this IProtocol protocol,
+    AmqpTcpEndpoint endpoint,
+#if !NETFX_CORE
+            Func<AddressFamily, IHyperTcpClient> socketFactory,
+#else
+            Func<StreamSocket> socketFactory,
+#endif
+            int connectionTimeout,
+    int readTimeout,
+    int writeTimeout)
+        {
+            return new HyperSocketFrameHandler(endpoint, socketFactory,
+                connectionTimeout, readTimeout, writeTimeout);
+        }
     }
 }

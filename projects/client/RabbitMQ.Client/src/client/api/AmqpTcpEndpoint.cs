@@ -214,7 +214,13 @@ namespace RabbitMQ.Client
                 return new AmqpTcpEndpoint(address);
             }
             port = address.Substring(index + 1).Trim();
-            portNumber = (port.Length == 0) ? -1 : int.Parse(port);
+            if (port.Length == 0 )
+                portNumber = -1;
+            else
+                if(!int.TryParse(port, out portNumber))
+            {
+                throw new FormatException("The format of the port is invalid");
+            }
             return new AmqpTcpEndpoint(address.Substring(0, index), portNumber);
         }
 

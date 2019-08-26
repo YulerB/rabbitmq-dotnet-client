@@ -54,13 +54,9 @@ namespace RabbitMQ.Client.Unit
         {
             using (var ms = new MemoryStream())
             {
-                using (DisposableWrapper<MemoryStream> disposer = new DisposableWrapper<MemoryStream>(ms))
+                using (DisposableMemoryStreamWrapper disposer = new DisposableMemoryStreamWrapper(ms, e=> { }))
                 {
                     Assert.AreEqual(ms, disposer.Instance);
-                    disposer.Disposing += (sender, e) =>
-                    {
-                        Assert.AreEqual(ms, e);
-                    };
                 }
             }
         }

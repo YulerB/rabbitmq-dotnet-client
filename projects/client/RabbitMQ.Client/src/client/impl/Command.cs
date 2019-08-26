@@ -84,7 +84,7 @@ namespace RabbitMQ.Client.Impl
         {
             long actualLength = 0;
             {
-                using (var stream = Pooler.MemoryStreamPool.GetObject())
+                using (var stream = MemoryStreamPool.GetObject())
                 {
                     {
                         var writer = new NetworkBinaryWriter(stream.Instance);
@@ -106,7 +106,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public void Transmit(int channelNumber, Connection connection)
+        public void Transmit(ushort channelNumber, Connection connection)
         {
             if (Method.HasContent)
             {
@@ -118,12 +118,12 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public void TransmitAsSingleFrame(int channelNumber, Connection connection)
+        public void TransmitAsSingleFrame(ushort channelNumber, Connection connection)
         {
             connection.WriteFrame(new MethodOutboundFrame(channelNumber, Method));
         }
 
-        public void TransmitAsFrameSet(int channelNumber, Connection connection)
+        public void TransmitAsFrameSet(ushort channelNumber, Connection connection)
         {
             var frames = new List<OutboundFrame>();
             frames.Add(new MethodOutboundFrame(channelNumber, Method));
@@ -147,7 +147,7 @@ namespace RabbitMQ.Client.Impl
         }
 
 
-        public static List<OutboundFrame> CalculateFrames(int channelNumber, Connection connection, IList<Command> commands)
+        public static List<OutboundFrame> CalculateFrames(ushort channelNumber, Connection connection, IList<Command> commands)
         {
             var frameMax = (int)Math.Min(int.MaxValue, connection.FrameMax);
             var frames = new List<OutboundFrame>();

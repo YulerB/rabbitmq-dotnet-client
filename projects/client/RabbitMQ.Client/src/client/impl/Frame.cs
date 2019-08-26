@@ -59,7 +59,7 @@ namespace RabbitMQ.Client.Impl
         private readonly ContentHeaderBase header;
         private readonly int bodyLength;
 
-        public HeaderOutboundFrame(int channel, ContentHeaderBase header, int bodyLength) : base(FrameType.FrameHeader, channel)
+        public HeaderOutboundFrame(ushort channel, ContentHeaderBase header, int bodyLength) : base(FrameType.FrameHeader, channel)
         {
             this.header = header;
             this.bodyLength = bodyLength;
@@ -67,7 +67,7 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(NetworkBinaryWriter writer)
         {
-            using (var ms = Pooler.MemoryStreamPool.GetObject())
+            using (var ms = MemoryStreamPool.GetObject())
             {
                 {
                     var nw = new NetworkBinaryWriter(ms.Instance);
@@ -92,7 +92,7 @@ namespace RabbitMQ.Client.Impl
         private readonly int offset;
         private readonly int count;
 
-        public BodySegmentOutboundFrame(int channel, byte[] body, int offset, int count) : base(FrameType.FrameBody, channel)
+        public BodySegmentOutboundFrame(ushort channel, byte[] body, int offset, int count) : base(FrameType.FrameBody, channel)
         {
             this.body = body;
             this.offset = offset;
@@ -110,14 +110,14 @@ namespace RabbitMQ.Client.Impl
     {
         private readonly MethodBase method;
 
-        public MethodOutboundFrame(int channel, MethodBase method) : base(FrameType.FrameMethod, channel)
+        public MethodOutboundFrame(ushort channel, MethodBase method) : base(FrameType.FrameMethod, channel)
         {
             this.method = method;
         }
 
         public override void WritePayload(NetworkBinaryWriter writer)
         {
-            using (var ms = Pooler.MemoryStreamPool.GetObject())
+            using (var ms = MemoryStreamPool.GetObject())
             {
                 {
                     var nw = new NetworkBinaryWriter(ms.Instance);
@@ -154,14 +154,14 @@ namespace RabbitMQ.Client.Impl
 
     public abstract class OutboundFrame : Frame
     {
-        public OutboundFrame(FrameType type, int channel) : base(type, channel)
+        public OutboundFrame(FrameType type, ushort channel) : base(type, channel)
         {
         }
 
         public void WriteTo(NetworkBinaryWriter writer)
         {
             writer.Write((byte)Type);
-            writer.Write((ushort)Channel);
+            writer.Write(Channel);
             WritePayload(writer);
             writer.Write((byte)Constants.FrameEnd);
         }
@@ -171,7 +171,7 @@ namespace RabbitMQ.Client.Impl
 
     public class InboundFrame : Frame
     {
-        private InboundFrame(FrameType type, int channel, byte[] payload) : base(type, channel, payload)
+        private InboundFrame(FrameType type, ushort channel, byte[] payload) : base(type, channel, payload)
         {
         }
 
@@ -191,6 +191,39 @@ namespace RabbitMQ.Client.Impl
                 int transportLow = reader.ReadByte();
                 int serverMajor = reader.ReadByte();
                 int serverMinor = reader.ReadByte();
+                throw new PacketNotRecognizedException(transportHigh,
+                    transportLow,
+                    serverMajor,
+                    serverMinor);
+            }
+            catch (EndOfStreamException)
+            {
+                // Ideally we'd wrap the EndOfStreamException in the
+                // MalformedFrameException, but unfortunately the
+                // design of MalformedFrameException's superclass,
+                // ProtocolViolationException, doesn't permit
+                // this. Fortunately, the call stack in the
+                // EndOfStreamException is largely irrelevant at this
+                // point, so can safely be ignored.
+                throw new MalformedFrameException("Invalid AMQP protocol header from server");
+            }
+        }
+        private static void ProcessProtocolHeader(NetworkArraySegmentsReader reader)
+        {
+            try
+            {
+                byte b1 = reader.ReadByte();
+                byte b2 = reader.ReadByte();
+                byte b3 = reader.ReadByte();
+                if (b1 != 'M' || b2 != 'Q' || b3 != 'P')
+                {
+                    throw new MalformedFrameException("Invalid AMQP protocol header from server");
+                }
+
+                byte transportHigh = reader.ReadByte();
+                byte transportLow = reader.ReadByte();
+                byte serverMajor = reader.ReadByte();
+                byte serverMinor = reader.ReadByte();
                 throw new PacketNotRecognizedException(transportHigh,
                     transportLow,
                     serverMajor,
@@ -247,9 +280,9 @@ namespace RabbitMQ.Client.Impl
                 ProcessProtocolHeader(reader);
             }
 
-            int channel = reader.ReadUInt16();
-            int payloadSize = reader.ReadInt32(); // FIXME - throw exn on unreasonable value
-            byte[] payload = reader.ReadBytes(payloadSize);
+            ushort channel = reader.ReadUInt16();
+            uint payloadSize = reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
+            byte[] payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
             if (payload.Length != payloadSize)
             {
                 // Early EOF.
@@ -266,6 +299,63 @@ namespace RabbitMQ.Client.Impl
 
             return new InboundFrame((FrameType)type, channel, payload);
         }
+        public static InboundFrame ReadFrom(NetworkArraySegmentsReader reader)
+        {
+            byte type;
+
+            try
+            {
+                type = reader.ReadByte();
+            }
+            catch (IOException ioe)
+            {
+#if NETFX_CORE
+                if (ioe.InnerException != null
+                    && SocketError.GetStatus(ioe.InnerException.HResult) == SocketErrorStatus.ConnectionTimedOut)
+                {
+                    throw ioe.InnerException;
+                }
+
+                throw;
+#else
+                // If it's a WSAETIMEDOUT SocketException, unwrap it.
+                // This might happen when the limit of half-open connections is
+                // reached.
+                if (ioe.InnerException == null ||
+                    !(ioe.InnerException is SocketException) ||
+                    ((SocketException)ioe.InnerException).SocketErrorCode != SocketError.TimedOut)
+                {
+                    throw ioe;
+                }
+                throw ioe.InnerException;
+#endif
+            }
+
+            if (type == 'A')
+            {
+                // Probably an AMQP protocol header, otherwise meaningless
+                ProcessProtocolHeader(reader);
+            }
+
+            ushort channel = reader.ReadUInt16();
+            uint payloadSize =  reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
+            byte[] payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
+            if (payload.Length != payloadSize)
+            {
+                // Early EOF.
+                throw new MalformedFrameException("Short frame - expected " +
+                                                  payloadSize + " bytes, got " +
+                                                  payload.Length + " bytes");
+            }
+
+            byte frameEndMarker = reader.ReadByte();
+            if (frameEndMarker != 206)
+            {
+                throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker);
+            }
+
+            return new InboundFrame((FrameType)type, channel, payload);
+        }
 
         public NetworkBinaryReader GetReader()
         {
@@ -275,21 +365,21 @@ namespace RabbitMQ.Client.Impl
 
     public class Frame
     {
-        public Frame(FrameType type, int channel)
+        public Frame(FrameType type, ushort channel)
         {
             Type = type;
             Channel = channel;
             Payload = null;
         }
 
-        public Frame(FrameType type, int channel, byte[] payload)
+        public Frame(FrameType type, ushort channel, byte[] payload)
         {
             Type = type;
             Channel = channel;
             Payload = payload;
         }
 
-        public int Channel { get; private set; }
+        public ushort Channel { get; private set; }
 
         public byte[] Payload { get; private set; }
 

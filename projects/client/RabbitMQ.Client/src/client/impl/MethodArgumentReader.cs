@@ -48,6 +48,7 @@ namespace RabbitMQ.Client.Impl
     {
         private int m_bit;
         private int m_bits;
+        private readonly NetworkBinaryReader BaseReader;
 
         public MethodArgumentReader(NetworkBinaryReader reader)
         {
@@ -55,7 +56,6 @@ namespace RabbitMQ.Client.Impl
             ClearBits();
         }
 
-        public NetworkBinaryReader BaseReader { get; private set; }
 
         public bool ReadBit()
         {

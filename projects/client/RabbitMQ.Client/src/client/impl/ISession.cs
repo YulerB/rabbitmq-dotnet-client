@@ -48,7 +48,7 @@ namespace RabbitMQ.Client.Impl
         /// <summary>
         /// Gets the channel number.
         /// </summary>
-        int ChannelNumber { get; }
+        ushort ChannelNumber { get; }
 
         /// <summary>
         /// Gets the close reason.

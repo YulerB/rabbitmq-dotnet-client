@@ -55,7 +55,7 @@ namespace RabbitMQ.Client.Unit
             using (var ms = new System.IO.MemoryStream())
             {
                 var writter = new RabbitMQ.Util.NetworkBinaryWriter(ms);
-                var channel = 1;
+                ushort channel = 1;
                 MethodOutboundFrame mFrame = new MethodOutboundFrame(channel, new ConnectionSecureOk(new byte[1] { 1 }));
                 Assert.AreEqual(channel, mFrame.Channel);
                 Assert.IsNull(mFrame.Payload);

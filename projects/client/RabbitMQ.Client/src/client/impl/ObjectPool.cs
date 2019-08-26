@@ -40,34 +40,23 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class ObjectPool<T> where T : class
+    public static class MemoryStreamPool
     {
-        private readonly ConcurrentBag<T> _objects;
-        private readonly Func<T> _objectGenerator;
-        private readonly Action<T> _OnPut;
+        private static readonly ConcurrentStack<MemoryStream> _objects = new ConcurrentStack<MemoryStream>();
 
-        public ObjectPool(Func<T> objectGenerator, Action<T> onPut)
+        public static DisposableMemoryStreamWrapper GetObject()
         {
-            if (objectGenerator == null) throw new ArgumentNullException(nameof(objectGenerator));
-            if (onPut == null) throw new ArgumentNullException(nameof(onPut));
-
-            _objects = new ConcurrentBag<T>();
-            _objectGenerator = objectGenerator;
-            _OnPut = onPut;
+            return  new DisposableMemoryStreamWrapper(_objects.TryPop(out MemoryStream item) ? item : new MemoryStream(256), e =>
+            {
+                e.Position = 0;
+                e.SetLength(0);
+                _objects.Push(e);
+            });
         }
 
-        public virtual DisposableWrapper<T> GetObject()
-        {
-            return new DisposableWrapper<T>(_objects.TryTake(out T item) ? item : _objectGenerator(), D_Disposing);
-        }
-
-        private void D_Disposing(object sender, T e)
-        {
-            _OnPut(e);
-            _objects.Add(e);
-        }
     }
 }

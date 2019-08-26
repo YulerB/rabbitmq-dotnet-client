@@ -5,7 +5,7 @@ using RabbitMQ.Client.Events;
 
 namespace RabbitMQ.Client.Impl
 {
-    sealed class BasicCancel : Work
+    public sealed class BasicCancel : Work
     {
         readonly string consumerTag;
 

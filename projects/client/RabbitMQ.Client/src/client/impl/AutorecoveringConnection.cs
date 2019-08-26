@@ -615,7 +615,7 @@ namespace RabbitMQ.Client.Framing.Impl
         public void Init(IEndpointResolver endpoints)
         {
             this.endpoints = endpoints;
-            var fh = endpoints.SelectOne(m_factory.CreateFrameHandler);
+            var fh = endpoints.SelectOne(m_factory.CreateHyperFrameHandler);
             this.Init(fh);
         }
 
@@ -832,7 +832,7 @@ namespace RabbitMQ.Client.Framing.Impl
             {
                 try
                 {
-                    var fh = endpoints.SelectOne(m_factory.CreateFrameHandler);
+                    var fh = endpoints.SelectOne(m_factory.CreateHyperFrameHandler);
                     m_delegate = new Connection(m_factory, false, fh, this.ClientProvidedName);
                     return true;
                 }

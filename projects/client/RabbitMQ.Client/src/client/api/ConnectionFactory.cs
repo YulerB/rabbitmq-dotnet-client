@@ -479,7 +479,7 @@ namespace RabbitMQ.Client
                 else
                 {
                     IProtocol protocol = Protocols.DefaultProtocol;
-                    conn = protocol.CreateConnection(this, false, endpointResolver.SelectOne(this.CreateFrameHandler), clientProvidedName);
+                    conn = protocol.CreateConnection(this, false, endpointResolver.SelectOne(this.CreateHyperFrameHandler), clientProvidedName);
                 }
             }
             catch (Exception e)
@@ -504,9 +504,24 @@ namespace RabbitMQ.Client
             return ConfigureFrameHandler(fh);
         }
 
+        public IFrameHandler CreateHyperFrameHandler()
+        {
+            var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(Endpoint, HyperSocketFactory,
+                RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
+            return ConfigureFrameHandler(fh);
+        }
+
+        public IFrameHandler CreateHyperFrameHandler(AmqpTcpEndpoint endpoint)
+        {
+            var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(endpoint, HyperSocketFactory,
+                RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
+            return ConfigureFrameHandler(fh);
+        }
+
+
         public IFrameHandler CreateFrameHandlerForHostname(string hostname)
         {
-            return CreateFrameHandler(this.Endpoint.CloneWithHostname(hostname));
+            return CreateHyperFrameHandler(this.Endpoint.CloneWithHostname(hostname));
         }
 
 

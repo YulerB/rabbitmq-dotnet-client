@@ -51,29 +51,11 @@ namespace RabbitMQ.Client.Unit
     public class TestObjectPool
     {
         [Test]
-        public void TestCreateObjectPool()
-        {
-            ObjectPool<MemoryStream> pool = new ObjectPool<MemoryStream>(() => new MemoryStream(), m => {
-                m.Position = 0;
-                m.SetLength(0);
-            });
-            
-        }
-        [Test]
         public void TestGetObjectPoolItem()
         {
-            ObjectPool<MemoryStream> pool = new ObjectPool<MemoryStream>(() => new MemoryStream(), m => {
-                m.Position = 0;
-                m.SetLength(0);
-            });
-            
-            using (var disposer = pool.GetObject())
+            using (var disposer = MemoryStreamPool.GetObject())
             {
                 Assert.IsNotNull(disposer.Instance);
-                disposer.Disposing += (sender, e) =>
-                {
-                    Assert.IsTrue(e != null && e is MemoryStream);
-                };
             }
         }
 
@@ -84,19 +66,15 @@ namespace RabbitMQ.Client.Unit
             long ticks2 = 0;
             Stopwatch sw1 = null;
             Stopwatch sw2 = null;
-            Stack<DisposableWrapper<MemoryStream>> streams1 = new Stack<DisposableWrapper<MemoryStream>>();
+            Stack<DisposableMemoryStreamWrapper> streams1 = new Stack<DisposableMemoryStreamWrapper>();
             Stack<MemoryStream> streams2 = new Stack<MemoryStream>();
-            ObjectPool<MemoryStream> pool = new ObjectPool<MemoryStream>(() => new MemoryStream(256), m => {
-                m.Position = 0;
-                m.SetLength(0);
-            });
 
             {
                 sw1 = Stopwatch.StartNew();
 
                 for (int i = 0; i < 10000; i++)
                 {
-                    streams1.Push(pool.GetObject());
+                    streams1.Push(MemoryStreamPool.GetObject());
                     if (i > 3) streams1.Pop().Dispose();  
                 }
                 streams1.Pop().Dispose(); streams1.Pop().Dispose(); streams1.Pop().Dispose();
@@ -125,13 +103,9 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestPoolerPool()
         {
-            using (var disposer = Pooler.MemoryStreamPool.GetObject())
+            using (var disposer = MemoryStreamPool.GetObject())
             {
                 Assert.IsNotNull(disposer.Instance);
-                disposer.Disposing += (sender, e) =>
-                {
-                    Assert.IsTrue(e != null && e is MemoryStream);
-                };
             }
         }
     }

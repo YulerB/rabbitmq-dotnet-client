@@ -53,7 +53,7 @@ namespace RabbitMQ.Client.Impl
         public ShutdownEventArgs m_reason;
 
         public QuiescingSession(Connection connection,
-            int channelNumber,
+            ushort channelNumber,
             ShutdownEventArgs reason)
             : base(connection, channelNumber)
         {

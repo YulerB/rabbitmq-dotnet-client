@@ -43,6 +43,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Framing;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -118,18 +119,20 @@ namespace RabbitMQ.Client.Unit
             for (int i = 0; i < y; i++)
             {
                 var ch = Conn.CreateModel();
-                var q = ch.QueueDeclare("", durable: false, exclusive: true, autoDelete: true, arguments: null);
-                ch.QueueBind(queue: q, exchange: x, routingKey: "");
                 channels.Add(ch);
-                queues.Add(q);
                 var cons = new CollectingConsumer(ch);
                 consumers.Add(cons);
+
+                var q = ch.QueueDeclare(string.Empty, durable: false, exclusive: true, autoDelete: true, arguments: null);
+                queues.Add(q);
+                ch.QueueBind(queue: q, exchange: x, routingKey: string.Empty);
+
                 ch.BasicConsume(queue: q, autoAck: false, consumer: cons);
             }
 
             for (int i = 0; i < n; i++)
             {
-                Ch.BasicPublish(exchange: x, routingKey: "",
+                Ch.BasicPublish(exchange: x, routingKey: string.Empty,
                     basicProperties: new BasicProperties(),
                     body: encoding.GetBytes("msg"));
             }
@@ -145,7 +148,6 @@ namespace RabbitMQ.Client.Unit
                 {
                     var a = ary[i];
                     var b = ary[i + 1];
-
                     Assert.IsTrue(a < b);
                 }
             }

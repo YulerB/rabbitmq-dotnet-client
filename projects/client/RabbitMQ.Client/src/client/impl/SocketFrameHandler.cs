@@ -48,6 +48,8 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Concurrent;
 
 namespace RabbitMQ.Client.Impl
 {
@@ -88,9 +90,11 @@ namespace RabbitMQ.Client.Impl
 
             if (ShouldTryIPv6(endpoint))
             {
-                try {
+                try
+                {
                     m_socket = ConnectUsingIPv6(endpoint, socketFactory, connectionTimeout);
-                } catch (ConnectFailureException)
+                }
+                catch (ConnectFailureException)
                 {
                     m_socket = null;
                 }
@@ -102,7 +106,7 @@ namespace RabbitMQ.Client.Impl
             }
 
             Stream netstream = m_socket.GetStream();
-            netstream.ReadTimeout  = readTimeout;
+            netstream.ReadTimeout = readTimeout;
             netstream.WriteTimeout = writeTimeout;
 
             if (endpoint.Ssl.Enabled)
@@ -118,7 +122,7 @@ namespace RabbitMQ.Client.Impl
                     throw;
                 }
             }
-            m_reader = new NetworkBinaryReader(new BufferedStream(netstream, m_socket.Client.ReceiveBufferSize));
+            m_reader = new NetworkBinaryReader(new BufferedStream(netstream, m_socket.ClientReceiveBufferSize));
             m_writer = new NetworkBinaryWriter(netstream);
 
             m_writeableStateTimeout = writeTimeout;
@@ -127,7 +131,7 @@ namespace RabbitMQ.Client.Impl
 
         public EndPoint LocalEndPoint
         {
-            get { return m_socket.Client.LocalEndPoint; }
+            get { return m_socket.ClientLocalEndPoint; }
         }
 
         public int LocalPort
@@ -137,7 +141,7 @@ namespace RabbitMQ.Client.Impl
 
         public EndPoint RemoteEndPoint
         {
-            get { return m_socket.Client.RemoteEndPoint; }
+            get { return m_socket.ClientRemoteEndPoint; }
         }
 
         public int RemotePort
@@ -168,7 +172,7 @@ namespace RabbitMQ.Client.Impl
             set
             {
                 m_writeableStateTimeout = value;
-                m_socket.Client.SendTimeout = value;
+                m_socket.ClientSendTimeout = value;
             }
         }
 
@@ -202,10 +206,10 @@ namespace RabbitMQ.Client.Impl
         private static readonly byte[] amqp = Encoding.ASCII.GetBytes("AMQP");
         public void SendHeader()
         {
-            byte[] header = Endpoint.Protocol.Revision != 0 ? 
-                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)0, (byte)Endpoint.Protocol.MajorVersion,(byte)Endpoint.Protocol.MinorVersion, (byte)Endpoint.Protocol.Revision }
-                    : 
-                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)1, (byte)1,(byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion };
+            byte[] header = Endpoint.Protocol.Revision != 0 ?
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)0, (byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion, (byte)Endpoint.Protocol.Revision }
+                    :
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)1, (byte)1, (byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion };
 
             if (_ssl)
             {
@@ -222,29 +226,29 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteFrame(OutboundFrame frame)
         {
-            using (var ms = Pooler.MemoryStreamPool.GetObject())
+            using (var ms = MemoryStreamPool.GetObject())
             {
                 var nbw = new NetworkBinaryWriter(ms.Instance);
                 frame.WriteTo(nbw);
-                m_socket.Client.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
+                m_socket.ClientPollCanWrite(m_writeableStateTimeout);
                 Write(ms.Instance.GetBufferSegment());
             }
         }
 
         public void WriteFrameSet(IList<OutboundFrame> frames)
         {
-            using (var ms = Pooler.MemoryStreamPool.GetObject())
+            using (var ms = MemoryStreamPool.GetObject())
             {
                 var nbw = new NetworkBinaryWriter(ms.Instance);
                 foreach (var f in frames) f.WriteTo(nbw);
-                m_socket.Client.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
+                m_socket.ClientPollCanWrite(m_writeableStateTimeout);
                 Write(ms.Instance.GetBufferSegment());
             }
         }
 
         private void Write(ArraySegment<byte> bufferSegment)
         {
-            if(_ssl)
+            if (_ssl)
             {
                 lock (_sslStreamLock)
                 {
@@ -281,10 +285,13 @@ namespace RabbitMQ.Client.Impl
                                                     int timeout, AddressFamily family)
         {
             ITcpClient socket = socketFactory(family);
-            try {
+            try
+            {
                 ConnectOrFail(socket, endpoint, timeout);
                 return socket;
-            } catch (ConnectFailureException e) {
+            }
+            catch (ConnectFailureException e)
+            {
                 socket.Dispose();
                 throw e;
             }
@@ -353,6 +360,337 @@ namespace RabbitMQ.Client.Impl
             Dispose(true);
         }
         #endregion
+    }
+
+
+    public class HyperSocketFrameHandler : IFrameHandler, IDisposable
+    {
+        private ArraySegmentStream m_stream;
+        private IHyperTcpClient m_socket;
+        private readonly object _semaphore = new object();
+        private bool _closed;
+
+        public HyperSocketFrameHandler(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int connectionTimeout, int readTimeout, int writeTimeout)
+        {
+            Endpoint = endpoint;
+
+            if (ShouldTryIPv6(endpoint))
+            {
+                try
+                {
+                    m_socket = ConnectUsingIPv6(endpoint, socketFactory, connectionTimeout);
+                }
+                catch (ConnectFailureException)
+                {
+                    m_socket = null;
+                }
+            }
+            else
+            {
+                m_socket = ConnectUsingIPv4(endpoint, socketFactory, connectionTimeout);
+            }
+            m_socket.Receive += M_socket_Receive;
+            m_stream = new ArraySegmentStream();
+        }
+
+        private void M_socket_Receive(object sender, ArraySegment<byte> e)
+        {
+            m_stream.Write(e.Array, e.Offset, e.Count);
+        }
+
+        public AmqpTcpEndpoint Endpoint { get; set; }
+
+        public EndPoint LocalEndPoint
+        {
+            get { return m_socket.ClientLocalEndPoint; }
+        }
+
+        public int LocalPort
+        {
+            get { return ((IPEndPoint)LocalEndPoint).Port; }
+        }
+
+        public EndPoint RemoteEndPoint
+        {
+            get { return m_socket.ClientRemoteEndPoint; }
+        }
+
+        public int RemotePort
+        {
+            get { return ((IPEndPoint)LocalEndPoint).Port; }
+        }
+
+        public int ReadTimeout
+        {
+            set
+            {
+                try
+                {
+                    if (m_socket.Connected)
+                    {
+                        m_socket.ReceiveTimeout = value;
+                    }
+                }
+                catch (SocketException)
+                {
+                    // means that the socket is already closed
+                }
+            }
+        }
+
+        public int WriteTimeout
+        {
+            set
+            {
+                m_socket.ClientSendTimeout = value;
+            }
+        }
+
+        public void Close()
+        {
+            if (!_closed)
+            {
+                lock (_semaphore)
+                {
+                    if (!_closed)
+                    {
+                        try
+                        {
+                            m_socket.Close();
+                        }
+                        catch (Exception)
+                        {
+                            // ignore, we are closing anyway
+                        }
+                        finally
+                        {
+                            _closed = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        public InboundFrame ReadFrame()
+        {
+            return RabbitMQ.Client.Impl.InboundFrame.ReadFrom(new NetworkArraySegmentsReader(m_stream));
+        }
+
+        private static readonly byte[] amqp = Encoding.ASCII.GetBytes("AMQP");
+        public void SendHeader()
+        {
+            byte[] header = Endpoint.Protocol.Revision != 0 ?
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)0, (byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion, (byte)Endpoint.Protocol.Revision }
+                    :
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)1, (byte)1, (byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion };
+
+            m_socket.Write(new ArraySegment<byte>(header));
+        }
+
+        public void WriteFrame(OutboundFrame frame)
+        {
+            using (var ms = MemoryStreamPool.GetObject())
+            {
+                var nbw = new NetworkBinaryWriter(ms.Instance);
+                frame.WriteTo(nbw);
+                m_socket.Write(ms.Instance.GetBufferSegment());
+            }
+        }
+
+        public void WriteFrameSet(IList<OutboundFrame> frames)
+        {
+            using (var ms = MemoryStreamPool.GetObject())
+            {
+                var nbw = new NetworkBinaryWriter(ms.Instance);
+                foreach (var f in frames) f.WriteTo(nbw);
+                m_socket.Write(ms.Instance.GetBufferSegment());
+            }
+        }
+
+        private bool ShouldTryIPv6(AmqpTcpEndpoint endpoint)
+        {
+            return (Socket.OSSupportsIPv6 && endpoint.AddressFamily != AddressFamily.InterNetwork);
+        }
+
+        private IHyperTcpClient ConnectUsingIPv6(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int timeout)
+        {
+            return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetworkV6);
+        }
+
+        private IHyperTcpClient ConnectUsingIPv4(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int timeout)
+        {
+            return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetwork);
+        }
+
+        private IHyperTcpClient ConnectUsingAddressFamily(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int timeout, AddressFamily family)
+        {
+            IHyperTcpClient socket = socketFactory(family);
+            try
+            {
+                if (endpoint.Ssl.Enabled) SecureConnectOrFail(socket, endpoint, timeout, false/*endpoint.Ssl.checkCertRevocation*/); else ConnectOrFail(socket, endpoint, timeout);
+                return socket;
+            }
+            catch (ConnectFailureException e)
+            {
+                socket.Dispose();
+                throw e;
+            }
+        }
+
+        private void ConnectOrFail(IHyperTcpClient socket, AmqpTcpEndpoint endpoint, int timeout)
+        {
+            try
+            {
+                socket.ConnectAsync(endpoint.HostName, endpoint.Port)
+                      .TimeoutAfter(timeout)
+                      .ConfigureAwait(false)
+                      // this ensures exceptions aren't wrapped in an AggregateException
+                      .GetAwaiter()
+                      .GetResult();
+            }
+            catch (ArgumentException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+            catch (SocketException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+            catch (NotSupportedException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+            catch (TimeoutException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+        }
+        private void SecureConnectOrFail(IHyperTcpClient socket, AmqpTcpEndpoint endpoint, int timeout, bool checkCertRevocation)
+        {
+            try
+            {
+                socket.SecureConnectAsync(
+                    endpoint.HostName, 
+                    endpoint.Port, 
+                    endpoint.Ssl.Certs, 
+                    endpoint.Ssl.CertificateValidationCallback, 
+                    endpoint.Ssl.CertificateSelectionCallback,
+                    checkCertRevocation
+                ).TimeoutAfter(timeout)
+                 .ConfigureAwait(false) // this ensures exceptions aren't wrapped in an AggregateException
+                 .GetAwaiter()
+                 .GetResult();
+            }
+            catch (ArgumentException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+            catch (SocketException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+            catch (NotSupportedException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+            catch (TimeoutException e)
+            {
+                throw new ConnectFailureException("Connection failed", e);
+            }
+        }
+
+        #region IDisposable Support
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                m_socket?.Dispose();
+            }
+            m_socket = null;
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~SocketFrameHandler() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion
+    }
+    public class ArraySegmentStream : Stream
+    {
+        BlockingCollection<ArraySegment<byte>> data = new BlockingCollection<ArraySegment<byte>>();
+        public ArraySegmentStream()
+        {
+
+        }
+
+        public override bool CanRead => true;
+
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => true;
+
+        public override long Length => 0;
+
+        public override long Position { get => 0; set => throw new NotImplementedException(); }
+
+        public override void Flush()
+        {
+
+        }
+
+        ArraySegment<byte> top = new ArraySegment<byte>();
+        public ArraySegment<byte>[] Read(int count)
+        {
+            List<ArraySegment<byte>> result = new List<ArraySegment<byte>>();
+            while (count > 0)
+            {
+                if (top.Count == 0) top = data.Take();
+
+                if (top.Count > count)
+                {
+                    var read = new ArraySegment<byte>(top.Array, top.Offset, count);
+                    top = new ArraySegment<byte>(top.Array, top.Offset + count, top.Count - count);
+                    count = 0;
+                    result.Add(read);
+                }
+                else
+                {
+                    var read = new ArraySegment<byte>(top.Array, top.Offset, top.Count);
+                    count -= top.Count;
+                    top = new ArraySegment<byte>();
+                    result.Add(read);
+                }
+            }
+            return result.ToArray();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            data.Add(new ArraySegment<byte>(buffer, offset, count));
+        }
     }
 }
 #endif

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace RabbitMQ.Client.Impl
 {
-    internal abstract class Work
+    public abstract class Work
     {
         readonly IAsyncBasicConsumer asyncConsumer;
 

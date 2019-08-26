@@ -44,6 +44,7 @@ using RabbitMQ.Client.Framing;
 using RabbitMQ.Client.Framing.Impl;
 using RabbitMQ.Util;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -1585,6 +1586,7 @@ namespace RabbitMQ.Client.Impl
             {
                 if (multiple)
                 {
+                    
                     for (ulong i = m_unconfirmedSet[0]; i <= deliveryTag; i++)
                     {
                         // removes potential duplicates

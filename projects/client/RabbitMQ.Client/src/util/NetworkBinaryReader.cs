@@ -38,6 +38,7 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using RabbitMQ.Client.Impl;
 using System;
 using System.IO;
 using System.Text;
@@ -180,6 +181,267 @@ namespace RabbitMQ.Util
                     ((i & 0x0000000000FF0000) << 24) |
                     ((i & 0x000000000000FF00) << 40) |
                     ((i & 0x00000000000000FF) << 56));
+        }
+    }
+
+    public class NetworkArraySegmentsReader 
+    {
+        // Not particularly efficient. To be more efficient, we could
+        // reuse BinaryReader's implementation details: m_buffer and
+        // FillBuffer, if they weren't private
+        // members. Private/protected claim yet another victim, film
+        // at 11. (I could simply cut-n-paste all that good code from
+        // BinaryReader, but two wrongs do not make a right)
+
+        private readonly ArraySegmentStream input;
+
+        /// <summary>
+        /// Construct a NetworkBinaryReader over the given input stream.
+        /// </summary>
+        public NetworkArraySegmentsReader(ArraySegmentStream input) 
+        {
+            this.input = input;
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public double ReadDouble()
+        {
+            byte[] bytes = new byte[8];
+            var data = input.Read(8);
+
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Count;
+            for (int i = 7; i > -1; i--)
+            {
+                var segment  = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToDouble(bytes, 0);
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public short ReadInt16()
+        {
+            byte[] bytes = new byte[2];
+            var data = input.Read(2);
+
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Count;
+            for (int i = 1; i > -1; i--)
+            {
+                var segment = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToInt16(bytes, 0);
+
+            //uint i = base.ReadUInt16();
+            //return (short)(((i & 0xFF00) >> 8) |
+            //               ((i & 0x00FF) << 8));
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public int ReadInt32()
+        {
+            byte[] bytes = new byte[4];
+            var data = input.Read(4);
+
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Count;
+            for (int i = 3; i > -1; i--)
+            {
+                var segment = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToInt16(bytes, 0);
+        }
+
+        public byte ReadByte()
+        {
+            var data = input.Read(1);
+            return data[0].Array[data[0].Offset];
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public long ReadInt64()
+        {
+            byte[] bytes = new byte[8];
+            var data = input.Read(8);
+
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Count;
+            for (int i = 7; i > -1; i--)
+            {
+                var segment = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToInt64(bytes, 0);
+        }
+
+        public byte[] ReadBytes(int payloadSize)
+        {
+            byte[] bytes = new byte[payloadSize];
+            {
+                var data = input.Read(payloadSize);
+                int offset = 0;
+                foreach (var segment in data)
+                {
+                    Buffer.BlockCopy(segment.Array, segment.Offset, bytes, offset, segment.Count);
+                    offset += segment.Count;
+                }
+            }
+            return bytes;
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public float ReadSingle()
+        {
+            byte[] bytes = new byte[4];
+            var data = input.Read(4);
+
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Count;
+            for (int i = 3; i > -1; i--)
+            {
+                var segment = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToSingle(bytes, 0);
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public ushort ReadUInt16()
+        {
+            var arrayIndex = 0;
+            var offset = 0;
+            byte[] bytes = new byte[2];
+            var data = input.Read(2);
+
+            var count = data[arrayIndex].Count;
+            for (int i = 1; i > -1; i--)
+            {
+                var segment = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToUInt16(bytes, 0);
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public uint ReadUInt32()
+        {
+            byte[] bytes = new byte[4];
+            var data = input.Read(4);
+
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Count;
+            for (int i = 3; i > -1; i--)
+            {
+                var segment = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToUInt32(bytes, 0);
+        }
+
+        /// <summary>
+        /// Override BinaryReader's method for network-order.
+        /// </summary>
+        public ulong ReadUInt64()
+        {
+            byte[] bytes = new byte[8];
+            var data = input.Read(8);
+
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Count;
+            for (int i = 7; i > -1; i--)
+            {
+                var segment = data[arrayIndex];
+                bytes[i] = segment.Array[segment.Offset + offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToUInt64(bytes, 0);
         }
     }
 }
