@@ -389,10 +389,12 @@ namespace RabbitMQ.Client.Impl
             {
                 m_socket = ConnectUsingIPv4(endpoint, socketFactory, connectionTimeout);
             }
+            
             m_socket.Receive += M_socket_Receive;
             m_stream = new ArraySegmentStream();
         }
 
+     
         private void M_socket_Receive(object sender, ArraySegment<byte> e)
         {
             m_stream.Write(e.Array, e.Offset, e.Count);
@@ -623,12 +625,16 @@ namespace RabbitMQ.Client.Impl
         }
         #endregion
     }
-    public class ArraySegmentStream : Stream
+    public class ArraySegmentStream : Stream, IDisposable
     {
-        BlockingCollection<ArraySegment<byte>> data = new BlockingCollection<ArraySegment<byte>>();
-        public ArraySegmentStream()
-        {
+        private BlockingCollection<ArraySegment<byte>> data = new BlockingCollection<ArraySegment<byte>>(25);
+        public event EventHandler<ArraySegment<byte>> Release;
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) data.Dispose();
+            base.Dispose(disposing);
+            data = null;
         }
 
         public override bool CanRead => true;
@@ -665,6 +671,7 @@ namespace RabbitMQ.Client.Impl
                 {
                     var read = new ArraySegment<byte>(top.Array, top.Offset, top.Count);
                     count -= top.Count;
+                    if(Release != null) Release(this, top);
                     top = new ArraySegment<byte>();
                     result.Add(read);
                 }

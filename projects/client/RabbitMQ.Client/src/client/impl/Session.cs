@@ -57,13 +57,13 @@ namespace RabbitMQ.Client.Impl
         public override void HandleFrame(InboundFrame frame)
         {
             Command cmd = m_assembler.HandleFrame(frame);
-#if(DEBUG)
-            if(cmd!=null && cmd.Header !=null && cmd.Header.ProtocolClassName!=null)
-                Console.Write(cmd.Header.ProtocolClassName);
-            Console.Write(".");
-            if (cmd != null && cmd.Method != null && cmd.Method.ProtocolMethodName != null)
-                Console.WriteLine(cmd.Method.ProtocolMethodName);
-#endif
+//#if(DEBUG)
+//            if(cmd!=null && cmd.Header !=null && cmd.Header.ProtocolClassName!=null)
+//                Console.Write(cmd.Header.ProtocolClassName);
+//            Console.Write(".");
+//            if (cmd != null && cmd.Method != null && cmd.Method.ProtocolMethodName != null)
+//                Console.WriteLine(cmd.Method.ProtocolMethodName);
+//#endif
             if (cmd != null)
             {
                 OnCommandReceived(cmd);

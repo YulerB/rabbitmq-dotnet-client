@@ -9,6 +9,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.IO;
+using System.Collections.Generic;
 
 namespace RabbitMQ.Client
 {
@@ -124,13 +125,15 @@ namespace RabbitMQ.Client
         private NetworkStream baseStream;
         private SslStream baseSSLStream;
         public event EventHandler<ArraySegment<byte>> Receive;
-
+        private byte[] bigBuffer = null;
+        private int bigBufferPosition = 0;
         public HyperTcpClientAdapter(Socket socket)
         {
             if (socket == null)
                 throw new InvalidOperationException("socket must not be null");
 
             this.sock = socket;
+            bigBuffer= new byte[sock.ReceiveBufferSize * 30];
         }
 
 
@@ -246,8 +249,7 @@ namespace RabbitMQ.Client
 #endif
             baseStream = new NetworkStream(sock);
 
-            var buffer = new byte[sock.ReceiveBufferSize];
-            baseStream.BeginRead(buffer, 0,buffer.Length, new AsyncCallback(Read), buffer);
+            baseStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
         }
 
         private void Read(IAsyncResult result)
@@ -256,14 +258,9 @@ namespace RabbitMQ.Client
             {
                 if (!disposed)
                 {
-                    {
-                        int read = baseStream.EndRead(result);
-                        byte[] buffer = result.AsyncState as byte[];
-                        if (this.Receive != null) this.Receive(this, new ArraySegment<byte>(buffer, 0, read));
-                    }
-
-                    var buffer1 = new byte[sock.ReceiveBufferSize];
-                    baseStream.BeginRead(buffer1, 0, buffer1.Length, new AsyncCallback(Read), buffer1);
+                    this.Receive(this, new ArraySegment<byte>(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, baseStream.EndRead(result)));
+                    bigBufferPosition = bigBufferPosition == 29 ? 0 : bigBufferPosition + 1;
+                    baseStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
                 }
             }
             catch (System.Net.Sockets.SocketException) { }
@@ -280,13 +277,9 @@ namespace RabbitMQ.Client
             {
                 if (!disposed)
                 {
-                    {
-                        int read = baseSSLStream.EndRead(result);
-                        byte[] buffer = result.AsyncState as byte[];
-                        if (this.Receive != null) this.Receive(this, new ArraySegment<byte>(buffer, 0, read));
-                    }
-                    var buffer1 = new byte[sock.ReceiveBufferSize];
-                    baseSSLStream.BeginRead(buffer1, 0, buffer1.Length, new AsyncCallback(SecureRead), buffer1);
+                    this.Receive(this, new ArraySegment<byte>(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, baseSSLStream.EndRead(result)));
+                    bigBufferPosition = bigBufferPosition == 29 ? 0 : bigBufferPosition + 1;
+                    baseSSLStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
                 }
             }
             catch (System.Net.Sockets.SocketException) { }
@@ -317,12 +310,12 @@ namespace RabbitMQ.Client
             {
                 lock (this)
                 {
-                    baseSSLStream.WriteAsync(data.Array, data.Offset, data.Count).ConfigureAwait(false).GetAwaiter().GetResult();
+                    baseSSLStream.Write(data.Array, data.Offset, data.Count);
                 }
             }
             else
             {
-                baseStream.WriteAsync(data.Array, data.Offset, data.Count).ConfigureAwait(false).GetAwaiter().GetResult();
+                baseStream.Write(data.Array, data.Offset, data.Count);
             }
         }
     }

@@ -40,7 +40,7 @@ namespace RabbitMQ.Client
 
         Task ConnectAsync(string host, int port);
         Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation);
-         
+
         void Write(ArraySegment<byte> data);
         event EventHandler<ArraySegment<byte>> Receive;
 
