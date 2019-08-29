@@ -1354,7 +1354,6 @@ entry.ToString());
 
         private void OnConnectionStarted(object sender, ConnectionStartDetails connectionStart)
         {
-
             ServerProperties = connectionStart.m_serverProperties;
 
             var serverVersion = new AmqpVersion(connectionStart.m_versionMajor,

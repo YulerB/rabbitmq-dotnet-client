@@ -121,6 +121,7 @@ namespace RabbitMQ.Client
     }
     public class HyperTcpClientAdapter : IHyperTcpClient
     {
+        public event EventHandler Closed;
         private Socket sock;
         private NetworkStream baseStream;
         private SslStream baseSSLStream;
@@ -136,12 +137,12 @@ namespace RabbitMQ.Client
             bigBuffer= new byte[sock.ReceiveBufferSize * 30];
         }
 
-
         public virtual void Close()
         {
             baseStream?.Close();
             baseSSLStream?.Close();
             sock?.Close();
+            if (Closed != null) Closed(this, EventArgs.Empty);
         }
 
         private bool disposed;
@@ -230,8 +231,7 @@ namespace RabbitMQ.Client
 
             await baseSSLStream.AuthenticateAsClientAsync(host, certs, Convert(System.Net.ServicePointManager.SecurityProtocol), checkCertRevocation);
 
-            var buffer = new ArraySegment<byte>(new byte[sock.ReceiveBufferSize]);
-            baseSSLStream.BeginRead(buffer.Array, buffer.Offset, buffer.Count, new AsyncCallback(Read), buffer);
+            baseSSLStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(SecureRead), null);
         }
         public virtual async Task ConnectAsync(string host, int port)
         {
@@ -263,9 +263,12 @@ namespace RabbitMQ.Client
                     baseStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
                 }
             }
-            catch (System.Net.Sockets.SocketException) { }
+            catch (System.Net.Sockets.SocketException) {
+                Close();
+            }
             catch (System.ObjectDisposedException) { }
-            catch (System.IO.FileNotFoundException) { }
+            catch (System.IO.FileNotFoundException) {
+            }
             catch (IOException)
             {
                 Close();
@@ -279,10 +282,12 @@ namespace RabbitMQ.Client
                 {
                     this.Receive(this, new ArraySegment<byte>(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, baseSSLStream.EndRead(result)));
                     bigBufferPosition = bigBufferPosition == 29 ? 0 : bigBufferPosition + 1;
-                    baseSSLStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
+                    baseSSLStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(SecureRead), null);
                 }
             }
-            catch (System.Net.Sockets.SocketException) { }
+            catch (System.Net.Sockets.SocketException) {
+                Close();
+            }
             catch (System.ObjectDisposedException) { }
             catch (System.IO.FileNotFoundException) { }
             catch (IOException)

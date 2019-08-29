@@ -79,19 +79,21 @@ namespace RabbitMQ.Client
         /// <returns>New instance of a <see cref="TcpClient"/>.</returns>
         public static ITcpClient DefaultSocketFactory(AddressFamily addressFamily)
         {
-            var socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
-            {
-                NoDelay = true
-            };
-            return new TcpClientAdapter(socket);
+            return new TcpClientAdapter(
+                new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
+                {
+                    NoDelay = true
+                }
+            );
         }
         public static IHyperTcpClient DefaultHyperSocketFactory(AddressFamily addressFamily)
         {
-            var socket = new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
-            {
-                NoDelay = true
-            };
-            return new HyperTcpClientAdapter(socket);
+            return new HyperTcpClientAdapter(
+                new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
+                {
+                    NoDelay = true
+                }
+            );
         }
 #endif
     }

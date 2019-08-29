@@ -43,6 +43,7 @@ namespace RabbitMQ.Client
 
         void Write(ArraySegment<byte> data);
         event EventHandler<ArraySegment<byte>> Receive;
+        event EventHandler Closed;
 
         void Close();
     }

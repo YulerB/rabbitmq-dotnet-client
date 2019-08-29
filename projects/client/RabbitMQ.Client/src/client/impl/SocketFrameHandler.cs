@@ -391,13 +391,19 @@ namespace RabbitMQ.Client.Impl
             }
             
             m_socket.Receive += M_socket_Receive;
+            m_socket.Closed += M_socket_Closed;
+
             m_stream = new ArraySegmentStream();
         }
 
-     
+        private void M_socket_Closed(object sender, EventArgs e)
+        {
+            m_stream.NotifyClosed();
+        }
+
         private void M_socket_Receive(object sender, ArraySegment<byte> e)
         {
-            m_stream.Write(e.Array, e.Offset, e.Count);
+            m_stream.Write(e);
         }
 
         public AmqpTcpEndpoint Endpoint { get; set; }
@@ -628,11 +634,14 @@ namespace RabbitMQ.Client.Impl
     public class ArraySegmentStream : Stream, IDisposable
     {
         private BlockingCollection<ArraySegment<byte>> data = new BlockingCollection<ArraySegment<byte>>(25);
-        public event EventHandler<ArraySegment<byte>> Release;
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing) data.Dispose();
+            if (disposing)
+            {
+                cts.Dispose();
+                data.Dispose();
+            }
             base.Dispose(disposing);
             data = null;
         }
@@ -652,27 +661,37 @@ namespace RabbitMQ.Client.Impl
 
         }
 
-        ArraySegment<byte> top = new ArraySegment<byte>();
+        private ArraySegment<byte> top = new ArraySegment<byte>();
+        private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         public ArraySegment<byte>[] Read(int count)
         {
             List<ArraySegment<byte>> result = new List<ArraySegment<byte>>();
+
             while (count > 0)
             {
-                if (top.Count == 0) top = data.Take();
-
+                if (top.Count == 0)
+                {
+                    try
+                    {
+                        top = data.Take(cts.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw new EndOfStreamException();
+                    }
+                }
                 if (top.Count > count)
                 {
                     var read = new ArraySegment<byte>(top.Array, top.Offset, count);
                     top = new ArraySegment<byte>(top.Array, top.Offset + count, top.Count - count);
-                    count = 0;
                     result.Add(read);
+                    return result.ToArray();
                 }
                 else
                 {
                     var read = new ArraySegment<byte>(top.Array, top.Offset, top.Count);
                     count -= top.Count;
-                    if(Release != null) Release(this, top);
-                    top = new ArraySegment<byte>();
+                    top = empty;
                     result.Add(read);
                 }
             }
@@ -697,6 +716,16 @@ namespace RabbitMQ.Client.Impl
         public override void Write(byte[] buffer, int offset, int count)
         {
             data.Add(new ArraySegment<byte>(buffer, offset, count));
+        }
+        public void Write(ArraySegment<byte> buffer)
+        {
+            data.Add(buffer);
+        }
+
+        private CancellationTokenSource cts = new CancellationTokenSource();
+        internal void NotifyClosed()
+        {
+            cts.Cancel();
         }
     }
 }
