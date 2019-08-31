@@ -31,7 +31,7 @@ namespace RabbitMQ.Client
     public interface IHyperTcpClient : IDisposable
     {
         bool Connected { get; }
-        int ReceiveTimeout { get; set; }
+        int ReceiveTimeout { get; }
         EndPoint ClientLocalEndPoint { get; }
         EndPoint ClientRemoteEndPoint { get; }
         int ClientReceiveBufferSize { get; }

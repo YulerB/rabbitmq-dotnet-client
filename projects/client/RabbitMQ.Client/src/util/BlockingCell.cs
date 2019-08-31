@@ -84,7 +84,7 @@ namespace RabbitMQ.Util
         {
             if (manualResetEventSlim.Wait(timeout))
             {
-                if (ContinueUsingValue != null) ContinueUsingValue(this, m_value);
+                ContinueUsingValue?.Invoke(this, m_value);
                 return m_value;
             }
             throw new TimeoutException();
@@ -120,7 +120,7 @@ namespace RabbitMQ.Util
         ///<summary>Return valid timeout value</summary>
         ///<remarks>If value of the parameter is less then zero, return 0
         ///to mean infinity</remarks>
-        public static int validatedTimeout(int timeout)
+        public static int ValidatedTimeout(int timeout)
         {
             return (timeout != Timeout.Infinite) && (timeout < 0) ? 0 : timeout;
         }

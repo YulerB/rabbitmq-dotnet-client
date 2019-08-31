@@ -56,8 +56,8 @@ namespace RabbitMQ.Client
 #if NETFX_CORE
         public Func<StreamSocket> SocketFactory = DefaultSocketFactory;
 #else
-        public Func<AddressFamily, ITcpClient> SocketFactory = DefaultSocketFactory;
-        public Func<AddressFamily, IHyperTcpClient> HyperSocketFactory = DefaultHyperSocketFactory;
+        public Func<AddressFamily, int, ITcpClient> SocketFactory = DefaultSocketFactory;
+        public Func<AddressFamily, int, IHyperTcpClient> HyperSocketFactory = DefaultHyperSocketFactory;
 #endif
 
 #if NETFX_CORE
@@ -76,23 +76,26 @@ namespace RabbitMQ.Client
         /// Creates a new instance of the <see cref="TcpClient"/>.
         /// </summary>
         /// <param name="addressFamily">Specifies the addressing scheme.</param>
+        /// <param name="heartbeatTimeout">Specifies the addressing scheme.</param>
         /// <returns>New instance of a <see cref="TcpClient"/>.</returns>
-        public static ITcpClient DefaultSocketFactory(AddressFamily addressFamily)
+        public static ITcpClient DefaultSocketFactory(AddressFamily addressFamily, int heartbeatTimeout)
         {
             return new TcpClientAdapter(
                 new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
                 {
                     NoDelay = true
-                }
+                },
+                heartbeatTimeout
             );
         }
-        public static IHyperTcpClient DefaultHyperSocketFactory(AddressFamily addressFamily)
+        public static IHyperTcpClient DefaultHyperSocketFactory(AddressFamily addressFamily, int heartbeatTimeout)
         {
             return new HyperTcpClientAdapter(
                 new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
                 {
                     NoDelay = true
-                }
+                },
+                heartbeatTimeout
             );
         }
 #endif

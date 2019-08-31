@@ -20,12 +20,11 @@ namespace RabbitMQ.Client
     {
         private readonly Socket sock;
 
-        public TcpClientAdapter(Socket socket)
+        public TcpClientAdapter(Socket socket, int RequestedHeartbeat)
         {
-            if (socket == null)
-                throw new InvalidOperationException("socket must not be null");
-
-            this.sock = socket;
+            socket.ReceiveTimeout = Math.Max(socket.ReceiveTimeout, RequestedHeartbeat * 1000);
+            socket.SendTimeout = Math.Max(socket.SendTimeout, RequestedHeartbeat * 1000);
+            this.sock = socket ?? throw new InvalidOperationException("socket must not be null");
         }
 
         public virtual async Task ConnectAsync(string host, int port)
@@ -128,12 +127,11 @@ namespace RabbitMQ.Client
         public event EventHandler<ArraySegment<byte>> Receive;
         private byte[] bigBuffer = null;
         private int bigBufferPosition = 0;
-        public HyperTcpClientAdapter(Socket socket)
+        public HyperTcpClientAdapter(Socket socket, int RequestedHeartbeat)
         {
-            if (socket == null)
-                throw new InvalidOperationException("socket must not be null");
-
-            this.sock = socket;
+            socket.ReceiveTimeout = Math.Max(socket.ReceiveTimeout, RequestedHeartbeat * 1000);
+            socket.SendTimeout = Math.Max(socket.SendTimeout, RequestedHeartbeat * 1000);
+            this.sock = socket ?? throw new InvalidOperationException("socket must not be null");
             bigBuffer= new byte[sock.ReceiveBufferSize * 30];
         }
 
@@ -142,7 +140,7 @@ namespace RabbitMQ.Client
             baseStream?.Close();
             baseSSLStream?.Close();
             sock?.Close();
-            if (Closed != null) Closed(this, EventArgs.Empty);
+            Closed?.Invoke(this, EventArgs.Empty);
         }
 
         private bool disposed;
@@ -161,6 +159,7 @@ namespace RabbitMQ.Client
                 sock.Dispose();
                 disposed = true;
             }
+            bigBuffer = null;
             Receive = null;
             baseStream = null;
             baseSSLStream = null;
@@ -183,11 +182,11 @@ namespace RabbitMQ.Client
                 AssertSocket();
                 return sock.ReceiveTimeout;
             }
-            set
-            {
-                AssertSocket();
-                sock.ReceiveTimeout = value;
-            }
+            //set
+            //{
+            //    AssertSocket();
+            //    sock.ReceiveTimeout = value;
+            //}
         }
 
         public EndPoint ClientLocalEndPoint => sock.LocalEndPoint;

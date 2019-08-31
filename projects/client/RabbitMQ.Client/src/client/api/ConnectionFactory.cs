@@ -494,28 +494,28 @@ namespace RabbitMQ.Client
         {
             var fh = Protocols.DefaultProtocol.CreateFrameHandler(Endpoint, SocketFactory,
                 RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return ConfigureFrameHandler(fh);
+            return fh;// ConfigureFrameHandler(fh);
         }
 
         public IFrameHandler CreateFrameHandler(AmqpTcpEndpoint endpoint)
         {
             var fh = Protocols.DefaultProtocol.CreateFrameHandler(endpoint, SocketFactory,
                 RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return ConfigureFrameHandler(fh);
+            return fh;//ConfigureFrameHandler(fh);
         }
 
         public IFrameHandler CreateHyperFrameHandler()
         {
             var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(Endpoint, HyperSocketFactory,
                 RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return ConfigureFrameHandler(fh);
+            return fh;//ConfigureFrameHandler(fh);
         }
 
         public IFrameHandler CreateHyperFrameHandler(AmqpTcpEndpoint endpoint)
         {
             var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(endpoint, HyperSocketFactory,
                 RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return ConfigureFrameHandler(fh);
+            return fh;//ConfigureFrameHandler(fh);
         }
 
 
@@ -525,14 +525,14 @@ namespace RabbitMQ.Client
         }
 
 
-        private IFrameHandler ConfigureFrameHandler(IFrameHandler fh)
-        {
-            // make sure socket timeouts are higher than heartbeat
-            fh.ReadTimeout = Math.Max(SocketReadTimeout, RequestedHeartbeat * 1000);
-            fh.WriteTimeout = Math.Max(SocketWriteTimeout, RequestedHeartbeat * 1000);
-            // TODO: add user-provided configurator, like in the Java client
-            return fh;
-        }
+        //private IFrameHandler ConfigureFrameHandler(IFrameHandler fh)
+        //{
+        //    // make sure socket timeouts are higher than heartbeat
+        //    fh.ReadTimeout = Math.Max(SocketReadTimeout, RequestedHeartbeat * 1000);
+        //    fh.WriteTimeout = Math.Max(SocketWriteTimeout, RequestedHeartbeat * 1000);
+        //    // TODO: add user-provided configurator, like in the Java client
+        //    return fh;
+        //}
 
         private void SetUri(Uri uri)
         {

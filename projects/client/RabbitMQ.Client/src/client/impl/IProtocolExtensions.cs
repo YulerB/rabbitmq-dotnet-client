@@ -58,7 +58,7 @@ namespace RabbitMQ.Client.Framing.Impl
             this IProtocol protocol,
             AmqpTcpEndpoint endpoint,
 #if !NETFX_CORE
-            Func<AddressFamily, ITcpClient> socketFactory,
+            Func<AddressFamily,int, ITcpClient> socketFactory,
 #else
             Func<StreamSocket> socketFactory,
 #endif
@@ -73,7 +73,7 @@ namespace RabbitMQ.Client.Framing.Impl
     this IProtocol protocol,
     AmqpTcpEndpoint endpoint,
 #if !NETFX_CORE
-            Func<AddressFamily, IHyperTcpClient> socketFactory,
+            Func<AddressFamily, int, IHyperTcpClient> socketFactory,
 #else
             Func<StreamSocket> socketFactory,
 #endif

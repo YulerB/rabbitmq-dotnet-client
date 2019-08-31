@@ -97,8 +97,7 @@ namespace RabbitMQ.Client.Impl
 
         public ModelBase(ISession session, ConsumerWorkService workService)
         {
-            var asyncConsumerWorkService = workService as AsyncConsumerWorkService;
-            if (asyncConsumerWorkService != null)
+            if (workService is AsyncConsumerWorkService asyncConsumerWorkService)
             {
                 ConsumerDispatcher = new AsyncConsumerDispatcher(this, asyncConsumerWorkService);
             }
@@ -510,7 +509,7 @@ namespace RabbitMQ.Client.Impl
                 }
             }
 
-            handleAckNack(args.DeliveryTag, args.Multiple, false);
+            HandleAckNack(args.DeliveryTag, args.Multiple, false);
         }
 
         public virtual void OnBasicNack(BasicNackEventArgs args)
@@ -535,7 +534,7 @@ namespace RabbitMQ.Client.Impl
                 }
             }
 
-            handleAckNack(args.DeliveryTag, args.Multiple, true);
+            HandleAckNack(args.DeliveryTag, args.Multiple, true);
         }
 
         public virtual void OnBasicRecoverOk(EventArgs args)
@@ -883,11 +882,12 @@ namespace RabbitMQ.Client.Impl
             bool multiple,
             bool requeue)
         {
-            var e = new BasicNackEventArgs();
-            e.DeliveryTag = deliveryTag;
-            e.Multiple = multiple;
-            e.Requeue = requeue;
-            OnBasicNack(e);
+            OnBasicNack(new BasicNackEventArgs
+            {
+                DeliveryTag = deliveryTag,
+                Multiple = multiple,
+                Requeue = requeue
+            });
         }
 
         public void HandleBasicRecoverOk()
@@ -904,14 +904,15 @@ namespace RabbitMQ.Client.Impl
             IBasicProperties basicProperties,
             byte[] body)
         {
-            var e = new BasicReturnEventArgs();
-            e.ReplyCode = replyCode;
-            e.ReplyText = replyText;
-            e.Exchange = exchange;
-            e.RoutingKey = routingKey;
-            e.BasicProperties = basicProperties;
-            e.Body = body;
-            OnBasicReturn(e);
+            OnBasicReturn(new BasicReturnEventArgs
+            {
+                ReplyCode = replyCode,
+                ReplyText = replyText,
+                Exchange = exchange,
+                RoutingKey = routingKey,
+                BasicProperties = basicProperties,
+                Body = body
+            });
         }
 
         public void HandleChannelClose(ushort replyCode,
@@ -1210,11 +1211,9 @@ namespace RabbitMQ.Client.Impl
             IBasicConsumer consumer)
         {
             // TODO: Replace with flag
-            var asyncDispatcher = ConsumerDispatcher as AsyncConsumerDispatcher;
-            if (asyncDispatcher != null)
+            if (ConsumerDispatcher is AsyncConsumerDispatcher asyncDispatcher)
             {
-                var asyncConsumer = consumer as IAsyncBasicConsumer;
-                if (asyncConsumer == null)
+                if (!(consumer is IAsyncBasicConsumer asyncConsumer))
                 {
                     // TODO: Friendly message
                     throw new InvalidOperationException("In the async mode you have to use an async consumer");
@@ -1535,14 +1534,12 @@ namespace RabbitMQ.Client.Impl
 
         public bool WaitForConfirms()
         {
-            bool timedOut;
-            return WaitForConfirms(TimeSpan.FromMilliseconds(Timeout.Infinite), out timedOut);
+            return WaitForConfirms(TimeSpan.FromMilliseconds(Timeout.Infinite), out bool timedOut);
         }
 
         public bool WaitForConfirms(TimeSpan timeout)
         {
-            bool timedOut;
-            return WaitForConfirms(timeout, out timedOut);
+            return WaitForConfirms(timeout, out bool timedOut);
         }
 
         public void WaitForConfirmsOrDie()
@@ -1552,8 +1549,7 @@ namespace RabbitMQ.Client.Impl
 
         public void WaitForConfirmsOrDie(TimeSpan timeout)
         {
-            bool timedOut;
-            bool onlyAcksReceived = WaitForConfirms(timeout, out timedOut);
+            bool onlyAcksReceived = WaitForConfirms(timeout, out bool timedOut);
             if (!onlyAcksReceived)
             {
                 Close(new ShutdownEventArgs(ShutdownInitiator.Application,
@@ -1580,7 +1576,7 @@ namespace RabbitMQ.Client.Impl
             Session.Transmit(commands);
         }
 
-        protected virtual void handleAckNack(ulong deliveryTag, bool multiple, bool isNack)
+        protected virtual void HandleAckNack(ulong deliveryTag, bool multiple, bool isNack)
         {
             lock (m_unconfirmedSet.SyncRoot)
             {

@@ -81,9 +81,9 @@ namespace RabbitMQ.Client.Impl
         private readonly object _semaphore = new object();
         private readonly object _sslStreamLock = new object();
         private bool _closed;
-        private bool _ssl = false;
+        private readonly bool _ssl;
         public SocketFrameHandler(AmqpTcpEndpoint endpoint,
-            Func<AddressFamily, ITcpClient> socketFactory,
+            Func<AddressFamily, int, ITcpClient> socketFactory,
             int connectionTimeout, int readTimeout, int writeTimeout)
         {
             Endpoint = endpoint;
@@ -267,24 +267,24 @@ namespace RabbitMQ.Client.Impl
         }
 
         private ITcpClient ConnectUsingIPv6(AmqpTcpEndpoint endpoint,
-                                            Func<AddressFamily, ITcpClient> socketFactory,
+                                            Func<AddressFamily, int, ITcpClient> socketFactory,
                                             int timeout)
         {
             return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetworkV6);
         }
 
         private ITcpClient ConnectUsingIPv4(AmqpTcpEndpoint endpoint,
-                                            Func<AddressFamily, ITcpClient> socketFactory,
+                                            Func<AddressFamily, int, ITcpClient> socketFactory,
                                             int timeout)
         {
             return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetwork);
         }
 
         private ITcpClient ConnectUsingAddressFamily(AmqpTcpEndpoint endpoint,
-                                                    Func<AddressFamily, ITcpClient> socketFactory,
+                                                    Func<AddressFamily, int, ITcpClient> socketFactory,
                                                     int timeout, AddressFamily family)
         {
-            ITcpClient socket = socketFactory(family);
+            ITcpClient socket = socketFactory(family, timeout);
             try
             {
                 ConnectOrFail(socket, endpoint, timeout);
@@ -370,7 +370,7 @@ namespace RabbitMQ.Client.Impl
         private readonly object _semaphore = new object();
         private bool _closed;
 
-        public HyperSocketFrameHandler(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int connectionTimeout, int readTimeout, int writeTimeout)
+        public HyperSocketFrameHandler(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int connectionTimeout, int readTimeout, int writeTimeout)
         {
             Endpoint = endpoint;
 
@@ -428,23 +428,23 @@ namespace RabbitMQ.Client.Impl
             get { return ((IPEndPoint)LocalEndPoint).Port; }
         }
 
-        public int ReadTimeout
-        {
-            set
-            {
-                try
-                {
-                    if (m_socket.Connected)
-                    {
-                        m_socket.ReceiveTimeout = value;
-                    }
-                }
-                catch (SocketException)
-                {
-                    // means that the socket is already closed
-                }
-            }
-        }
+        //public int ReadTimeout
+        //{
+        //    set
+        //    {
+        //        try
+        //        {
+        //            if (m_socket.Connected)
+        //            {
+        //                m_socket.ReceiveTimeout = value;
+        //            }
+        //        }
+        //        catch (SocketException)
+        //        {
+        //            // means that the socket is already closed
+        //        }
+        //    }
+        //}
 
         public int WriteTimeout
         {
@@ -520,19 +520,19 @@ namespace RabbitMQ.Client.Impl
             return (Socket.OSSupportsIPv6 && endpoint.AddressFamily != AddressFamily.InterNetwork);
         }
 
-        private IHyperTcpClient ConnectUsingIPv6(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int timeout)
+        private IHyperTcpClient ConnectUsingIPv6(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int timeout)
         {
             return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetworkV6);
         }
 
-        private IHyperTcpClient ConnectUsingIPv4(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int timeout)
+        private IHyperTcpClient ConnectUsingIPv4(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int timeout)
         {
             return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetwork);
         }
 
-        private IHyperTcpClient ConnectUsingAddressFamily(AmqpTcpEndpoint endpoint, Func<AddressFamily, IHyperTcpClient> socketFactory, int timeout, AddressFamily family)
+        private IHyperTcpClient ConnectUsingAddressFamily(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int timeout, AddressFamily family)
         {
-            IHyperTcpClient socket = socketFactory(family);
+            IHyperTcpClient socket = socketFactory(family, timeout );
             try
             {
                 if (endpoint.Ssl.Enabled) SecureConnectOrFail(socket, endpoint, timeout, false/*endpoint.Ssl.checkCertRevocation*/); else ConnectOrFail(socket, endpoint, timeout);

@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Unit
         {
             SocketFrameHandler handler = new SocketFrameHandler(
                 new RabbitMQ.Client.AmqpTcpEndpoint(), 
-                (a) => new TcpClientAdapter(new Socket(a, SocketType.Stream, ProtocolType.Tcp)), 
+                (a, b) => new TcpClientAdapter(new Socket(a, SocketType.Stream, ProtocolType.Tcp), b), 
                 1, 1, 1);
         }
         [Test]
@@ -64,7 +64,7 @@ namespace RabbitMQ.Client.Unit
         {
             SocketFrameHandler handler = new SocketFrameHandler(
                 new RabbitMQ.Client.AmqpTcpEndpoint(),
-                (a) => new TcpClientAdapter(new Socket(a, SocketType.Stream, ProtocolType.Tcp)),
+                (a, b) => new TcpClientAdapter(new Socket(a, SocketType.Stream, ProtocolType.Tcp), b),
                 1, 1, 1);
             handler.WriteFrame(new HeaderOutboundFrame(1, new RabbitMQ.Client.Framing.BasicProperties(), 1));
         }
@@ -73,7 +73,7 @@ namespace RabbitMQ.Client.Unit
         {
             SocketFrameHandler handler = new SocketFrameHandler(
                 new RabbitMQ.Client.AmqpTcpEndpoint(),
-                (a) => new TcpClientAdapter(new Socket(a, SocketType.Stream, ProtocolType.Tcp)),
+                (a, b) => new TcpClientAdapter(new Socket(a, SocketType.Stream, ProtocolType.Tcp), b),
                 1, 1, 1);
             handler.WriteFrameSet(new List<OutboundFrame> { new HeaderOutboundFrame(1, new RabbitMQ.Client.Framing.BasicProperties(), 1) ,
                  new HeaderOutboundFrame(1, new RabbitMQ.Client.Framing.BasicProperties(), 1)

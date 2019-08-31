@@ -86,7 +86,7 @@ namespace RabbitMQ.Client.Framing.Impl
         private IConnectionFactory m_factory;
         private readonly IFrameHandler m_frameHandler;
 
-        private Guid m_id = Guid.NewGuid();
+        private readonly Guid m_id = Guid.NewGuid();
         private ModelBase m_model0;
         private volatile bool m_running = true;
         private MainSession m_session0;
@@ -112,11 +112,11 @@ namespace RabbitMQ.Client.Framing.Impl
         private bool m_hasDisposedHeartBeatWriteTimer;
 
 #if CORECLR
-        private static string version = typeof(Connection).GetTypeInfo().Assembly
+        private static readonly string version = typeof(Connection).GetTypeInfo().Assembly
                                                 .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                                                 .InformationalVersion;
 #else
-        private static string version = typeof(Connection).Assembly
+        private static readonly string version = typeof(Connection).Assembly
                                             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                                             .InformationalVersion;
 #endif
@@ -134,8 +134,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_factory = factory;
             m_frameHandler = frameHandler;
 
-            var asyncConnectionFactory = factory as IAsyncConnectionFactory;
-            if (asyncConnectionFactory != null && asyncConnectionFactory.DispatchConsumersAsync)
+            if (factory is IAsyncConnectionFactory asyncConnectionFactory && asyncConnectionFactory.DispatchConsumersAsync)
             {
                 ConsumerWorkService = new AsyncConsumerWorkService();
             }
@@ -311,7 +310,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 // timers fire at slightly below half the interval to avoid race
                 // conditions
                 m_heartbeatTimeSpan = TimeSpan.FromMilliseconds((value * 1000) / 4);
-                m_frameHandler.ReadTimeout = value * 1000 * 2;
+                //m_frameHandler.ReadTimeout = value * 1000 * 2;
             }
         }
 
@@ -368,13 +367,14 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public static IDictionary<string, object> DefaultClientProperties()
         {
-            IDictionary<string, object> table = new Dictionary<string, object>();
-            table["product"] = Encoding.UTF8.GetBytes("RabbitMQ");
-            table["version"] = Encoding.UTF8.GetBytes(version);
-            table["platform"] = Encoding.UTF8.GetBytes(".NET");
-            table["copyright"] = Encoding.UTF8.GetBytes("Copyright (c) 2007-2016 Pivotal Software, Inc.");
-            table["information"] = Encoding.UTF8.GetBytes("Licensed under the MPL.  " +
-                                                          "See http://www.rabbitmq.com/");
+            IDictionary<string, object> table = new Dictionary<string, object>
+            {
+                {"product" , Encoding.UTF8.GetBytes("RabbitMQ")},
+                {"version", Encoding.UTF8.GetBytes(version)},
+                {"platform", Encoding.UTF8.GetBytes(".NET")},
+                {"copyright", Encoding.UTF8.GetBytes("Copyright (c) 2007-2016 Pivotal Software, Inc.")},
+                {"information", Encoding.UTF8.GetBytes("Licensed under the MPL.  See http://www.rabbitmq.com/")}
+            };
             return table;
         }
 
@@ -433,13 +433,11 @@ namespace RabbitMQ.Client.Framing.Impl
                         throw ace;
                     }
                 }
-#pragma warning disable 0168
-                catch (NotSupportedException nse)
+                catch (NotSupportedException)
                 {
                     // buffered stream had unread data in it and Flush()
                     // was called, ignore to not confuse the user
                 }
-#pragma warning restore 0168
                 catch (IOException ioe)
                 {
                     if (m_model0.CloseReason == null)
@@ -464,7 +462,7 @@ namespace RabbitMQ.Client.Framing.Impl
 #if NETFX_CORE
             var receivedSignal = m_appContinuation.Wait(BlockingCell<object>.validatedTimeout(timeout));
 #else
-            var receivedSignal = m_appContinuation.Wait(BlockingCell<object>.validatedTimeout(timeout));
+            var receivedSignal = m_appContinuation.Wait(BlockingCell<object>.ValidatedTimeout(timeout));
 #endif
 
             if (!receivedSignal)
@@ -480,7 +478,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             try
             {
-                m_frameHandler.ReadTimeout = 0;
+                //m_frameHandler.ReadTimeout = 0;
                 // Wait for response/socket closure or timeout
                 while (!m_closed)
                 {
@@ -515,14 +513,11 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private Command ConnectionCloseWrapper(ushort reasonCode, string reasonText)
         {
-            Command request;
-            ushort replyClassId;
-            ushort replyMethodId;
             Protocol.CreateConnectionClose(reasonCode,
                 reasonText,
-                out request,
-                out replyClassId,
-                out replyMethodId);
+                out Command request,
+                out ushort replyClassId,
+                out ushort replyMethodId);
             return request;
         }
 
@@ -687,7 +682,6 @@ namespace RabbitMQ.Client.Framing.Impl
                 // connection closes.
                 if (shutdownCleanly)
                 {
-#pragma warning disable 0168
                     try
                     {
                         ClosingLoop();
@@ -707,14 +701,13 @@ namespace RabbitMQ.Client.Framing.Impl
                         }
                     }
 #else
-                    catch (SocketException se)
+                    catch (SocketException )
                     {
                         // means that socket was closed when frame handler
                         // attempted to use it. Since we are shutting down,
                         // ignore it.
                     }
 #endif
-#pragma warning restore 0168
                 }
 
                 FinishClose();
@@ -1041,9 +1034,11 @@ entry.ToString());
 #if NETFX_CORE
             Task.Factory.StartNew(this.MainLoop, TaskCreationOptions.LongRunning);
 #else
-            var mainLoopThread = new Thread(MainLoop);
-            mainLoopThread.Name = taskName;
-            mainLoopThread.IsBackground = useBackgroundThread;
+            Thread mainLoopThread = new Thread(MainLoop)
+            {
+                Name = taskName,
+                IsBackground = useBackgroundThread
+            };
             mainLoopThread.Start();
 #endif
         }
@@ -1323,14 +1318,11 @@ entry.ToString());
 
         Command ChannelCloseWrapper(ushort reasonCode, string reasonText)
         {
-            Command request;
-            ushort replyClassId;
-            ushort replyMethodId;
             Protocol.CreateChannelClose(reasonCode,
                 reasonText,
-                out request,
-                out replyClassId,
-                out replyMethodId);
+                out Command request,
+                out ushort replyClassId,
+                out ushort replyMethodId);
             return request;
         }
 
@@ -1339,7 +1331,7 @@ entry.ToString());
             var connectionStartCell = new BlockingCell<ConnectionStartDetails>();
             m_model0.m_connectionStartCell = connectionStartCell;
             m_model0.HandshakeContinuationTimeout = m_factory.HandshakeContinuationTimeout;
-            m_frameHandler.ReadTimeout = (int)m_factory.HandshakeContinuationTimeout.TotalMilliseconds;
+            //m_frameHandler.ReadTimeout = (int)m_factory.HandshakeContinuationTimeout.TotalMilliseconds;
             m_frameHandler.SendHeader();
 
             connectionStartCell.ContinueUsingValue += OnConnectionStarted;
@@ -1368,9 +1360,11 @@ entry.ToString());
                     serverVersion.Minor);
             }
 
-            m_clientProperties = new Dictionary<string, object>(m_factory.ClientProperties);
-            m_clientProperties["capabilities"] = Protocol.Capabilities;
-            m_clientProperties["connection_name"] = this.ClientProvidedName;
+            m_clientProperties = new Dictionary<string, object>(m_factory.ClientProperties)
+            {
+                { "capabilities", Protocol.Capabilities },
+                { "connection_name", this.ClientProvidedName }
+            };
 
             // FIXME: parse out locales properly!
             ConnectionTuneDetails connectionTune = default(ConnectionTuneDetails);
