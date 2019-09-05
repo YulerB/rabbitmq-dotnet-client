@@ -43,7 +43,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading;
-
+using System.Buffers.Binary;
 namespace RabbitMQ.Util
 {
     /// <summary>
@@ -196,7 +196,7 @@ namespace RabbitMQ.Util
         public byte ReadByte()
         {
             var data = input.Read(1);
-            return data[0].Array[data[0].Offset];
+            return data[0].Span[0];
         }
         public byte[] ReadBytes(int payloadSize)
         {
@@ -204,7 +204,8 @@ namespace RabbitMQ.Util
             var data = input.Read(payloadSize);
             if(data.Length == 1)
             {
-                Buffer.BlockCopy(data[0].Array, data[0].Offset, bytes, 0, data[0].Count);
+                Memory<byte> memory = new Memory<byte>(bytes);
+                data[0].CopyTo(memory);
                 return bytes;
             }
             else
@@ -212,8 +213,9 @@ namespace RabbitMQ.Util
                 int offset = 0;
                 foreach (var segment in data)
                 {
-                    Buffer.BlockCopy(segment.Array, segment.Offset, bytes, offset, segment.Count);
-                    offset += segment.Count;
+                    var arr = segment.ToArray();
+                    Buffer.BlockCopy(arr, 0, bytes, offset, segment.Length);
+                    offset += segment.Length;
                 }
             }
             return bytes;
@@ -224,10 +226,7 @@ namespace RabbitMQ.Util
 
             if (data.Length == 1)
             {
-                return BitConverter.ToUInt16(new byte[2]{
-                    data[0].Array[data[0].Offset+1],
-                    data[0].Array[data[0].Offset]
-                    }, 0);
+                return BinaryPrimitives.ReadUInt16BigEndian(data[0].Span);
             }
 
 
@@ -235,11 +234,12 @@ namespace RabbitMQ.Util
             var offset = 0;
             byte[] bytes = new byte[2];
 
-            var count = data[arrayIndex].Count;
+
+            var count = data[arrayIndex].Length;
             for (int i = 1; i > -1; i--)
             {
-                var segment = data[arrayIndex];
-                bytes[i] = segment.Array[segment.Offset + offset];
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
                 offset++;
                 count--;
 
@@ -256,22 +256,17 @@ namespace RabbitMQ.Util
             var data = input.Read(4);
             if (data.Length == 1)
             {
-                return BitConverter.ToUInt32(new byte[4]{
-                    data[0].Array[data[0].Offset+3],
-                    data[0].Array[data[0].Offset+2],
-                    data[0].Array[data[0].Offset+1],
-                    data[0].Array[data[0].Offset]
-                    }, 0);
+                return BinaryPrimitives.ReadUInt32BigEndian(data[0].Span);
             }
 
             byte[] bytes = new byte[4];
             var arrayIndex = 0;
             var offset = 0;
-            var count = data[arrayIndex].Count;
+            var count = data[arrayIndex].Length;
             for (int i = 3; i > -1; i--)
             {
-                var segment = data[arrayIndex];
-                bytes[i] = segment.Array[segment.Offset + offset];
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
                 offset++;
                 count--;
 
@@ -282,6 +277,33 @@ namespace RabbitMQ.Util
                 }
             }
             return BitConverter.ToUInt32(bytes, 0);
+        }
+        public ulong ReadUInt64()
+        {
+            var data = input.Read(8);
+            if (data.Length == 1)
+            {
+                return BinaryPrimitives.ReadUInt64BigEndian(data[0].Span);
+            }
+
+            byte[] bytes = new byte[8];
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Length;
+            for (int i = 7; i > -1; i--)
+            {
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToUInt64(bytes, 0);
         }
     }
 }

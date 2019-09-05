@@ -51,7 +51,7 @@ namespace RabbitMQ.Client.Unit
         [Test, Category("MonoBug")]
         public void TestAmqpUriParseFail()
         {
-            if(IsRunningOnMono() == false)
+            if(!IsRunningOnMono())
             {
                 /* Various failure cases */
                 ParseFailWith<ArgumentException>("http://www.rabbitmq.com");
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Unit
         [Test, Category("MonoBug")]
         public void TestAmqpUriParseSucceed()
         {
-            if(IsRunningOnMono() == false)
+            if(!IsRunningOnMono())
             {
                 /* From the spec */
                 ParseSuccess("amqp://user:pass@host:10000/vhost",
@@ -147,13 +147,13 @@ namespace RabbitMQ.Client.Unit
         private void ParseFailWith<T>(string uri) where T : Exception
         {
             var cf = new ConnectionFactory();
-            Assert.That(() => cf.Uri = new Uri(uri), Throws.TypeOf<T>());
+            Assert.That(() => cf.SetUri (new Uri(uri)), Throws.TypeOf<T>());
         }
 
         private void ParseSuccess(string uri, string user, string password, string host, int port, string vhost)
         {
             var factory = new ConnectionFactory();
-            factory.Uri = new Uri(uri);
+            factory.SetUri(new Uri(uri));
             AssertUriPartEquivalence(user, password, port, vhost, factory);
             Assert.AreEqual(host, factory.HostName);
         }
@@ -162,7 +162,7 @@ namespace RabbitMQ.Client.Unit
             string[] hosts, int port, string vhost)
         {
             var factory = new ConnectionFactory();
-            factory.Uri = new Uri(uri);
+            factory.SetUri(new Uri(uri));
             AssertUriPartEquivalence(user, password, port, vhost, factory);
             Assert.IsTrue((Array.IndexOf(hosts, factory.HostName)) != -1);
         }

@@ -339,7 +339,11 @@ namespace RabbitMQ.Client.Impl
 
             ushort channel = reader.ReadUInt16();
             uint payloadSize =  reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
-            byte[] payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
+
+            byte[] payload = new byte[] { };
+            if(payloadSize> 0)
+                payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
+
             if (payload.Length != payloadSize)
             {
                 // Early EOF.

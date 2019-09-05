@@ -30,6 +30,7 @@ namespace RabbitMQ.Client
     }
     public interface IHyperTcpClient : IDisposable
     {
+        void BufferUsed();
         bool Connected { get; }
         int ReceiveTimeout { get; }
         EndPoint ClientLocalEndPoint { get; }
@@ -42,7 +43,7 @@ namespace RabbitMQ.Client
         Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation);
 
         void Write(ArraySegment<byte> data);
-        event EventHandler<ArraySegment<byte>> Receive;
+        event EventHandler<ReadOnlyMemory<byte>> Receive;
         event EventHandler Closed;
 
         void Close();

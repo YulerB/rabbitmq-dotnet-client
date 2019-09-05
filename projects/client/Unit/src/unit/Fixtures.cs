@@ -57,7 +57,7 @@ using RabbitMQ.Client.Framing;
 namespace RabbitMQ.Client.Unit
 {
 
-    public class IntegrationFixture
+    public class IntegrationFixture : IntegrationFixtureBase
     {
         protected IConnection Conn;
         protected IModel Model;
@@ -403,98 +403,7 @@ namespace RabbitMQ.Client.Unit
         // Shelling Out
         //
 
-        protected Process ExecRabbitMQCtl(string args)
-        {
-            // Allow the path to the rabbitmqctl.bat to be set per machine
-            var envVariable = Environment.GetEnvironmentVariable("RABBITMQ_RABBITMQCTL_PATH");
 
-            string rabbitmqctlPath;
-            if (envVariable != null)
-            {
-                rabbitmqctlPath = envVariable;
-            }
-            else if (IsRunningOnMonoOrDotNetCore())
-            {
-                rabbitmqctlPath = "../../../../../../../rabbit/scripts/rabbitmqctl";
-            }
-            else
-            {
-                rabbitmqctlPath = @"..\..\..\..\..\..\..\rabbit\scripts\rabbitmqctl.bat";
-            }
-
-            return ExecCommand(rabbitmqctlPath, args);
-        }
-
-        protected Process ExecCommand(string command)
-        {
-            return ExecCommand(command, "");
-        }
-
-        protected Process ExecCommand(string command, string args)
-        {
-            return ExecCommand(command, args, null);
-        }
-
-        protected Process ExecCommand(string ctl, string args, string changeDirTo)
-        {
-            var proc = new Process
-            {
-                StartInfo =
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                }
-            };
-            if(changeDirTo != null)
-            {
-                proc.StartInfo.WorkingDirectory = changeDirTo;
-            }
-
-            string cmd;
-            if(IsRunningOnMonoOrDotNetCore()) {
-                cmd  = ctl;
-            } else {
-                cmd  = "cmd.exe";
-                args = "/c \"\"" + ctl + "\" " + args + "\"";
-            }
-
-            try {
-              proc.StartInfo.FileName = cmd;
-              proc.StartInfo.Arguments = args;
-              proc.StartInfo.RedirectStandardError = true;
-              proc.StartInfo.RedirectStandardOutput = true;
-
-              proc.Start();
-              String stderr = proc.StandardError.ReadToEnd();
-              proc.WaitForExit();
-              if (stderr.Length >  0 || proc.ExitCode > 0)
-              {
-                  String stdout = proc.StandardOutput.ReadToEnd();
-                  ReportExecFailure(cmd, args, stderr + "\n" + stdout);
-              }
-
-              return proc;
-            }
-            catch (Exception e)
-            {
-                ReportExecFailure(cmd, args, e.Message);
-                throw e;
-            }
-        }
-
-        protected void ReportExecFailure(String cmd, String args, String msg)
-        {
-            Console.WriteLine("Failure while running " + cmd + " " + args + ":\n" + msg);
-        }
-
-        public static bool IsRunningOnMonoOrDotNetCore()
-        {
-            #if CORECLR
-            return true;
-            #else
-            return Type.GetType("Mono.Runtime") != null;
-            #endif
-        }
 
         //
         // Flow Control
@@ -602,15 +511,6 @@ namespace RabbitMQ.Client.Unit
             StartRabbitMQ();
         }
 
-        protected void StopRabbitMQ()
-        {
-            ExecRabbitMQCtl("stop_app");
-        }
-
-        protected void StartRabbitMQ()
-        {
-            ExecRabbitMQCtl("start_app");
-        }
 
         //
         // Concurrency and Coordination
@@ -635,7 +535,115 @@ namespace RabbitMQ.Client.Unit
             return Environment.GetEnvironmentVariable("SSL_CERTS_DIR");
         }
     }
+    public abstract class IntegrationFixtureBase
+    {
+        protected void StopRabbitMQ()
+        {
+            ExecRabbitMQCtl("stop_app");
+        }
 
+        protected void StartRabbitMQ()
+        {
+            ExecRabbitMQCtl("start_app");
+        }
+        protected Process ExecRabbitMQCtl(string args)
+        {
+            // Allow the path to the rabbitmqctl.bat to be set per machine
+            var envVariable = Environment.GetEnvironmentVariable("RABBITMQ_RABBITMQCTL_PATH");
+
+            string rabbitmqctlPath;
+            if (envVariable != null)
+            {
+                rabbitmqctlPath = envVariable;
+            }
+            else if (IsRunningOnMonoOrDotNetCore())
+            {
+                rabbitmqctlPath = "../../../../../../../rabbit/scripts/rabbitmqctl";
+            }
+            else
+            {
+                rabbitmqctlPath = @"..\..\..\..\..\..\..\rabbit\scripts\rabbitmqctl.bat";
+            }
+
+            return ExecCommand(rabbitmqctlPath, args);
+        }
+
+        protected Process ExecCommand(string command)
+        {
+            return ExecCommand(command, "");
+        }
+
+        protected Process ExecCommand(string command, string args)
+        {
+            return ExecCommand(command, args, null);
+        }
+
+        protected Process ExecCommand(string ctl, string args, string changeDirTo)
+        {
+            var proc = new Process
+            {
+                StartInfo =
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                }
+            };
+            if (changeDirTo != null)
+            {
+                proc.StartInfo.WorkingDirectory = changeDirTo;
+            }
+
+            string cmd;
+            if (IsRunningOnMonoOrDotNetCore())
+            {
+                cmd = ctl;
+            }
+            else
+            {
+                cmd = "cmd.exe";
+                args = "/c \"\"" + ctl + "\" " + args + "\"";
+            }
+
+            try
+            {
+                proc.StartInfo.FileName = cmd;
+                proc.StartInfo.Arguments = args;
+                proc.StartInfo.RedirectStandardError = true;
+                proc.StartInfo.RedirectStandardOutput = true;
+
+                proc.Start();
+                String stderr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit();
+                if (stderr.Length > 0 || proc.ExitCode > 0)
+                {
+                    String stdout = proc.StandardOutput.ReadToEnd();
+                    ReportExecFailure(cmd, args, stderr + "\n" + stdout);
+                }
+
+                return proc;
+            }
+            catch (Exception e)
+            {
+                ReportExecFailure(cmd, args, e.Message);
+                throw e;
+            }
+        }
+        public static bool IsRunningOnMonoOrDotNetCore()
+        {
+#if CORECLR
+            return true;
+#else
+            return Type.GetType("Mono.Runtime") != null;
+#endif
+        }
+
+        protected void ReportExecFailure(String cmd, String args, String msg)
+        {
+            Console.WriteLine("Failure while running " + cmd + " " + args + ":\n" + msg);
+        }
+
+
+    }
     public class TimingFixture
     {
         public static readonly int TimingInterval = 300;

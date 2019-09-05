@@ -75,5 +75,6 @@
 
   <ItemGroup>
     <PackageReference Include="NuGet.Build.Tasks.Pack" Version="4.0.0" PrivateAssets="All" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
 </Project>

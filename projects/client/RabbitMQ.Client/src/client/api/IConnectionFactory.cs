@@ -90,8 +90,8 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Sets or gets the AMQP Uri to be used for connections.
         /// </summary>
-        Uri Uri { get; set; }
-
+        Uri Uri { get;  }
+        void SetUri(Uri uri);
         /// <summary>
         /// Default client provided name to be used for connections.
         /// </summary>

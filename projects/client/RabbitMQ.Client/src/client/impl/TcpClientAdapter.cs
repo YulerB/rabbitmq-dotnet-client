@@ -13,126 +13,30 @@ using System.Collections.Generic;
 
 namespace RabbitMQ.Client
 {
-    /// <summary>
-    /// Simple wrapper around TcpClient.
-    /// </summary>
-    public class TcpClientAdapter : ITcpClient
-    {
-        private readonly Socket sock;
-
-        public TcpClientAdapter(Socket socket, int RequestedHeartbeat)
-        {
-            socket.ReceiveTimeout = Math.Max(socket.ReceiveTimeout, RequestedHeartbeat * 1000);
-            socket.SendTimeout = Math.Max(socket.SendTimeout, RequestedHeartbeat * 1000);
-            this.sock = socket ?? throw new InvalidOperationException("socket must not be null");
-        }
-
-        public virtual async Task ConnectAsync(string host, int port)
-        {
-            AssertSocket();
-            var adds = await Dns.GetHostAddressesAsync(host).ConfigureAwait(false);
-            var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
-            if (ep == default(IPAddress))
-            {
-                throw new ArgumentException("No ip address could be resolved for " + host);
-            }
-#if CORECLR
-            await sock.ConnectAsync(ep, port).ConfigureAwait(false);
-#else
-            sock.Connect(ep, port);
-#endif
-        }
-
-        public virtual void Close()
-        {
-            if (sock != null)
-            {
-                sock.Dispose();
-            }
-        }
-
-        [Obsolete("Override Dispose(bool) instead.")]
-        public virtual void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // dispose managed resources
-                Close();
-            }
-
-            // dispose unmanaged resources
-        }
-
-        public virtual NetworkStream GetStream()
-        {
-            AssertSocket();
-            return new NetworkStream(sock);
-        }
-
-        public virtual bool Connected
-        {
-            get
-            {
-                if(sock == null) return false;
-                return sock.Connected;
-            }
-        }
-
-        public virtual int ReceiveTimeout
-        {
-            get
-            {
-                AssertSocket();
-                return sock.ReceiveTimeout;
-            }
-            set
-            {
-                AssertSocket();
-                sock.ReceiveTimeout = value;
-            }
-        }
-
-        public EndPoint ClientLocalEndPoint => sock.LocalEndPoint;
-
-        public EndPoint ClientRemoteEndPoint => sock.RemoteEndPoint;
-
-        public int ClientReceiveBufferSize => sock.ReceiveBufferSize;
-
-        public int ClientSendTimeout { set { sock.SendTimeout = value; } }
-
-        private void AssertSocket()
-        {
-            if(sock == null)
-            {
-                throw new InvalidOperationException("Cannot perform operation as socket is null");
-            }
-        }
-
-        public bool ClientPollCanWrite(int m_writeableStateTimeout)
-        {
-            return sock.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
-        }
-    }
     public class HyperTcpClientAdapter : IHyperTcpClient
     {
         public event EventHandler Closed;
         private Socket sock;
         private NetworkStream baseStream;
         private SslStream baseSSLStream;
-        public event EventHandler<ArraySegment<byte>> Receive;
+        public event EventHandler<ReadOnlyMemory<byte>> Receive;
         private byte[] bigBuffer = null;
+        private ReadOnlyMemory<byte> Memory=null;
+        private const int BufferSegments = 40;
         private int bigBufferPosition = 0;
+        private SemaphoreSlim buffersInPlay = new SemaphoreSlim(BufferSegments);
         public HyperTcpClientAdapter(Socket socket, int RequestedHeartbeat)
         {
             socket.ReceiveTimeout = Math.Max(socket.ReceiveTimeout, RequestedHeartbeat * 1000);
             socket.SendTimeout = Math.Max(socket.SendTimeout, RequestedHeartbeat * 1000);
             this.sock = socket ?? throw new InvalidOperationException("socket must not be null");
-            bigBuffer= new byte[sock.ReceiveBufferSize * 30];
+            bigBuffer= new byte[sock.ReceiveBufferSize * BufferSegments];
+            Memory = new ReadOnlyMemory<byte>(bigBuffer);
+        }
+
+        public virtual void BufferUsed()
+        {
+            buffersInPlay.Release();
         }
 
         public virtual void Close()
@@ -159,6 +63,7 @@ namespace RabbitMQ.Client
                 sock.Dispose();
                 disposed = true;
             }
+            Memory = null;
             bigBuffer = null;
             Receive = null;
             baseStream = null;
@@ -182,11 +87,6 @@ namespace RabbitMQ.Client
                 AssertSocket();
                 return sock.ReceiveTimeout;
             }
-            //set
-            //{
-            //    AssertSocket();
-            //    sock.ReceiveTimeout = value;
-            //}
         }
 
         public EndPoint ClientLocalEndPoint => sock.LocalEndPoint;
@@ -207,7 +107,7 @@ namespace RabbitMQ.Client
 
         public bool ClientPollCanWrite(int m_writeableStateTimeout)
         {
-            return true;// sock.Poll(m_writeableStateTimeout, SelectMode.SelectWrite);
+            return true;
         }
 
         public virtual async Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation = false)
@@ -230,7 +130,8 @@ namespace RabbitMQ.Client
 
             await baseSSLStream.AuthenticateAsClientAsync(host, certs, Convert(System.Net.ServicePointManager.SecurityProtocol), checkCertRevocation);
 
-            baseSSLStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(SecureRead), null);
+            buffersInPlay.Wait();
+            baseSSLStream.BeginRead(bigBuffer, 0, sock.ReceiveBufferSize, new AsyncCallback(SecureRead), null);
         }
         public virtual async Task ConnectAsync(string host, int port)
         {
@@ -248,7 +149,8 @@ namespace RabbitMQ.Client
 #endif
             baseStream = new NetworkStream(sock);
 
-            baseStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
+            buffersInPlay.Wait();
+            baseStream.BeginRead(bigBuffer, 0, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
         }
 
         private void Read(IAsyncResult result)
@@ -257,16 +159,33 @@ namespace RabbitMQ.Client
             {
                 if (!disposed)
                 {
-                    this.Receive(this, new ArraySegment<byte>(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, baseStream.EndRead(result)));
-                    bigBufferPosition = bigBufferPosition == 29 ? 0 : bigBufferPosition + 1;
-                    baseStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
+                    this.Receive(this, Memory.Slice(bigBufferPosition * sock.ReceiveBufferSize, baseStream.EndRead(result)));
+                    bigBufferPosition++;
+                    if (bigBufferPosition == BufferSegments) bigBufferPosition = 0;
+                    buffersInPlay
+                        .WaitAsync()
+                        .ContinueWith(async (t) =>
+                            {
+                                await t;
+                                baseStream.BeginRead(
+                                  bigBuffer,
+                                  bigBufferPosition * sock.ReceiveBufferSize,
+                                  sock.ReceiveBufferSize,
+                                  new AsyncCallback(Read),
+                                  null
+                              );
+                            }
+                        ).ConfigureAwait(false);
                 }
             }
             catch (System.Net.Sockets.SocketException) {
                 Close();
             }
-            catch (System.ObjectDisposedException) { }
+            catch (System.ObjectDisposedException) {
+                // Nothing to do here.
+            }
             catch (System.IO.FileNotFoundException) {
+                // Nothing to do here.
             }
             catch (IOException)
             {
@@ -279,16 +198,36 @@ namespace RabbitMQ.Client
             {
                 if (!disposed)
                 {
-                    this.Receive(this, new ArraySegment<byte>(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, baseSSLStream.EndRead(result)));
-                    bigBufferPosition = bigBufferPosition == 29 ? 0 : bigBufferPosition + 1;
-                    baseSSLStream.BeginRead(bigBuffer, bigBufferPosition * sock.ReceiveBufferSize, sock.ReceiveBufferSize, new AsyncCallback(SecureRead), null);
+                    this.Receive(this, Memory.Slice(bigBufferPosition * sock.ReceiveBufferSize, baseSSLStream.EndRead(result)));
+                    bigBufferPosition++;
+                    if (bigBufferPosition == BufferSegments) bigBufferPosition = 0;
+                    buffersInPlay
+                        .WaitAsync()
+                        .ContinueWith(async (t) =>
+                        {
+                            await t;
+                            baseSSLStream.BeginRead(
+                              bigBuffer,
+                              bigBufferPosition * sock.ReceiveBufferSize,
+                              sock.ReceiveBufferSize,
+                              new AsyncCallback(SecureRead),
+                              null
+                          );
+                        }
+                        ).ConfigureAwait(false);
                 }
             }
             catch (System.Net.Sockets.SocketException) {
                 Close();
             }
-            catch (System.ObjectDisposedException) { }
-            catch (System.IO.FileNotFoundException) { }
+            catch (System.ObjectDisposedException)
+            {
+                // Nothing to do here.
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                // Nothing to do here. 
+            }
             catch (IOException)
             {
                 Close();
@@ -308,11 +247,12 @@ namespace RabbitMQ.Client
             return protocols;
         }
 
+        private readonly object _syncLock = new object();
         public void Write(ArraySegment<byte> data)
         {
             if(baseSSLStream != null)
             {
-                lock (this)
+                lock (_syncLock)
                 {
                     baseSSLStream.Write(data.Array, data.Offset, data.Count);
                 }

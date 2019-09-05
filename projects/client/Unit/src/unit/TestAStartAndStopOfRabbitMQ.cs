@@ -38,49 +38,29 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using NUnit.Framework;
+using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
+using RabbitMQ.Client.Framing.Impl;
+using RabbitMQ.Client.Impl;
 using System;
+using System.Collections.Generic;
+using System.Threading;
 
-#if NETFX_CORE
-using Windows.Networking.Sockets;
-#else
-using System.Net.Sockets;
-#endif
+#pragma warning disable 0618
 
-namespace RabbitMQ.Client
+namespace RabbitMQ.Client.Unit
 {
-    public class ConnectionFactoryBase
+    [TestFixture]
+    public class TestAStartAndStopOfRabbitMQ : IntegrationFixtureBase
     {
-        /// <summary>
-        /// Set custom socket options by providing a SocketFactory.
-        /// </summary>
-#if NETFX_CORE
-        public Func<StreamSocket> SocketFactory = DefaultSocketFactory;
-#else
-        public readonly Func<AddressFamily, int, IHyperTcpClient> HyperSocketFactory = DefaultHyperSocketFactory;
-#endif
-
-#if NETFX_CORE
-        /// <summary>
-        /// Creates a new instance of the <see cref="StreamSocket"/>.
-        /// </summary>
-        /// <returns>New instance of a <see cref="StreamSocket"/>.</returns>
-        public static StreamSocket DefaultSocketFactory()
+        [Test]
+        public void StartRabbitMQTest()
         {
-            StreamSocket tcpClient = new StreamSocket();
-            tcpClient.Control.NoDelay = true;
-            return tcpClient;
+            StopRabbitMQ();
+            StartRabbitMQ();
         }
-#else
-        public static IHyperTcpClient DefaultHyperSocketFactory(AddressFamily addressFamily, int heartbeatTimeout)
-        {
-            return new HyperTcpClientAdapter(
-                new Socket(addressFamily, SocketType.Stream, ProtocolType.Tcp)
-                {
-                    NoDelay = true
-                },
-                heartbeatTimeout
-            );
-        }
-#endif
     }
 }
+
+#pragma warning restore 0168

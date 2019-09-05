@@ -8,6 +8,7 @@ using System;
 using RabbitMQ.Client.Unsafe;
 using System.Runtime.InteropServices;
 using System.Buffers.Binary;
+using RabbitMQ.Client.Impl;
 
 namespace Unit.src.benches
 {
@@ -151,6 +152,10 @@ namespace Unit.src.benches
             stream.Position = 0;
             stream.Seek(0, SeekOrigin.Begin);
             Assert.AreEqual(values, reader1.ReadUInt643(), "ReadInt643");
+
+            stream.Position = 0;
+            stream.Seek(0, SeekOrigin.Begin);
+            Assert.AreEqual(values, reader1.ReadUInt64(), "ReadInt644");
         }
         [Test]
         public void TestBenchReadDouble()
@@ -565,6 +570,14 @@ namespace Unit.src.benches
                 stream.Seek(0, SeekOrigin.Begin);
                 var reader = new NewNetworkBinaryReader(stream);
                 reader.ReadUInt643();
+            }
+
+            [Benchmark]
+            public void TestNewReadUInt644()
+            {
+                ArraySegmentStream stream = new ArraySegmentStream(shared);
+                var reader = new NetworkArraySegmentsReader(stream);
+                reader.ReadUInt64();
             }
         }
 

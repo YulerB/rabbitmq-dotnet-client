@@ -101,10 +101,17 @@ namespace RabbitMQ.Client
     ///hosts with an empty name are not addressable. </para></remarks>
     public class ConnectionFactory : ConnectionFactoryBase, IAsyncConnectionFactory
     {
-        /// <summary>
-        /// Default value for the desired maximum channel number, with zero meaning unlimited (value: 0).
-        /// </summary>
-        /// <remarks>PLEASE KEEP THIS MATCHING THE DOC ABOVE.</remarks>
+        public ConnectionFactory() : base()
+        {
+            HandshakeContinuationTimeout = TimeSpan.FromSeconds(10);
+            ContinuationTimeout = TimeSpan.FromSeconds(20);
+            ClientProperties = Connection.DefaultClientProperties();
+        }
+
+    /// <summary>
+    /// Default value for the desired maximum channel number, with zero meaning unlimited (value: 0).
+    /// </summary>
+    /// <remarks>PLEASE KEEP THIS MATCHING THE DOC ABOVE.</remarks>
         public const ushort DefaultChannelMax = 0;
 
         /// <summary>
@@ -184,11 +191,6 @@ namespace RabbitMQ.Client
         /// Amount of time client will wait for before re-trying  to recover connection.
         /// </summary>
         public TimeSpan NetworkRecoveryInterval { get; set; } = TimeSpan.FromSeconds(5);
-        private TimeSpan m_handshakeContinuationTimeout = TimeSpan.FromSeconds(10);
-        private TimeSpan m_continuationTimeout = TimeSpan.FromSeconds(20);
-
-        // just here to hold the value that was set through the setter
-        private Uri uri;
 
         /// <summary>
         /// Amount of time protocol handshake operations are allowed to take before
@@ -196,8 +198,8 @@ namespace RabbitMQ.Client
         /// </summary>
         public TimeSpan HandshakeContinuationTimeout
         {
-            get { return m_handshakeContinuationTimeout; }
-            set { m_handshakeContinuationTimeout = value; }
+            get;
+            set;
         }
 
         /// <summary>
@@ -206,8 +208,8 @@ namespace RabbitMQ.Client
         /// </summary>
         public TimeSpan ContinuationTimeout
         {
-            get { return m_continuationTimeout; }
-            set { m_continuationTimeout = value; }
+            get;
+            set;
         }
 
         /// <summary>
@@ -263,10 +265,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Construct a fresh instance, with all fields set to their respective defaults.
         /// </summary>
-        public ConnectionFactory()
-        {
-            ClientProperties = Connection.DefaultClientProperties();
-        }
+
 
         /// <summary>
         /// Connection endpoint.
@@ -327,8 +326,8 @@ namespace RabbitMQ.Client
         /// </summary>
         public Uri Uri
         {
-            get { return uri; }
-            set { SetUri(value); }
+            get; 
+            private set;
         }
 
         /// <summary>
@@ -490,32 +489,18 @@ namespace RabbitMQ.Client
             return conn;
         }
 
-        public IFrameHandler CreateFrameHandler()
-        {
-            var fh = Protocols.DefaultProtocol.CreateFrameHandler(Endpoint, SocketFactory,
-                RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return fh;// ConfigureFrameHandler(fh);
-        }
-
-        public IFrameHandler CreateFrameHandler(AmqpTcpEndpoint endpoint)
-        {
-            var fh = Protocols.DefaultProtocol.CreateFrameHandler(endpoint, SocketFactory,
-                RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return fh;//ConfigureFrameHandler(fh);
-        }
-
         public IFrameHandler CreateHyperFrameHandler()
         {
             var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(Endpoint, HyperSocketFactory,
                 RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return fh;//ConfigureFrameHandler(fh);
+            return fh;
         }
 
         public IFrameHandler CreateHyperFrameHandler(AmqpTcpEndpoint endpoint)
         {
             var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(endpoint, HyperSocketFactory,
                 RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return fh;//ConfigureFrameHandler(fh);
+            return fh;
         }
 
 
@@ -525,16 +510,7 @@ namespace RabbitMQ.Client
         }
 
 
-        //private IFrameHandler ConfigureFrameHandler(IFrameHandler fh)
-        //{
-        //    // make sure socket timeouts are higher than heartbeat
-        //    fh.ReadTimeout = Math.Max(SocketReadTimeout, RequestedHeartbeat * 1000);
-        //    fh.WriteTimeout = Math.Max(SocketWriteTimeout, RequestedHeartbeat * 1000);
-        //    // TODO: add user-provided configurator, like in the Java client
-        //    return fh;
-        //}
-
-        private void SetUri(Uri uri)
+        public void SetUri(Uri uri)
         {
             Endpoint = new AmqpTcpEndpoint();
 
@@ -596,7 +572,7 @@ namespace RabbitMQ.Client
                 VirtualHost = UriDecode(uri.Segments[1]);
             }
 
-            this.uri = uri;
+            this.Uri = uri;
         }
 
         ///<summary>

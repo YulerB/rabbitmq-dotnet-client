@@ -19,21 +19,21 @@ namespace Unit.src.unit
             stream.Write(buffer, 0, buffer.Length);
 
             var segments = stream.Read(1);
-            Assert.AreEqual(1, segments[0].Count);
-            Assert.AreEqual(buffer[0], segments[0].Array[segments[0].Offset]);
+            Assert.AreEqual(1, segments[0].Length, "Test 1");
+            Assert.AreEqual(buffer[0], segments[0].ToArray()[0], "Test 2");
 
             segments = stream.Read(2);
-            Assert.AreEqual(2, segments[0].Count);
-            Assert.AreEqual(buffer[1], segments[0].Array[segments[0].Offset]);
-            Assert.AreEqual(buffer[2], segments[0].Array[segments[0].Offset+1]);
+            Assert.AreEqual(2, segments[0].Length, "Test 3");
+            Assert.AreEqual(buffer[1], segments[0].ToArray()[0], "Test 4");
+            Assert.AreEqual(buffer[2], segments[0].ToArray()[1], "Test 5");
 
             segments = stream.Read(4);
-            Assert.AreEqual(2, segments[0].Count);
-            Assert.AreEqual(2, segments[1].Count);
-            Assert.AreEqual(buffer[3], segments[0].Array[segments[0].Offset]);
-            Assert.AreEqual(buffer[4], segments[0].Array[segments[0].Offset + 1]);
-            Assert.AreEqual(buffer[0], segments[1].Array[segments[1].Offset]);
-            Assert.AreEqual(buffer[1], segments[1].Array[segments[1].Offset + 1]);
+            Assert.AreEqual(2, segments[0].Length, "Test 6");
+            Assert.AreEqual(2, segments[1].Length, "Test 7");
+            Assert.AreEqual(buffer[3], segments[0].ToArray()[0], "Test 8");
+            Assert.AreEqual(buffer[4], segments[0].ToArray()[1], "Test 9");
+            Assert.AreEqual(buffer[0], segments[1].ToArray()[0], "Test 10");
+            Assert.AreEqual(buffer[1], segments[1].ToArray()[1], "Test 11");
 
         }
         [Test]
@@ -44,11 +44,11 @@ namespace Unit.src.unit
             stream.Write(buffer, 0, buffer.Length);
             stream.Write(buffer, 0, buffer.Length);
             NetworkArraySegmentsReader reader = new NetworkArraySegmentsReader(stream);
-            Assert.AreEqual(buffer[0], reader.ReadByte());
-            Assert.AreEqual(new byte[] { 199, 197, 196 }, reader.ReadBytes(3));
-            Assert.AreEqual(new byte[] { 195, 200, 199 }, reader.ReadBytes(3));
-            Assert.AreEqual(BitConverter.ToUInt16(new byte[] { 196, 197 }, 0), reader.ReadUInt16());
-            Assert.AreEqual(buffer[4], reader.ReadByte());
+            Assert.AreEqual(buffer[0], reader.ReadByte(), "Test 3");
+            Assert.AreEqual(new byte[] { 199, 197, 196 }, reader.ReadBytes(3), "Test 4");
+            Assert.AreEqual(new byte[] { 195, 200, 199 }, reader.ReadBytes(3), "Test 5");
+            Assert.AreEqual(BitConverter.ToUInt16(new byte[] { 196, 197 }, 0), reader.ReadUInt16(), "Test 6");
+            Assert.AreEqual(buffer[4], reader.ReadByte(), "Test 7");
 
 
         }

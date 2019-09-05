@@ -55,7 +55,7 @@ namespace RabbitMQ.Client.Impl
 {
     static class TaskExtensions
     {
-        public static Task CompletedTask = Task.FromResult(0);
+        public static readonly Task CompletedTask = Task.FromResult(0);
 
         public static async Task TimeoutAfter(this Task task, int millisecondsTimeout)
         {
@@ -69,7 +69,7 @@ namespace RabbitMQ.Client.Impl
         }
     }
 
-    public class SocketFrameHandler : IFrameHandler, IDisposable
+    public class SocketFrameHandler : IFrameHandler
     {
         // Socket poll timeout in ms. If the socket does not
         // become writeable in this amount of time, we throw
@@ -96,10 +96,9 @@ namespace RabbitMQ.Client.Impl
                 }
                 catch (ConnectFailureException)
                 {
-                    m_socket = null;
+                    m_socket = ConnectUsingIPv4(endpoint, socketFactory, connectionTimeout);
                 }
             }
-
             if (m_socket == null && endpoint.AddressFamily != AddressFamily.InterNetworkV6)
             {
                 m_socket = ConnectUsingIPv4(endpoint, socketFactory, connectionTimeout);
@@ -290,10 +289,10 @@ namespace RabbitMQ.Client.Impl
                 ConnectOrFail(socket, endpoint, timeout);
                 return socket;
             }
-            catch (ConnectFailureException e)
+            catch (ConnectFailureException)
             {
                 socket.Dispose();
-                throw e;
+                throw;
             }
         }
 
@@ -327,31 +326,19 @@ namespace RabbitMQ.Client.Impl
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (disposing)
             {
-                if (disposing)
-                {
-                    m_reader?.Dispose();
-                    m_writer?.Dispose();
-                    m_socket?.Dispose();
-                }
-                m_reader = null;
-                m_writer = null;
-                m_socket = null;
-
-                disposedValue = true;
+                m_reader?.Dispose();
+                m_writer?.Dispose();
+                m_socket?.Dispose();
             }
+            m_reader = null;
+            m_writer = null;
+            m_socket = null;
         }
-
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~SocketFrameHandler() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
+        
 
         // This code added to correctly implement the disposable pattern.
         public void Dispose()
@@ -365,7 +352,7 @@ namespace RabbitMQ.Client.Impl
 
     public class HyperSocketFrameHandler : IFrameHandler, IDisposable
     {
-        private ArraySegmentStream m_stream;
+        private readonly ArraySegmentStream m_stream;
         private IHyperTcpClient m_socket;
         private readonly object _semaphore = new object();
         private bool _closed;
@@ -382,7 +369,7 @@ namespace RabbitMQ.Client.Impl
                 }
                 catch (ConnectFailureException)
                 {
-                    m_socket = null;
+                    m_socket = ConnectUsingIPv4(endpoint, socketFactory, connectionTimeout);
                 }
             }
             else
@@ -394,6 +381,12 @@ namespace RabbitMQ.Client.Impl
             m_socket.Closed += M_socket_Closed;
 
             m_stream = new ArraySegmentStream();
+            m_stream.BufferUsed += M_stream_BufferUsed;
+        }
+
+        private void M_stream_BufferUsed(object sender, EventArgs e)
+        {
+            m_socket.BufferUsed();
         }
 
         private void M_socket_Closed(object sender, EventArgs e)
@@ -401,7 +394,7 @@ namespace RabbitMQ.Client.Impl
             m_stream.NotifyClosed();
         }
 
-        private void M_socket_Receive(object sender, ArraySegment<byte> e)
+        private void M_socket_Receive(object sender, ReadOnlyMemory<byte> e)
         {
             m_stream.Write(e);
         }
@@ -428,32 +421,7 @@ namespace RabbitMQ.Client.Impl
             get { return ((IPEndPoint)LocalEndPoint).Port; }
         }
 
-        //public int ReadTimeout
-        //{
-        //    set
-        //    {
-        //        try
-        //        {
-        //            if (m_socket.Connected)
-        //            {
-        //                m_socket.ReceiveTimeout = value;
-        //            }
-        //        }
-        //        catch (SocketException)
-        //        {
-        //            // means that the socket is already closed
-        //        }
-        //    }
-        //}
-
-        public int WriteTimeout
-        {
-            set
-            {
-                m_socket.ClientSendTimeout = value;
-            }
-        }
-
+        
         public void Close()
         {
             if (!_closed)
@@ -538,10 +506,10 @@ namespace RabbitMQ.Client.Impl
                 if (endpoint.Ssl.Enabled) SecureConnectOrFail(socket, endpoint, timeout, false/*endpoint.Ssl.checkCertRevocation*/); else ConnectOrFail(socket, endpoint, timeout);
                 return socket;
             }
-            catch (ConnectFailureException e)
+            catch (ConnectFailureException)
             {
                 socket.Dispose();
-                throw e;
+                throw;
             }
         }
 
@@ -617,12 +585,6 @@ namespace RabbitMQ.Client.Impl
             m_socket = null;
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~SocketFrameHandler() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
-
         // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
@@ -631,9 +593,23 @@ namespace RabbitMQ.Client.Impl
         }
         #endregion
     }
-    public class ArraySegmentStream : Stream, IDisposable
+    public class ArraySegmentStream : Stream
     {
-        private BlockingCollection<ArraySegment<byte>> data = new BlockingCollection<ArraySegment<byte>>(25);
+        private BlockingCollection<ReadOnlyMemory<byte>> data = new BlockingCollection<ReadOnlyMemory<byte>>();
+        public event EventHandler BufferUsed;
+        public ArraySegmentStream(byte[] buffer) {
+            data.Add(new ArraySegment<byte>(buffer, 0, buffer.Length));
+        }
+        public ArraySegmentStream(ArraySegment<byte> buffer)
+        {
+            data.Add(buffer);
+        }
+        public ArraySegmentStream(IEnumerable<ArraySegment<byte>> buffers)
+        {
+            foreach(var buffer in buffers)
+                data.Add(buffer);
+        }
+        public ArraySegmentStream() { }
 
         protected override void Dispose(bool disposing)
         {
@@ -661,15 +637,15 @@ namespace RabbitMQ.Client.Impl
 
         }
 
-        private ArraySegment<byte> top = new ArraySegment<byte>();
+        private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
-        public ArraySegment<byte>[] Read(int count)
+        public ReadOnlyMemory<byte>[] Read(int count)
         {
-            List<ArraySegment<byte>> result = new List<ArraySegment<byte>>();
+            List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
 
             while (count > 0)
             {
-                if (top.Count == 0)
+                if (top.Length == 0)
                 {
                     try
                     {
@@ -680,18 +656,19 @@ namespace RabbitMQ.Client.Impl
                         throw new EndOfStreamException();
                     }
                 }
-                if (top.Count > count)
+                if (top.Length > count)
                 {
-                    var read = new ArraySegment<byte>(top.Array, top.Offset, count);
-                    top = new ArraySegment<byte>(top.Array, top.Offset + count, top.Count - count);
+                    var read = top.Slice(0, count);
+                    top = top.Slice(count, top.Length - count);
                     result.Add(read);
                     return result.ToArray();
                 }
                 else
                 {
-                    var read = new ArraySegment<byte>(top.Array, top.Offset, top.Count);
-                    count -= top.Count;
+                    var read = top.Slice(0, top.Length);
+                    count -= top.Length;
                     top = empty;
+                    BufferUsed?.Invoke(this, EventArgs.Empty);
                     result.Add(read);
                 }
             }
@@ -717,12 +694,12 @@ namespace RabbitMQ.Client.Impl
         {
             data.Add(new ArraySegment<byte>(buffer, offset, count));
         }
-        public void Write(ArraySegment<byte> buffer)
+        public void Write(ReadOnlyMemory<byte> buffer)
         {
             data.Add(buffer);
         }
 
-        private CancellationTokenSource cts = new CancellationTokenSource();
+        private readonly CancellationTokenSource cts = new CancellationTokenSource();
         internal void NotifyClosed()
         {
             cts.Cancel();
