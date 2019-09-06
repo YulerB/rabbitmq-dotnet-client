@@ -61,10 +61,10 @@ namespace RabbitMQ.Client.Unit
             return ((MemoryStream)w.BaseStream).ToArray();
         }
 
-        public NetworkBinaryReader Reader(byte[] bytes)
-        {
-            return new NetworkBinaryReader(new MemoryStream(bytes));
-        }
+        //public NetworkBinaryReader Reader(byte[] bytes)
+        //{
+        //    return new NetworkBinaryReader(new MemoryStream(bytes));
+        //}
 
         public void Check(NetworkBinaryWriter w, byte[] bytes)
         {
@@ -100,17 +100,17 @@ namespace RabbitMQ.Client.Unit
             Check(m_w, new byte[] { 0x89, 0xAB });
         }
 
-        [Test]
-        public void TestReadInt16()
-        {
-            Assert.AreEqual(0x1234, Reader(new byte[] { 0x12, 0x34 }).ReadInt16());
-        }
+        //[Test]
+        //public void TestReadInt16()
+        //{
+        //    Assert.AreEqual(0x1234, Reader(new byte[] { 0x12, 0x34 }).ReadInt16());
+        //}
 
-        [Test]
-        public void TestReadUInt16()
-        {
-            Assert.AreEqual(0x89AB, Reader(new byte[] { 0x89, 0xAB }).ReadUInt16());
-        }
+        //[Test]
+        //public void TestReadUInt16()
+        //{
+        //    Assert.AreEqual(0x89AB, Reader(new byte[] { 0x89, 0xAB }).ReadUInt16());
+        //}
 
 
         [Test]
@@ -134,17 +134,17 @@ namespace RabbitMQ.Client.Unit
             Check(m_w, new byte[] { 0x89, 0xAB, 0xCD, 0xEF });
         }
 
-        [Test]
-        public void TestReadInt32()
-        {
-            Assert.AreEqual(0x12345678, Reader(new byte[] { 0x12, 0x34, 0x56, 0x78 }).ReadInt32());
-        }
+        //[Test]
+        //public void TestReadInt32()
+        //{
+        //    Assert.AreEqual(0x12345678, Reader(new byte[] { 0x12, 0x34, 0x56, 0x78 }).ReadInt32());
+        //}
 
-        [Test]
-        public void TestReadUInt32()
-        {
-            Assert.AreEqual(0x89ABCDEF, Reader(new byte[] { 0x89, 0xAB, 0xCD, 0xEF }).ReadUInt32());
-        }
+        //[Test]
+        //public void TestReadUInt32()
+        //{
+        //    Assert.AreEqual(0x89ABCDEF, Reader(new byte[] { 0x89, 0xAB, 0xCD, 0xEF }).ReadUInt32());
+        //}
 
 
         [Test]
@@ -168,20 +168,20 @@ namespace RabbitMQ.Client.Unit
             Check(m_w, new byte[] { 0x89, 0xAB, 0xCD, 0xEF, 0x01, 0x23, 0x45, 0x67 });
         }
 
-        [Test]
-        public void TestReadInt64()
-        {
-            Assert.AreEqual(0x123456789ABCDEF0,
-                            Reader(new byte[] { 0x12, 0x34, 0x56, 0x78,
-                                                0x9A, 0xBC, 0xDE, 0xF0 }).ReadInt64());
-        }
+        //[Test]
+        //public void TestReadInt64()
+        //{
+        //    Assert.AreEqual(0x123456789ABCDEF0,
+        //                    Reader(new byte[] { 0x12, 0x34, 0x56, 0x78,
+        //                                        0x9A, 0xBC, 0xDE, 0xF0 }).ReadInt64());
+        //}
 
-        [Test]
-        public void TestReadUInt64()
-        {
-            Assert.AreEqual(0x89ABCDEF01234567,
-                            Reader(new byte[] { 0x89, 0xAB, 0xCD, 0xEF,
-                                                0x01, 0x23, 0x45, 0x67 }).ReadUInt64());
-        }
+        //[Test]
+        //public void TestReadUInt64()
+        //{
+        //    Assert.AreEqual(0x89ABCDEF01234567,
+        //                    Reader(new byte[] { 0x89, 0xAB, 0xCD, 0xEF,
+        //                                        0x01, 0x23, 0x45, 0x67 }).ReadUInt64());
+        //}
     }
 }

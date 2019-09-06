@@ -59,11 +59,6 @@ namespace RabbitMQ.Client.Unit
             return new ContentHeaderPropertyWriter(new NetworkBinaryWriter(new MemoryStream()));
         }
 
-        public static ContentHeaderPropertyReader Reader(byte[] bytes)
-        {
-            return new ContentHeaderPropertyReader(new NetworkBinaryReader(new MemoryStream(bytes)));
-        }
-
         public byte[] Contents(ContentHeaderPropertyWriter w)
         {
             return ((MemoryStream)w.BaseWriter.BaseStream).ToArray();

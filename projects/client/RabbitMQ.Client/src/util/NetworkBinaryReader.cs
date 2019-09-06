@@ -474,7 +474,7 @@ namespace RabbitMQ.Util
         }
         public string ReadLongString(out long read)
         {
-            int size = (int)ReadUInt32();
+            int size = Convert.ToInt32(ReadUInt32());
             read = size + 4;
             return System.Text.Encoding.UTF8.GetString(ReadMemory(size).ToArray());
         }
