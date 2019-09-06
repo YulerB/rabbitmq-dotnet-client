@@ -177,10 +177,7 @@ namespace RabbitMQ.Client.Impl
             this.Header = header;
             this.TotalBodyBytes = totalBodyBytes;
         }
-        private InboundFrame(FrameType type, ushort channel, byte[] payload) : base(type, channel, payload)
-        {
-        }
-
+    
         private static void ProcessProtocolHeader(NetworkBinaryReader reader)
         {
             try
@@ -246,81 +243,6 @@ namespace RabbitMQ.Client.Impl
                 // point, so can safely be ignored.
                 throw new MalformedFrameException("Invalid AMQP protocol header from server");
             }
-        }
-
-        public static InboundFrame ReadFrom(NetworkBinaryReader reader)
-        {
-            int type;
-
-            try
-            {
-                type = reader.ReadByte();
-            }
-            catch (IOException ioe)
-            {
-#if NETFX_CORE
-                if (ioe.InnerException != null
-                    && SocketError.GetStatus(ioe.InnerException.HResult) == SocketErrorStatus.ConnectionTimedOut)
-                {
-                    throw ioe.InnerException;
-                }
-
-                throw;
-#else
-                // If it's a WSAETIMEDOUT SocketException, unwrap it.
-                // This might happen when the limit of half-open connections is
-                // reached.
-                if (ioe.InnerException == null ||
-                    !(ioe.InnerException is SocketException) ||
-                    ((SocketException)ioe.InnerException).SocketErrorCode != SocketError.TimedOut)
-                {
-                    throw ioe;
-                }
-                throw ioe.InnerException;
-#endif
-            }
-
-            if (type == 'A')
-            {
-                // Probably an AMQP protocol header, otherwise meaningless
-                ProcessProtocolHeader(reader);
-            }
-
-            ushort channel = reader.ReadUInt16();
-            uint payloadSize = reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
-
-            ContentHeaderBase m_content = null;
-            byte[] payload=null;
-            MethodBase m_method = null;
-            ulong totalBodyBytes =0;
-
-            Protocol m_protocol = new Protocol();
-            if (type == (int)FrameType.FrameMethod)
-            {
-                m_method = m_protocol.DecodeMethodFrom(reader);
-            }
-            else if (type == (int)FrameType.FrameHeader)
-            {
-                m_content = m_protocol.DecodeContentHeaderFrom(reader);
-                totalBodyBytes = m_content.ReadFrom(reader);
-            }
-            else if (type == (int)FrameType.FrameBody)
-            {
-                payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
-
-                if (payload.Length != payloadSize)
-                {
-                    throw new MalformedFrameException($"Short frame - expected {payloadSize} bytes, got {payload.Length} bytes");
-                }
-            }
-            
-            int frameEndMarker = reader.ReadByte();
-            if (frameEndMarker != Constants.FrameEnd)
-            {
-                throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker);
-            }
-
-            return new InboundFrame((FrameType)type, channel, payload, m_method, m_content, totalBodyBytes);
         }
         public static InboundFrame ReadFrom(NetworkArraySegmentsReader reader)
         {

@@ -22,7 +22,7 @@ namespace RabbitMQ.Client
         public event EventHandler<ReadOnlyMemory<byte>> Receive;
         private byte[] bigBuffer = null;
         private ReadOnlyMemory<byte> Memory=null;
-        private const int BufferSegments = 40;
+        private const int BufferSegments = 20;
         private int bigBufferPosition = 0;
         private SemaphoreSlim buffersInPlay = new SemaphoreSlim(BufferSegments);
         public HyperTcpClientAdapter(Socket socket, int RequestedHeartbeat)
