@@ -46,162 +46,20 @@ using System.Threading;
 using System.Buffers.Binary;
 using RabbitMQ.Client;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace RabbitMQ.Util
 {
-    /// <summary>
-    /// Subclass of BinaryReader that reads integers etc in correct network order.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Kludge to compensate for .NET's broken little-endian-only BinaryReader.
-    /// Relies on BinaryReader always being little-endian.
-    /// </para>
-    /// </remarks>
-    public class NetworkBinaryReader : BinaryReader
+    public static class NetworkArraySegmentsReader 
     {
-        // Not particularly efficient. To be more efficient, we could
-        // reuse BinaryReader's implementation details: m_buffer and
-        // FillBuffer, if they weren't private
-        // members. Private/protected claim yet another victim, film
-        // at 11. (I could simply cut-n-paste all that good code from
-        // BinaryReader, but two wrongs do not make a right)
-
-        /// <summary>
-        /// Construct a NetworkBinaryReader over the given input stream.
-        /// </summary>
-        public NetworkBinaryReader(Stream input) : base(input)
-        {
-        }
-        
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override double ReadDouble()
-        {
-            byte[] bytes = ReadBytes(8);
-            byte temp = bytes[0];
-            bytes[0] = bytes[7];
-            bytes[7] = temp;
-            temp = bytes[1];
-            bytes[1] = bytes[6];
-            bytes[6] = temp;
-            temp = bytes[2];
-            bytes[2] = bytes[5];
-            bytes[5] = temp;
-            temp = bytes[3];
-            bytes[3] = bytes[4];
-            bytes[4] = temp;
-            return BitConverter.ToDouble(bytes, 0);
-        }
-
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override short ReadInt16()
-        {
-            uint i = base.ReadUInt16();
-            return (short)(((i & 0xFF00) >> 8) |
-                           ((i & 0x00FF) << 8));
-        }
-
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override int ReadInt32()
-        {
-            uint i = base.ReadUInt32();
-            return (int)(((i & 0xFF000000) >> 24) |
-                         ((i & 0x00FF0000) >> 8) |
-                         ((i & 0x0000FF00) << 8) |
-                         ((i & 0x000000FF) << 24));
-        }
-
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override long ReadInt64()
-        {
-            ulong i = base.ReadUInt64();
-            return (long)(((i & 0xFF00000000000000) >> 56) |
-                          ((i & 0x00FF000000000000) >> 40) |
-                          ((i & 0x0000FF0000000000) >> 24) |
-                          ((i & 0x000000FF00000000) >> 8) |
-                          ((i & 0x00000000FF000000) << 8) |
-                          ((i & 0x0000000000FF0000) << 24) |
-                          ((i & 0x000000000000FF00) << 40) |
-                          ((i & 0x00000000000000FF) << 56));
-        }
-
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override float ReadSingle()
-        {
-            byte[] bytes = ReadBytes(4);
-            byte temp = bytes[0];
-            bytes[0] = bytes[3];
-            bytes[3] = temp;
-            temp = bytes[1];
-            bytes[1] = bytes[2];
-            bytes[2] = temp;
-            return BitConverter.ToSingle(bytes, 0);
-        }
-
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override ushort ReadUInt16()
-        {
-            uint i = base.ReadUInt16();
-            return (ushort)(((i & 0xFF00) >> 8) |
-                            ((i & 0x00FF) << 8));
-        }
-
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override uint ReadUInt32()
-        {
-            uint i = base.ReadUInt32();
-            return (((i & 0xFF000000) >> 24) |
-                    ((i & 0x00FF0000) >> 8) |
-                    ((i & 0x0000FF00) << 8) |
-                    ((i & 0x000000FF) << 24));
-        }
-
-        /// <summary>
-        /// Override BinaryReader's method for network-order.
-        /// </summary>
-        public override ulong ReadUInt64()
-        {
-            ulong i = base.ReadUInt64();
-            return (((i & 0xFF00000000000000) >> 56) |
-                    ((i & 0x00FF000000000000) >> 40) |
-                    ((i & 0x0000FF0000000000) >> 24) |
-                    ((i & 0x000000FF00000000) >> 8) |
-                    ((i & 0x00000000FF000000) << 8) |
-                    ((i & 0x0000000000FF0000) << 24) |
-                    ((i & 0x000000000000FF00) << 40) |
-                    ((i & 0x00000000000000FF) << 56));
-        }
-    }
-
-    public class NetworkArraySegmentsReader 
-    {
-        private readonly ArraySegmentStream input;
-
-        public NetworkArraySegmentsReader(ArraySegmentStream input) 
-        {
-            this.input = input;
-        }
-
-        public byte ReadByte()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte ReadByte(this ArraySegmentStream input)
         {
             var data = input.Read(1);
             return data[0].Span[0];
         }
-        public byte[] ReadBytes(int payloadSize)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] ReadBytes(this ArraySegmentStream input,int payloadSize)
         {
             //Think of ways to remove memory copying
 
@@ -226,7 +84,8 @@ namespace RabbitMQ.Util
                 return bytes;
             }
         }
-        public ReadOnlyMemory<byte> ReadMemory(int payloadSize)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ReadOnlyMemory<byte> ReadMemory(this ArraySegmentStream input, int payloadSize)
         {
             var data = input.Read(payloadSize);
             if (data.Length == 1)
@@ -248,7 +107,8 @@ namespace RabbitMQ.Util
                 return new ReadOnlyMemory<byte>(bytes);
             }
         }
-        public ushort ReadUInt16()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort ReadUInt16(this ArraySegmentStream input)
         {
             var data = input.Read(2);
 
@@ -279,7 +139,8 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToUInt16(bytes, 0);
         }
-        public uint ReadUInt32()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint ReadUInt32(this ArraySegmentStream input)
         {
             var data = input.Read(4);
             if (data.Length == 1)
@@ -306,7 +167,8 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToUInt32(bytes, 0);
         }
-        public ulong ReadUInt64()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong ReadUInt64(this ArraySegmentStream input)
         {
             var data = input.Read(8);
             if (data.Length == 1)
@@ -333,7 +195,8 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToUInt64(bytes, 0);
         }
-        public short ReadInt16()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short ReadInt16(this ArraySegmentStream input)
         {
             var data = input.Read(2);
 
@@ -364,7 +227,8 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToInt16(bytes, 0);
         }
-        public int ReadInt32()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ReadInt32(this ArraySegmentStream input)
         {
             var data = input.Read(4);
             if (data.Length == 1)
@@ -391,7 +255,8 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToInt32(bytes, 0);
         }
-        public long ReadInt64()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long ReadInt64(this ArraySegmentStream input)
         {
             var data = input.Read(8);
             if (data.Length == 1)
@@ -418,7 +283,8 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToInt64(bytes, 0);
         }
-        public float ReadSingle()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float ReadSingle(this ArraySegmentStream input)
         {
             var data = input.Read(4);
             if (data.Length == 1)
@@ -445,7 +311,8 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToSingle(bytes, 0);
         }
-        public double ReadDouble()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double ReadDouble(this ArraySegmentStream input)
         {
             var data = input.Read(8);
             if (data.Length == 1)
@@ -472,22 +339,25 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToDouble(bytes, 0);
         }
-        public string ReadLongString(out long read)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReadLongString(this ArraySegmentStream input, out long read)
         {
-            int size = Convert.ToInt32(ReadUInt32());
+            int size = Convert.ToInt32(ReadUInt32(input));
             read = size + 4;
-            return System.Text.Encoding.UTF8.GetString(ReadMemory(size).ToArray());
+            return System.Text.Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
-        public string ReadShortString(out long read)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReadShortString(this ArraySegmentStream input,out long read)
         {
-            int size = (int)ReadByte();
+            int size = (int)ReadByte(input);
             read = size + 1;
-            return Encoding.UTF8.GetString(ReadMemory(size).ToArray());
+            return Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
-        public decimal ReadDecimal(out long read)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static decimal ReadDecimal(this ArraySegmentStream input, out long read)
         {
-            byte scale = ReadByte();
-            uint unsignedMantissa = ReadUInt32();
+            byte scale = ReadByte(input);
+            uint unsignedMantissa = ReadUInt32(input);
             read = 5;
             if (scale > 28)
             {
@@ -500,20 +370,22 @@ namespace RabbitMQ.Util
                 ((unsignedMantissa & 0x80000000) == 0) ? false : true,
                 scale);
         }
-        public AmqpTimestamp ReadTimestamp()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static AmqpTimestamp ReadTimestamp(this ArraySegmentStream input)
         {
-            return new AmqpTimestamp(ReadInt64());
+            return new AmqpTimestamp(ReadInt64(input));
         }
-        public IDictionary<string, object> ReadTable(out long read)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IDictionary<string, object> ReadTable(this ArraySegmentStream input, out long read)
         {
             IDictionary<string, object> table = new Dictionary<string, object>();
-            UInt32 tableLength = ReadUInt32();
+            UInt32 tableLength = ReadUInt32(input);
             long left = tableLength;
             while (left> 0)
             {
-                string key = ReadShortString(out long read1);
+                string key = ReadShortString(input,out long read1);
                 left -= read1;
-                object value = ReadFieldValue(out long read2);
+                object value = ReadFieldValue(input, out long read2);
                 left -= read2;
 
                 if (!table.ContainsKey(key))
@@ -524,14 +396,15 @@ namespace RabbitMQ.Util
             read = tableLength + 4;
             return table;
         }
-        public IList<object> ReadArray(out long read)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IList<object> ReadArray(this ArraySegmentStream input, out long read)
         {
             IList<object> array = new List<object>();
-            long arrayLength = ReadUInt32();
+            long arrayLength = ReadUInt32(input);
             long left = arrayLength;
             while (left > 0)
             {
-                array.Add(ReadFieldValue(out long read1));
+                array.Add(ReadFieldValue(input,out long read1));
                 left -= read1;
             }
             read = arrayLength + 4;
@@ -552,60 +425,61 @@ namespace RabbitMQ.Util
         private const byte s = 115;
         private const byte t = 116;
         private const byte x = 120;
-        public object ReadFieldValue(out long read)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object ReadFieldValue(this ArraySegmentStream input, out long read)
         {
-            byte discriminator = ReadByte();
+            byte discriminator = ReadByte(input);
             object value;
             switch (discriminator)
             {
                 case S:
-                    value =  ReadLongString(out read);
+                    value =  ReadLongString(input,out read);
                     break;
                 case I:
-                    value = ReadInt32();
+                    value = ReadInt32(input);
                     read = 4;
                     break;
                 case D:
-                    value = ReadDecimal(out read);
+                    value = ReadDecimal(input, out read);
                     read = 4;
                     break;
                 case T:
-                    value = ReadTimestamp();
+                    value = ReadTimestamp(input);
                     read = 8;
                     break;
                 case F:
-                    value = ReadTable(out read);
+                    value = ReadTable(input, out read);
                     break;
                 case A:
-                    value = ReadArray(out read);
+                    value = ReadArray(input, out read);
                     break;
                 case b:
-                    value = (sbyte)ReadByte();
+                    value = (sbyte)ReadByte(input);
                     read = 1;
                     break;
                 case d:
-                    value = ReadDouble();
+                    value = ReadDouble(input);
                     read = 8;
                     break;
                 case f:
-                    value = ReadSingle();
+                    value = ReadSingle(input);
                     read = 4;
                     break;
                 case l:
-                    value = ReadInt64();
+                    value = ReadInt64(input);
                     read = 8;
                     break;
                 case s:
-                    value = ReadInt16();
+                    value = ReadInt16(input);
                     read = 2;
                     break;
                 case t:
-                    value = (ReadByte() != 0);
+                    value = (ReadByte(input) != 0);
                     read = 1;
                     break;
                 case x:
-                    int size = Convert.ToInt32(ReadUInt32()) ;
-                    value = new BinaryTableValue(ReadMemory(size).ToArray());
+                    int size = Convert.ToInt32(ReadUInt32(input)) ;
+                    value = new BinaryTableValue(ReadMemory(input, size).ToArray());
                     read = 4 + size;
                     break;
                 case V:

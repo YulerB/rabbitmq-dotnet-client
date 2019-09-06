@@ -74,7 +74,6 @@ namespace RabbitMQ.Client.Impl
     public class HyperSocketFrameHandler : IFrameHandler, IDisposable
     {
         private readonly ArraySegmentStream m_stream;
-        private readonly NetworkArraySegmentsReader m_stream_reader ;
         private IHyperTcpClient m_socket;
         private readonly object _semaphore = new object();
         private bool _closed;
@@ -104,7 +103,6 @@ namespace RabbitMQ.Client.Impl
 
             m_stream = new ArraySegmentStream();
             m_stream.BufferUsed += M_stream_BufferUsed;
-            m_stream_reader = new NetworkArraySegmentsReader(m_stream);
         }
 
         private void M_stream_BufferUsed(object sender, EventArgs e)
@@ -172,7 +170,7 @@ namespace RabbitMQ.Client.Impl
 
         public InboundFrame ReadFrame()
         {
-            return RabbitMQ.Client.Impl.InboundFrame.ReadFrom(m_stream_reader);
+            return RabbitMQ.Client.Impl.InboundFrame.ReadFrom(m_stream);
         }
 
         private static readonly byte[] amqp = Encoding.ASCII.GetBytes("AMQP");
@@ -401,6 +399,11 @@ namespace RabbitMQ.Client.Impl
         }
 
         public override int Read(byte[] buffer, int offset, int count)
+        {
+            throw new NotImplementedException();
+        }
+
+        public new int ReadByte()
         {
             throw new NotImplementedException();
         }

@@ -105,10 +105,17 @@ namespace RabbitMQ.Client.Unit {
                     resetEvent.Set();
                 };
 
-                Model.BasicConsume(q, true, ec);
-                Model.BasicPublish("", q, null, encoding.GetBytes("msg"));
 
-                resetEvent.WaitOne();
+                Model.BasicConsume(q, true, ec);
+
+
+                for (int i = 0; i < 40000; i++)
+                {
+                    Model.BasicPublish("", q, null, encoding.GetBytes("msg"));
+                    resetEvent.WaitOne();
+                }
+
+
                 Assert.IsTrue(receivedInvoked);
                 Assert.IsNotNull(receivedSender);
                 Assert.AreEqual(ec, receivedSender);

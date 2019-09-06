@@ -1,15 +1,17 @@
 ﻿using RabbitMQ.Client.Framing.Impl;
+using RabbitMQ.Client.Impl;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Framing
 {
     public partial class Protocol : ProtocolBase
     {
-        public override RabbitMQ.Client.Impl.MethodBase DecodeMethodFrom(RabbitMQ.Util.NetworkArraySegmentsReader reader)
+        public override RabbitMQ.Client.Impl.MethodBase DecodeMethodFrom(ArraySegmentStream reader)
         {
             ushort classId = reader.ReadUInt16();
             ushort methodId = reader.ReadUInt16();
@@ -448,7 +450,7 @@ namespace RabbitMQ.Client.Framing
             }
             throw new RabbitMQ.Client.Impl.UnknownClassOrMethodException(classId, methodId);
         }
-        public override RabbitMQ.Client.Impl.ContentHeaderBase DecodeContentHeaderFrom(RabbitMQ.Util.NetworkArraySegmentsReader reader)
+        public override RabbitMQ.Client.Impl.ContentHeaderBase DecodeContentHeaderFrom(ArraySegmentStream reader)
         {
             ushort classId = reader.ReadUInt16();
 

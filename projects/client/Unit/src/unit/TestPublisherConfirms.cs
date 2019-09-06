@@ -51,19 +51,19 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestWaitForConfirmsWithoutTimeout()
         {
-            TestWaitForConfirms(200, (ch) =>
+            TestWaitForConfirms(20000, (ch) =>
             {
                 Assert.IsTrue(ch.WaitForConfirms());
-            });;
+            });
         }
 
         [Test]
         public void TestWaitForConfirmsWithTimeout()
         {
-            TestWaitForConfirms(200, (ch) =>
+            TestWaitForConfirms(20000, (ch) =>
             {
                 Assert.IsTrue(ch.WaitForConfirms(TimeSpan.FromSeconds(4)));
-            }); ;
+            });
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace RabbitMQ.Client.Unit
             ch.ConfirmSelect();
 
             var q = ch.QueueDeclare().QueueName;
-            var n = 200;
+            var n = 20000;
             // number of event handler invocations
             var c = 0;
 

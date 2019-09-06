@@ -66,11 +66,11 @@ namespace RabbitMQ.Client.Impl
         ///<summary>
         /// Fill this instance from the given byte buffer stream.
         ///</summary>
-        public ulong ReadFrom(NetworkArraySegmentsReader reader)
+        public ulong ReadFrom(ArraySegmentStream stream)
         {
-            reader.ReadUInt16(); // weight - not currently used
-            ulong bodySize = reader.ReadUInt64();
-            ReadPropertiesFrom(new ContentHeaderPropertyReader2(reader));
+            stream.ReadUInt16(); // weight - not currently used
+            ulong bodySize = stream.ReadUInt64();
+            ReadPropertiesFrom(new ContentHeaderPropertyReader2(stream));
             return bodySize;
         }
 

@@ -109,8 +109,8 @@ namespace RabbitMQ.Client.Framing.Impl
             replyMethodId = Impl.ConnectionCloseOk.MethodId;
         }
 
-        public abstract ContentHeaderBase DecodeContentHeaderFrom(NetworkArraySegmentsReader reader);
-        public abstract MethodBase DecodeMethodFrom(NetworkArraySegmentsReader reader);
+        public abstract ContentHeaderBase DecodeContentHeaderFrom(ArraySegmentStream reader);
+        public abstract MethodBase DecodeMethodFrom(ArraySegmentStream reader);
 
         public override bool Equals(object obj)
         {

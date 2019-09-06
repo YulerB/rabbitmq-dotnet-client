@@ -5,6 +5,7 @@ using System.IO;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
+using System;
 
 namespace Unit.src.benches
 {
@@ -23,6 +24,7 @@ namespace Unit.src.benches
         [RankColumn]
         public class Benches
         {
+            int processors = Environment.ProcessorCount;
 
             [GlobalSetup]
             public void Setup()
@@ -32,27 +34,25 @@ namespace Unit.src.benches
             [Benchmark]
             public void PooledMemoryStream()
             {
-                Stack<DisposableMemoryStreamWrapper> streams1 = new Stack<DisposableMemoryStreamWrapper>();
-
                 for (int i = 0; i < 10000; i++)
                 {
-                    streams1.Push(MemoryStreamPool.GetObject());
-                    if (i > 3) streams1.Pop().Dispose();
+                    using (var ms = MemoryStreamPool.GetObject())
+                    {
+                        //do nothing
+                    }
                 }
-                streams1.Pop().Dispose(); streams1.Pop().Dispose(); streams1.Pop().Dispose();
             }
 
             [Benchmark]
             public void NewMemoryStream()
             {
-                Stack<MemoryStream> streams2 = new Stack<MemoryStream>();
-
                 for (int i = 0; i < 10000; i++)
                 {
-                    streams2.Push(new MemoryStream(256));
-                    if (i > 3) streams2.Pop().Dispose();
+                    using (var ms = new MemoryStream(256))
+                    {
+                        //do nothing
+                    }
                 }
-                streams2.Pop().Dispose(); streams2.Pop().Dispose(); streams2.Pop().Dispose();
             }
         }
 
