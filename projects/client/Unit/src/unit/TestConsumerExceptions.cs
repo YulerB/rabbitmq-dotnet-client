@@ -116,22 +116,24 @@ namespace RabbitMQ.Client.Unit
         protected void TestExceptionHandlingWith(IBasicConsumer consumer,
             Action<IModel, string, IBasicConsumer, string> action)
         {
-            var o = new object();
-            bool notified = false;
-            string q = Model.QueueDeclare();
-
-
-            Model.CallbackException += (m, evt) =>
+            using (ManualResetEventSlim resetEvent = new ManualResetEventSlim(false))
             {
-                notified = true;
-                Monitor.PulseAll(o);
-            };
+                bool notified = false;
+                string q = Model.QueueDeclare();
 
-            string tag = Model.BasicConsume(q, true, consumer);
-            action(Model, q, consumer, tag);
-            WaitOn(o);
 
-            Assert.IsTrue(notified);
+                Model.CallbackException += (m, evt) =>
+                {
+                    notified = true;
+                    resetEvent.Set();
+                };
+
+                string tag = Model.BasicConsume(q, true, consumer);
+                action(Model, q, consumer, tag);
+                resetEvent.Wait();
+
+                Assert.IsTrue(notified);
+            }
         }
 
         [Test]

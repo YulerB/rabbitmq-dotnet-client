@@ -48,9 +48,8 @@ namespace RabbitMQ.Client.Unit
     [TestFixture]
     public class TestConnectionBlocked : IntegrationFixture
     {
-        private readonly Object _lockObject = new Object();
-        private bool _notified;
-
+        private readonly ManualResetEventSlim resetEvent = new ManualResetEventSlim(false);
+        
         public void HandleBlocked(object sender, ConnectionBlockedEventArgs args)
         {
             Unblock();
@@ -59,16 +58,13 @@ namespace RabbitMQ.Client.Unit
 
         public void HandleUnblocked(object sender, EventArgs ea)
         {
-            lock (_lockObject)
-            {
-                _notified = true;
-                Monitor.PulseAll(_lockObject);
-            }
+            resetEvent.Set();
         }
 
         protected override void ReleaseResources()
         {
             Unblock();
+            base.ReleaseResources();
         }
 
         [Test]
@@ -76,20 +72,14 @@ namespace RabbitMQ.Client.Unit
         {
             Conn.ConnectionBlocked += HandleBlocked;
             Conn.ConnectionUnblocked += HandleUnblocked;
-
             Block();
-            lock (_lockObject)
-            {
-                if (!_notified)
-                {
-                    Monitor.Wait(_lockObject, TimeSpan.FromSeconds(15));
-                }
-            }
-            if (!_notified)
+            if (!resetEvent.Wait(TimeSpan.FromSeconds(15)))
             {
                 Unblock();
                 Assert.Fail("Unblock notification not received.");
             }
+            Conn.ConnectionBlocked -= HandleBlocked;
+            Conn.ConnectionUnblocked -= HandleUnblocked;
         }
     }
 }

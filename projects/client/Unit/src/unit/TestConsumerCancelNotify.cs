@@ -48,7 +48,6 @@ namespace RabbitMQ.Client.Unit
     [TestFixture]
     public class TestConsumerCancelNotify : IntegrationFixture
     {
-        protected readonly Object lockObject = new Object();
         protected bool notifiedCallback;
         protected bool notifiedEvent;
 
@@ -67,22 +66,25 @@ namespace RabbitMQ.Client.Unit
         public void TestConsumerCancel(string queue, bool EventMode, ref bool notified)
         {
             Model.QueueDeclare(queue, false, true, false, null);
-            IBasicConsumer consumer = new CancelNotificationConsumer(Model, this, EventMode);
-            Model.BasicConsume(queue, false, consumer);
-
-            Model.QueueDelete(queue);
-            WaitOn(lockObject);
-            Assert.IsTrue(notified);
+            using (ManualResetEventSlim resetEvent = new ManualResetEventSlim(false))
+            {
+                IBasicConsumer consumer = new CancelNotificationConsumer(Model, this, EventMode, resetEvent);
+                Model.BasicConsume(queue, false, consumer);
+                Model.QueueDelete(queue);
+                resetEvent.Wait();
+                Assert.IsTrue(notified);
+            }
         }
 
         private class CancelNotificationConsumer : DefaultBasicConsumer
         {
             private TestConsumerCancelNotify testClass;
             private bool EventMode;
-
-            public CancelNotificationConsumer(IModel model, TestConsumerCancelNotify tc, bool EventMode)
+            private ManualResetEventSlim resetEvent;
+            public CancelNotificationConsumer(IModel model, TestConsumerCancelNotify tc, bool EventMode, ManualResetEventSlim resetEvent)
                 : base(model)
             {
+                this.resetEvent = resetEvent;
                 this.testClass = tc;
                 this.EventMode = EventMode;
                 if (EventMode)
@@ -95,22 +97,16 @@ namespace RabbitMQ.Client.Unit
             {
                 if (!EventMode)
                 {
-                    lock (testClass.lockObject)
-                    {
-                        testClass.notifiedCallback = true;
-                        Monitor.PulseAll(testClass.lockObject);
-                    }
+                    testClass.notifiedCallback = true;
+                    resetEvent.Set();
                 }
                 base.HandleBasicCancel(consumerTag);
             }
 
             private void Cancelled(object sender, ConsumerEventArgs arg)
             {
-                lock (testClass.lockObject)
-                {
                     testClass.notifiedEvent = true;
-                    Monitor.PulseAll(testClass.lockObject);
-                }
+                    resetEvent.Set();
             }
         }
     }

@@ -76,6 +76,7 @@ namespace RabbitMQ.Client.Unit
                     ch.Close();
                 }
             }
+
             queues.Clear();
             consumers.Clear();
             counter.Reset();

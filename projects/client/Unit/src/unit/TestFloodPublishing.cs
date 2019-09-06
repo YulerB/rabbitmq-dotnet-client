@@ -73,22 +73,24 @@ namespace RabbitMQ.Client.Unit
                 }
             };
 
+            long sent = 0;
             bool elapsed = false;
-            var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1);
-
-            var batch = Model.CreateBasicPublishBatch();
-            for (int i = 0; i < 5000; i++)
+            IBasicPublishBatch batch = null;
+            using (var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1))
             {
-                batch.Add(string.Empty, string.Empty, false, Model.CreateBasicProperties(),  new byte[4096]);
+                while (!elapsed)
+                {
+                    batch = Model.CreateBasicPublishBatch();
+                    for (int i = 0; i < 5000; i++)
+                    {
+                        batch.Add(string.Empty, string.Empty, false, null, new byte[2048]);
+                    }
+                    batch.Publish();
+                    sent += 5000;
+                }
+                Assert.IsTrue(Conn.IsOpen);
             }
-
-            while (!elapsed)
-            {
-                batch.Publish();
-            }
-
-            Assert.IsTrue(Conn.IsOpen);
-            t.Dispose();
+            Console.WriteLine(sent);
         }
         [Test, Category("LongRunning")]
         public void TestUnthrottledFloodPublishing()
@@ -101,15 +103,18 @@ namespace RabbitMQ.Client.Unit
                 }
             };
 
+            long sent = 0;
             bool elapsed = false;
-            var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1);
-
-            while (!elapsed)
+            using (var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1))
             {
-                Model.BasicPublish(string.Empty, string.Empty, null, new byte[2048]);
+                while (!elapsed)
+                {
+                    Model.BasicPublish(string.Empty, string.Empty, null, new byte[2048]);
+                    sent ++;
+                }
+                Assert.IsTrue(Conn.IsOpen);
             }
-            Assert.IsTrue(Conn.IsOpen);
-            t.Dispose();
+            Console.WriteLine(sent);
         }
     }
 }

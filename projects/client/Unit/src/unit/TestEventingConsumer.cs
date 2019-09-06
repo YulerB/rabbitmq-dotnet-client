@@ -92,47 +92,46 @@ namespace RabbitMQ.Client.Unit {
         public void TestEventingConsumerDeliveryEvents()
         {
             string q = Model.QueueDeclare();
-            object o = new Object ();
-
-            bool receivedInvoked = false;
-            object receivedSender = null;
-
-            EventingBasicConsumer ec = new EventingBasicConsumer(Model);
-            ec.Received += (s, args) =>
+            using (AutoResetEvent resetEvent = new AutoResetEvent(false))
             {
-                receivedInvoked = true;
-                receivedSender = s;
+                bool receivedInvoked = false;
+                object receivedSender = null;
 
-                Monitor.PulseAll(o);
-            };
+                EventingBasicConsumer ec = new EventingBasicConsumer(Model);
+                ec.Received += (s, args) =>
+                {
+                    receivedInvoked = true;
+                    receivedSender = s;
+                    resetEvent.Set();
+                };
 
-            Model.BasicConsume(q, true, ec);
-            Model.BasicPublish("", q, null, encoding.GetBytes("msg"));
+                Model.BasicConsume(q, true, ec);
+                Model.BasicPublish("", q, null, encoding.GetBytes("msg"));
 
-            WaitOn(o);
-            Assert.IsTrue(receivedInvoked);
-            Assert.IsNotNull(receivedSender);
-            Assert.AreEqual(ec, receivedSender);
-            Assert.AreEqual(Model, ((EventingBasicConsumer)receivedSender).Model);
+                resetEvent.WaitOne();
+                Assert.IsTrue(receivedInvoked);
+                Assert.IsNotNull(receivedSender);
+                Assert.AreEqual(ec, receivedSender);
+                Assert.AreEqual(Model, ((EventingBasicConsumer)receivedSender).Model);
 
-            bool shutdownInvoked = false;
-            object shutdownSender = null;
+                bool shutdownInvoked = false;
+                object shutdownSender = null;
 
-            ec.Shutdown += (s, args) =>
-            {
-                shutdownInvoked = true;
-                shutdownSender = s;
+                ec.Shutdown += (s, args) =>
+                {
+                    shutdownInvoked = true;
+                    shutdownSender = s;
+                    resetEvent.Set();
+                };
 
-                Monitor.PulseAll(o);
-            };
+                Model.Close();
+                resetEvent.WaitOne();
 
-            Model.Close();
-            WaitOn(o);
-
-            Assert.IsTrue(shutdownInvoked);
-            Assert.IsNotNull(shutdownSender);
-            Assert.AreEqual(ec, shutdownSender);
-            Assert.AreEqual(Model, ((EventingBasicConsumer)shutdownSender).Model);
+                Assert.IsTrue(shutdownInvoked);
+                Assert.IsNotNull(shutdownSender);
+                Assert.AreEqual(ec, shutdownSender);
+                Assert.AreEqual(Model, ((EventingBasicConsumer)shutdownSender).Model);
+            }
         }
     }
 }

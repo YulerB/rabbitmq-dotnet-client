@@ -619,7 +619,9 @@ namespace RabbitMQ.Client.Impl
                 data.Dispose();
             }
             base.Dispose(disposing);
+            BufferUsed = null;
             data = null;
+            cts = null;
         }
 
         public override bool CanRead => true;
@@ -699,7 +701,7 @@ namespace RabbitMQ.Client.Impl
             data.Add(buffer);
         }
 
-        private readonly CancellationTokenSource cts = new CancellationTokenSource();
+        private CancellationTokenSource cts = new CancellationTokenSource();
         internal void NotifyClosed()
         {
             cts.Cancel();

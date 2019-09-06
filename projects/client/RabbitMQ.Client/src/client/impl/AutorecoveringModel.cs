@@ -247,7 +247,7 @@ namespace RabbitMQ.Client.Impl
 
         public bool IsOpen
         {
-            get { return m_delegate.IsOpen; }
+            get { return m_delegate !=null && m_delegate.IsOpen; }
         }
 
         public ulong NextPublishSeqNo
@@ -729,11 +729,11 @@ namespace RabbitMQ.Client.Impl
         {
             try
             {
-                m_delegate.Abort();
+                m_delegate?.Abort();
             }
             finally
             {
-                m_connection.UnregisterModel(this);
+                m_connection?.UnregisterModel(this);
             }
         }
 

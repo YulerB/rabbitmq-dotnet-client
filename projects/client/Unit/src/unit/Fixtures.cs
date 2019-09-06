@@ -76,9 +76,9 @@ namespace RabbitMQ.Client.Unit
         [TearDown]
         public void Dispose()
         {
-            if(Model.IsOpen)
+            if(Model != null && Model.IsOpen)
             {
-                Model.Close();
+                Model?.Close();
             }
             if (Conn != null && Conn.IsOpen)
             {
@@ -90,7 +90,8 @@ namespace RabbitMQ.Client.Unit
 
         protected virtual void ReleaseResources()
         {
-            // no-op
+            Model?.Dispose();
+            Conn?.Dispose();
         }
 
         //
@@ -178,38 +179,44 @@ namespace RabbitMQ.Client.Unit
 
         protected void WithTemporaryModel(IConnection connection, Action<IModel> action)
         {
-            IModel model = connection.CreateModel();
+            using (IModel model = connection.CreateModel())
+            {
 
-            try
-            {
-                action(model);
-            }
-            finally
-            {
-                model.Abort();
+                try
+                {
+                    action(model);
+                }
+                finally
+                {
+                    model.Abort();
+                }
             }
         }
 
         protected void WithTemporaryModel(Action<IModel> action)
         {
-            IModel model = Conn.CreateModel();
+            using (IModel model = Conn.CreateModel())
+            {
 
-            try
-            {
-                action(model);
-            }
-            finally
-            {
-                model.Abort();
+                try
+                {
+                    action(model);
+                }
+                finally
+                {
+                    model.Abort();
+                }
             }
         }
 
         protected void WithClosedModel(Action<IModel> action)
         {
-            IModel model = Conn.CreateModel();
-            model.Close();
+            using (IModel model = Conn.CreateModel())
+            {
+                model.Close();
 
-            action(model);
+                action(model);
+            }
         }
 
         protected bool WaitForConfirms(IModel m)
@@ -387,45 +394,25 @@ namespace RabbitMQ.Client.Unit
             return !(evt.Initiator == ShutdownInitiator.Application);
         }
 
-        //
-        // Concurrency
-        //
-
-        protected void WaitOn(object o)
-        {
-            lock(o)
-            {
-                Monitor.Wait(o, TimingFixture.TestTimeout);
-            }
-        }
-
-        //
-        // Shelling Out
-        //
-
-
-
-        //
-        // Flow Control
-        //
-
         protected void Block()
         {
-            ExecRabbitMQCtl("set_vm_memory_high_watermark 0.000000001");
-            // give rabbitmqctl some time to do its job
-            Thread.Sleep(1200);
+            using (var p = ExecRabbitMQCtl("set_vm_memory_high_watermark 0.000000001")) { }
+                // give rabbitmqctl some time to do its job
+                Thread.Sleep(1200);
             Publish(Conn);
         }
 
         protected void Unblock()
         {
-            ExecRabbitMQCtl("set_vm_memory_high_watermark 0.4");
+            using (var p = ExecRabbitMQCtl("set_vm_memory_high_watermark 0.4")) { }
         }
 
         protected void Publish(IConnection conn)
         {
-            IModel ch = conn.CreateModel();
-            ch.BasicPublish("amq.fanout", "", null, encoding.GetBytes("message"));
+            using (IModel ch = conn.CreateModel())
+            {
+                ch.BasicPublish("amq.fanout", "", null, encoding.GetBytes("message"));
+            }
         }
 
         //
@@ -458,8 +445,11 @@ namespace RabbitMQ.Client.Unit
 
         protected List<ConnectionInfo> ListConnections()
         {
-            Process proc  = ExecRabbitMQCtl("list_connections -q pid peer_port");
-            String stdout = proc.StandardOutput.ReadToEnd();
+            String stdout = null;
+            using (Process proc = ExecRabbitMQCtl("list_connections -q pid peer_port"))
+            {
+                stdout = proc.StandardOutput.ReadToEnd();
+            }
 
             try
             {
@@ -499,9 +489,9 @@ namespace RabbitMQ.Client.Unit
 
         protected void CloseConnection(string pid)
         {
-            ExecRabbitMQCtl("close_connection \"" +
+            using (var p = ExecRabbitMQCtl("close_connection \"" +
                             pid +
-                            "\" \"Closed via rabbitmqctl\"");
+                           "\" \"Closed via rabbitmqctl\"")) { }
         }
 
         protected void RestartRabbitMQ()
@@ -539,12 +529,12 @@ namespace RabbitMQ.Client.Unit
     {
         protected void StopRabbitMQ()
         {
-            ExecRabbitMQCtl("stop_app");
+            using (var p = ExecRabbitMQCtl("stop_app")) { }
         }
 
         protected void StartRabbitMQ()
         {
-            ExecRabbitMQCtl("start_app");
+            using (var p = ExecRabbitMQCtl("start_app")) { }
         }
         protected Process ExecRabbitMQCtl(string args)
         {
@@ -570,7 +560,7 @@ namespace RabbitMQ.Client.Unit
 
         protected Process ExecCommand(string command)
         {
-            return ExecCommand(command, "");
+            return ExecCommand(command, string.Empty);
         }
 
         protected Process ExecCommand(string command, string args)

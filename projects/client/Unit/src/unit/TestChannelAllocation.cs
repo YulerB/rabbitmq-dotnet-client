@@ -66,6 +66,7 @@ namespace RabbitMQ.Client.Unit
     [TearDown] public void Disconnect()
     {
       C.Close();
+      C.Dispose();
     }
 
 

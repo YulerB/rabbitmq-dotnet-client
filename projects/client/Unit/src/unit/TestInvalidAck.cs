@@ -56,16 +56,17 @@ namespace RabbitMQ.Client.Unit {
         {
             object o = new Object();
             bool shutdownFired = false;
+            ManualResetEventSlim resetEvent = new ManualResetEventSlim(false);
             ShutdownEventArgs shutdownArgs = null;
             Model.ModelShutdown += (s, args) =>
             {
                 shutdownFired = true;
                 shutdownArgs = args;
-                Monitor.PulseAll(o);
+                resetEvent.Set();
             };
 
             Model.BasicAck(123456, false);
-            WaitOn(o);
+            resetEvent.Wait();
             Assert.IsTrue(shutdownFired);
             AssertPreconditionFailed(shutdownArgs);
         }

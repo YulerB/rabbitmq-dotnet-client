@@ -70,25 +70,32 @@ namespace RabbitMQ.Client.Unit {
         public void TestCloseWithFaultyConsumer()
         {
             ConnectionFactory connFactory = new ConnectionFactory();
-            IConnection c = connFactory.CreateConnection();
-            IModel m = Conn.CreateModel();
-            object o = new object();
-            string q = GenerateQueueName();
-            m.QueueDeclare(q, false, false, false, null);
+            using (IConnection c = connFactory.CreateConnection())
+            {
+                using (IModel m = Conn.CreateModel())
+                {
+                    using (ManualResetEventSlim resetEvent = new ManualResetEventSlim(false))
+                    {
+                        string q = GenerateQueueName();
+                        m.QueueDeclare(q, false, false, false, null);
 
-            CallbackExceptionEventArgs ea = null;
-            m.CallbackException += (_, evt) => {
-                ea = evt;
-                c.Close();
-                Monitor.PulseAll(o);
-            };
-            m.BasicConsume(q, true, new FaultyConsumer(Model));
-            m.BasicPublish("", q, null, encoding.GetBytes("message"));
-            WaitOn(o);
+                        CallbackExceptionEventArgs ea = null;
+                        m.CallbackException += (_, evt) =>
+                        {
+                            ea = evt;
+                            c.Close();
+                            resetEvent.Set();
+                        };
+                        m.BasicConsume(q, true, new FaultyConsumer(Model));
+                        m.BasicPublish("", q, null, encoding.GetBytes("message"));
+                        resetEvent.Wait();
 
-            Assert.IsNotNull(ea);
-            Assert.AreEqual(c.IsOpen, false);
-            Assert.AreEqual(c.CloseReason.ReplyCode, 200);
+                        Assert.IsNotNull(ea);
+                        Assert.AreEqual(c.IsOpen, false);
+                        Assert.AreEqual(c.CloseReason.ReplyCode, 200);
+                    }
+                }
+            }
         }
     }
 }

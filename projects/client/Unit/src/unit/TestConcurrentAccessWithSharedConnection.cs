@@ -66,6 +66,7 @@ namespace RabbitMQ.Client.Unit {
         protected override void ReleaseResources()
         {
             latch.Dispose();
+            base.ReleaseResources();
         }
 
         [Test]
