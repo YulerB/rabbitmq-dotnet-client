@@ -178,39 +178,6 @@ namespace RabbitMQ.Client.Impl
             this.TotalBodyBytes = totalBodyBytes;
         }
     
-        private static void ProcessProtocolHeader(NetworkBinaryReader reader)
-        {
-            try
-            {
-                byte b1 = reader.ReadByte();
-                byte b2 = reader.ReadByte();
-                byte b3 = reader.ReadByte();
-                if (b1 != 'M' || b2 != 'Q' || b3 != 'P')
-                {
-                    throw new MalformedFrameException("Invalid AMQP protocol header from server");
-                }
-
-                int transportHigh = reader.ReadByte();
-                int transportLow = reader.ReadByte();
-                int serverMajor = reader.ReadByte();
-                int serverMinor = reader.ReadByte();
-                throw new PacketNotRecognizedException(transportHigh,
-                    transportLow,
-                    serverMajor,
-                    serverMinor);
-            }
-            catch (EndOfStreamException)
-            {
-                // Ideally we'd wrap the EndOfStreamException in the
-                // MalformedFrameException, but unfortunately the
-                // design of MalformedFrameException's superclass,
-                // ProtocolViolationException, doesn't permit
-                // this. Fortunately, the call stack in the
-                // EndOfStreamException is largely irrelevant at this
-                // point, so can safely be ignored.
-                throw new MalformedFrameException("Invalid AMQP protocol header from server");
-            }
-        }
         private static void ProcessProtocolHeader(NetworkArraySegmentsReader reader)
         {
             try
@@ -293,11 +260,11 @@ namespace RabbitMQ.Client.Impl
             Protocol m_protocol = new Protocol();
             if (type == (int)FrameType.FrameMethod)
             {
-                m_method = m_protocol.DecodeMethodFrom2(reader);
+                m_method = m_protocol.DecodeMethodFrom(reader);
             }
             else if (type == (int)FrameType.FrameHeader)
             {
-                m_content = m_protocol.DecodeContentHeaderFrom2(reader);
+                m_content = m_protocol.DecodeContentHeaderFrom(reader);
                 totalBodyBytes = m_content.ReadFrom(reader);
             }
             else if (type == (int)FrameType.FrameBody)

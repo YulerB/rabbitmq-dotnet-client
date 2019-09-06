@@ -86,26 +86,7 @@ namespace RabbitMQ.Client.Impl
             m_bitCount = 0;
         }
 
-        public uint ReadLong()
-        {
-            return WireFormatting.ReadLong(BaseReader);
-        }
-
-        public ulong ReadLonglong()
-        {
-            return WireFormatting.ReadLonglong(BaseReader);
-        }
-
-        public byte[] ReadLongstr()
-        {
-            return WireFormatting.ReadLongstr(BaseReader);
-        }
-
-        public byte ReadOctet()
-        {
-            return WireFormatting.ReadOctet(BaseReader);
-        }
-
+    
         public bool ReadPresence()
         {
             if (m_bitCount == 15)
@@ -119,26 +100,6 @@ namespace RabbitMQ.Client.Impl
             return result;
         }
 
-        public ushort ReadShort()
-        {
-            return WireFormatting.ReadShort(BaseReader);
-        }
-
-        public string ReadShortstr()
-        {
-            return WireFormatting.ReadShortstr(BaseReader);
-        }
-
-        /// <returns>A type of <seealso cref="System.Collections.Generic.IDictionary{TKey,TValue}"/>.</returns>
-        public IDictionary<string, object> ReadTable()
-        {
-            return WireFormatting.ReadTable(BaseReader);
-        }
-
-        public AmqpTimestamp ReadTimestamp()
-        {
-            return WireFormatting.ReadTimestamp(BaseReader);
-        }
     }
     public class ContentHeaderPropertyReader2
     {

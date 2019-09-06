@@ -45,89 +45,28 @@ using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class MethodArgumentReader
+    public abstract class MethodArgumentReader
     {
-        private int m_bit;
-        private int m_bits;
-        private readonly NetworkBinaryReader BaseReader;
-
-        public MethodArgumentReader(NetworkBinaryReader reader)
-        {
-            BaseReader = reader;
-            ClearBits();
-        }
 
 
-        public virtual bool ReadBit()
-        {
-            if (m_bit > 0x80)
-            {
-                m_bits = BaseReader.ReadByte();
-                m_bit = 0x01;
-            }
+        public abstract bool ReadBit();
 
-            bool result = (m_bits & m_bit) != 0;
-            m_bit = m_bit << 1;
-            return result;
-        }
+        public abstract uint ReadLong();
 
-        public virtual uint ReadLong()
-        {
-            ClearBits();
-            return WireFormatting.ReadLong(BaseReader);
-        }
+        public abstract ulong ReadLonglong();
 
-        public virtual ulong ReadLonglong()
-        {
-            ClearBits();
-            return WireFormatting.ReadLonglong(BaseReader);
-        }
+        public abstract byte[] ReadLongstr();
 
-        public virtual byte[] ReadLongstr()
-        {
-            ClearBits();
-            return WireFormatting.ReadLongstr(BaseReader);
-        }
+        public abstract byte ReadOctet();
 
-        public virtual byte ReadOctet()
-        {
-            ClearBits();
-            return WireFormatting.ReadOctet(BaseReader);
-        }
+        public abstract ushort ReadShort();
 
-        public virtual ushort ReadShort()
-        {
-            ClearBits();
-            return WireFormatting.ReadShort(BaseReader);
-        }
+        public abstract string ReadShortstr();
 
-        public virtual string ReadShortstr()
-        {
-            ClearBits();
-            return WireFormatting.ReadShortstr(BaseReader);
-        }
+        public abstract IDictionary<string, object> ReadTable();
 
-        public virtual IDictionary<string, object> ReadTable()
-        {
-            ClearBits();
-            return WireFormatting.ReadTable(BaseReader);
-        }
+        public abstract AmqpTimestamp ReadTimestamp();
 
-        public virtual AmqpTimestamp ReadTimestamp()
-        {
-            ClearBits();
-            return WireFormatting.ReadTimestamp(BaseReader);
-        }
-
-        private void ClearBits()
-        {
-            m_bits = 0;
-            m_bit = 0x100;
-        }
-
-        // TODO: Consider using NotImplementedException (?)
-        // This is a completely bizarre consequence of the way the
-        // Message.Transfer method is marked up in the XML spec.
     }
     public class MethodArgumentReader2 : MethodArgumentReader
     {
@@ -135,7 +74,7 @@ namespace RabbitMQ.Client.Impl
         private int m_bits;
         private readonly NetworkArraySegmentsReader BaseReader;
 
-        public MethodArgumentReader2(NetworkArraySegmentsReader reader) : base(null)
+        public MethodArgumentReader2(NetworkArraySegmentsReader reader) : base()
         {
             BaseReader = reader;
             ClearBits();

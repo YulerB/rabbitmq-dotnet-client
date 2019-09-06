@@ -203,6 +203,8 @@ namespace RabbitMQ.Util
         }
         public byte[] ReadBytes(int payloadSize)
         {
+            //Think of ways to remove memory copying
+
             var data = input.Read(payloadSize);
             if(data.Length == 1)
             {
@@ -233,6 +235,8 @@ namespace RabbitMQ.Util
             }
             else
             {
+                //Think of ways to remove memory copying
+
                 byte[] bytes = new byte[payloadSize];
                 int offset = 0;
                 foreach (var segment in data)
