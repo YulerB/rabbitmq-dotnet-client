@@ -484,4 +484,196 @@ namespace RabbitMQ.Client.Impl
             WriteLonglong(writer, (ulong)val.UnixTime);
         }
     }
+    public class WireFormatting2
+    {
+        public static decimal AmqpToDecimal(byte scale, uint unsignedMantissa)
+        {
+            if (scale > 28)
+            {
+                throw new SyntaxError("Unrepresentable AMQP decimal table field: " +
+                                      "scale=" + scale);
+            }
+            return new decimal((int)(unsignedMantissa & 0x7FFFFFFF),
+                0,
+                0,
+                ((unsignedMantissa & 0x80000000) == 0) ? false : true,
+                scale);
+        }
+
+        public static void DecimalToAmqp(decimal value, out byte scale, out int mantissa)
+        {
+            // According to the documentation :-
+            //  - word 0: low-order "mantissa"
+            //  - word 1, word 2: medium- and high-order "mantissa"
+            //  - word 3: mostly reserved; "exponent" and sign bit
+            // In one way, this is broader than AMQP: the mantissa is larger.
+            // In another way, smaller: the exponent ranges 0-28 inclusive.
+            // We need to be careful about the range of word 0, too: we can
+            // only take 31 bits worth of it, since the sign bit needs to
+            // fit in there too.
+            int[] bitRepresentation = decimal.GetBits(value);
+            if (bitRepresentation[1] != 0 || // mantissa extends into middle word
+                bitRepresentation[2] != 0 || // mantissa extends into top word
+                bitRepresentation[0] < 0) // mantissa extends beyond 31 bits
+            {
+                throw new WireFormattingException("Decimal overflow in AMQP encoding", value);
+            }
+            scale = (byte)((((uint)bitRepresentation[3]) >> 16) & 0xFF);
+            mantissa = (int)((((uint)bitRepresentation[3]) & 0x80000000) |
+                             (((uint)bitRepresentation[0]) & 0x7FFFFFFF));
+        }
+
+        public static IList ReadArray(NetworkArraySegmentsReader reader)
+        {
+            IList array = new List<object>();
+            uint arrayLength = reader.ReadUInt32();
+            Stream backingStream = new MemoryStream(reader.ReadBytes(Convert.ToInt32(arrayLength)));
+            long startPosition = backingStream.Position;
+            var tmpReader = new NetworkBinaryReader(backingStream);
+            while ((backingStream.Position - startPosition) < arrayLength)
+            {
+                object value = WireFormatting.ReadFieldValue(tmpReader);
+                array.Add(value);
+            }
+            return array;
+        }
+
+        public static decimal ReadDecimal(NetworkArraySegmentsReader reader)
+        {
+            byte scale = ReadOctet(reader);
+            uint unsignedMantissa = ReadLong(reader);
+            return AmqpToDecimal(scale, unsignedMantissa);
+        }
+
+        public static object ReadFieldValue(NetworkArraySegmentsReader reader)
+        {
+            object value = null;
+            byte discriminator = reader.ReadByte();
+            switch ((char)discriminator)
+            {
+                case 'S':
+                    value = ReadLongstr(reader);
+                    break;
+                case 'I':
+                    value = reader.ReadInt32();
+                    break;
+                case 'D':
+                    value = ReadDecimal(reader);
+                    break;
+                case 'T':
+                    value = ReadTimestamp(reader);
+                    break;
+                case 'F':
+                    value = ReadTable(reader);
+                    break;
+
+                case 'A':
+                    value = ReadArray(reader);
+                    break;
+                case 'b':
+                    value = (sbyte) reader.ReadByte();
+                    break;
+                case 'd':
+                    value = reader.ReadDouble();
+                    break;
+                case 'f':
+                    value = reader.ReadSingle();
+                    break;
+                case 'l':
+                    value = reader.ReadInt64();
+                    break;
+                case 's':
+                    value = reader.ReadInt16();
+                    break;
+                case 't':
+                    value = (ReadOctet(reader) != 0);
+                    break;
+                case 'x':
+                    value = new BinaryTableValue(ReadLongstr(reader));
+                    break;
+                case 'V':
+                    value = null;
+                    break;
+
+                default:
+                    throw new SyntaxError("Unrecognised type in table: " +
+                                          (char)discriminator);
+            }
+            return value;
+        }
+
+        public static uint ReadLong(NetworkArraySegmentsReader reader)
+        {
+            return reader.ReadUInt32();
+        }
+
+        public static ulong ReadLonglong(NetworkArraySegmentsReader reader)
+        {
+            return reader.ReadUInt64();
+        }
+
+        public static byte[] ReadLongstr(NetworkArraySegmentsReader reader)
+        {
+            uint byteCount = reader.ReadUInt32();
+            if (byteCount > int.MaxValue)
+            {
+                throw new SyntaxError("Long string too long; " +
+                                      "byte length=" + byteCount + ", max=" + int.MaxValue);
+            }
+            return reader.ReadBytes((int)byteCount);
+        }
+
+        public static byte ReadOctet(NetworkArraySegmentsReader reader)
+        {
+            return reader.ReadByte();
+        }
+
+        public static ushort ReadShort(NetworkArraySegmentsReader reader)
+        {
+            return reader.ReadUInt16();
+        }
+
+        public static string ReadShortstr(NetworkArraySegmentsReader reader)
+        {
+            int byteCount = reader.ReadByte();
+            byte[] readBytes = reader.ReadBytes(byteCount);
+            return Encoding.UTF8.GetString(readBytes, 0, readBytes.Length);
+        }
+
+        ///<summary>Reads an AMQP "table" definition from the reader.</summary>
+        ///<remarks>
+        /// Supports the AMQP 0-8/0-9 standard entry types S, I, D, T
+        /// and F, as well as the QPid-0-8 specific b, d, f, l, s, t,
+        /// x and V types and the AMQP 0-9-1 A type.
+        ///</remarks>
+        /// <returns>A <seealso cref="System.Collections.Generic.IDictionary{TKey,TValue}"/>.</returns>
+        public static IDictionary<string, object> ReadTable(NetworkArraySegmentsReader reader)
+        {
+            IDictionary<string, object> table = new Dictionary<string, object>();
+            UInt32 tableLength = reader.ReadUInt32();
+            Stream backingStream = new MemoryStream(reader.ReadBytes(Convert.ToInt32(tableLength)));
+            long startPosition = backingStream.Position;
+            var tmpReader = new NetworkBinaryReader(backingStream);
+            while ((backingStream.Position - startPosition) < tableLength)
+            {
+                string key = WireFormatting.ReadShortstr(tmpReader);
+                object value = WireFormatting.ReadFieldValue(tmpReader);
+
+                if (!table.ContainsKey(key))
+                {
+                    table[key] = value;
+                }
+            }
+
+            return table;
+        }
+
+        public static AmqpTimestamp ReadTimestamp(NetworkArraySegmentsReader reader)
+        {
+            ulong stamp = ReadLonglong(reader);
+            // 0-9 is afaict silent on the signedness of the timestamp.
+            // See also MethodArgumentWriter.WriteTimestamp and AmqpTimestamp itself
+            return new AmqpTimestamp((long)stamp);
+        }
+    }
 }

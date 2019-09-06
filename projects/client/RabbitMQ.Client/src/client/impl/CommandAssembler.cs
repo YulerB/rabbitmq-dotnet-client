@@ -62,14 +62,11 @@ namespace RabbitMQ.Client.Impl
         public MethodBase m_method;
         public ContentHeaderBase m_header;
         public MemoryStream m_bodyStream;
-        public byte[] m_body;
-        public readonly ProtocolBase m_protocol;
         public int m_remainingBodyBytes;
         public AssemblyState m_state;
       
         public CommandAssembler(ProtocolBase protocol)
         {
-            m_protocol = protocol;
             Reset();
         }
 
@@ -78,54 +75,64 @@ namespace RabbitMQ.Client.Impl
             switch (m_state)
             {
                 case AssemblyState.ExpectingMethod:
-                {
-                    if (!f.IsMethod())
                     {
-                        throw new UnexpectedFrameException(f);
+                        if (!f.IsMethod())
+                        {
+                            throw new UnexpectedFrameException(f);
+                        }
+                        m_method = f.Method;// m_protocol.DecodeMethodFrom(f.GetReader());
+                        m_state = f.Method.HasContent
+                            ? AssemblyState.ExpectingContentHeader
+                            : AssemblyState.Complete;
+                        return CompletedCommand();
                     }
-                    m_method = m_protocol.DecodeMethodFrom(f.GetReader());
-                    m_state = m_method.HasContent
-                        ? AssemblyState.ExpectingContentHeader
-                        : AssemblyState.Complete;
-                    return CompletedCommand();
-                }
                 case AssemblyState.ExpectingContentHeader:
-                {
-                    if (!f.IsHeader())
                     {
-                        throw new UnexpectedFrameException(f);
+                        if (!f.IsHeader())
+                        {
+                            throw new UnexpectedFrameException(f);
+                        }
+                        //NetworkBinaryReader reader = f.GetReader();
+                        //m_header = m_protocol.DecodeContentHeaderFrom(reader);
+                        m_header = f.Header;
+                        ulong totalBodyBytes = f.TotalBodyBytes;// f.Header.ReadFrom(reader);
+                        if (totalBodyBytes > MaxArrayOfBytesSize)
+                        {
+                            throw new UnexpectedFrameException(f);
+                        }
+                        m_remainingBodyBytes = (int)totalBodyBytes;
+                        // Avoid double copy
+                        //m_body = new byte[m_remainingBodyBytes];
+                        //m_bodyStream = new MemoryStream(m_body, true);
+                        UpdateContentBodyState();
+                        return CompletedCommand();
                     }
-                    NetworkBinaryReader reader = f.GetReader();
-                    m_header = m_protocol.DecodeContentHeaderFrom(reader);
-                    var totalBodyBytes = m_header.ReadFrom(reader);
-                    if (totalBodyBytes > MaxArrayOfBytesSize)
-                    {
-                        throw new UnexpectedFrameException(f);
-                    }
-                    m_remainingBodyBytes = (int)totalBodyBytes;
-                    m_body = new byte[m_remainingBodyBytes];
-                    m_bodyStream = new MemoryStream(m_body, true);
-                    UpdateContentBodyState();
-                    return CompletedCommand();
-                }
                 case AssemblyState.ExpectingContentBody:
-                {
-                    if (!f.IsBody())
                     {
-                        throw new UnexpectedFrameException(f);
+                        if (!f.IsBody())
+                        {
+                            throw new UnexpectedFrameException(f);
+                        }
+                        if (f.Payload.Length > m_remainingBodyBytes)
+                        {
+                            throw new MalformedFrameException
+                                (string.Format("Overlong content body received - {0} bytes remaining, {1} bytes received",
+                                    m_remainingBodyBytes,
+                                    f.Payload.Length));
+                        }
+                        if (m_bodyStream == null)
+                        {
+                            // Avoid double copy
+                            m_bodyStream = new MemoryStream(f.Payload, true);
+                        }
+                        else
+                        {
+                            m_bodyStream.Write(f.Payload, 0, f.Payload.Length);
+                        }
+                        m_remainingBodyBytes -= f.Payload.Length;
+                        UpdateContentBodyState();
+                        return CompletedCommand();
                     }
-                    if (f.Payload.Length > m_remainingBodyBytes)
-                    {
-                        throw new MalformedFrameException
-                            (string.Format("Overlong content body received - {0} bytes remaining, {1} bytes received",
-                                m_remainingBodyBytes,
-                                f.Payload.Length));
-                    }
-                    m_bodyStream.Write(f.Payload, 0, f.Payload.Length);
-                    m_remainingBodyBytes -= f.Payload.Length;
-                    UpdateContentBodyState();
-                    return CompletedCommand();
-                }
                 case AssemblyState.Complete:
 
                 default:
@@ -142,9 +149,18 @@ namespace RabbitMQ.Client.Impl
         {
             if (m_state == AssemblyState.Complete)
             {
-                Command result = new Command(m_method, m_header, m_body);
-                Reset();
-                return result;
+                if (m_bodyStream == null)
+                {
+                    Command result = new Command(m_method, m_header, new byte[] { });
+                    Reset();
+                    return result;
+                }
+                else
+                {
+                    Command result = new Command(m_method, m_header, m_bodyStream.ToArray());
+                    Reset();
+                    return result;
+                }
             }
             else
             {
@@ -157,7 +173,6 @@ namespace RabbitMQ.Client.Impl
             m_state = AssemblyState.ExpectingMethod;
             m_method = null;
             m_header = null;
-            m_body = null;
             m_bodyStream = null;
             m_remainingBodyBytes = 0;
         }

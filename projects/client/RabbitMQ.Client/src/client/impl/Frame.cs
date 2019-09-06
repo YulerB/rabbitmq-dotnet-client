@@ -171,6 +171,12 @@ namespace RabbitMQ.Client.Impl
 
     public class InboundFrame : Frame
     {
+        private InboundFrame(FrameType type, ushort channel, byte[] payload, MethodBase method, ContentHeaderBase header, ulong totalBodyBytes) : base(type, channel, payload)
+        {
+            this.Method = method;
+            this.Header = header;
+            this.TotalBodyBytes = totalBodyBytes;
+        }
         private InboundFrame(FrameType type, ushort channel, byte[] payload) : base(type, channel, payload)
         {
         }
@@ -282,22 +288,42 @@ namespace RabbitMQ.Client.Impl
 
             ushort channel = reader.ReadUInt16();
             uint payloadSize = reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
-            byte[] payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
-            if (payload.Length != payloadSize)
-            {
-                // Early EOF.
-                throw new MalformedFrameException("Short frame - expected " +
-                                                  payloadSize + " bytes, got " +
-                                                  payload.Length + " bytes");
-            }
 
+            ContentHeaderBase m_content = null;
+            byte[] payload=null;
+            MethodBase m_method = null;
+            ulong totalBodyBytes =0;
+
+            Protocol m_protocol = new Protocol();
+            if (type == (int)FrameType.FrameMethod)
+            {
+                m_method = m_protocol.DecodeMethodFrom(reader);
+            }
+            else if (type == (int)FrameType.FrameHeader)
+            {
+                m_content = m_protocol.DecodeContentHeaderFrom(reader);
+                totalBodyBytes = m_content.ReadFrom(reader);
+            }
+            else if (type == (int)FrameType.FrameBody)
+            {
+                payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
+
+                if (payload.Length != payloadSize)
+                {
+                    // Early EOF.
+                    throw new MalformedFrameException("Short frame - expected " +
+                                                      payloadSize + " bytes, got " +
+                                                      payload.Length + " bytes");
+                }
+            }
+            
             int frameEndMarker = reader.ReadByte();
             if (frameEndMarker != Constants.FrameEnd)
             {
                 throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker);
             }
 
-            return new InboundFrame((FrameType)type, channel, payload);
+            return new InboundFrame((FrameType)type, channel, payload, m_method, m_content, totalBodyBytes);
         }
         public static InboundFrame ReadFrom(NetworkArraySegmentsReader reader)
         {
@@ -340,16 +366,32 @@ namespace RabbitMQ.Client.Impl
             ushort channel = reader.ReadUInt16();
             uint payloadSize =  reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
 
+            ContentHeaderBase m_content = null;
             byte[] payload = new byte[] { };
-            if(payloadSize> 0)
+            MethodBase m_method = null;
+            ulong totalBodyBytes=0;
+
+            Protocol m_protocol = new Protocol();
+            if (type == (int)FrameType.FrameMethod)
+            {
+                m_method = m_protocol.DecodeMethodFrom2(reader);
+            }
+            else if (type == (int)FrameType.FrameHeader)
+            {
+                m_content = m_protocol.DecodeContentHeaderFrom2(reader);
+                totalBodyBytes = m_content.ReadFrom(reader);
+            }
+            else if (type == (int)FrameType.FrameBody)
+            {
                 payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
 
-            if (payload.Length != payloadSize)
-            {
-                // Early EOF.
-                throw new MalformedFrameException("Short frame - expected " +
-                                                  payloadSize + " bytes, got " +
-                                                  payload.Length + " bytes");
+                if (payload.Length != payloadSize)
+                {
+                    // Early EOF.
+                    throw new MalformedFrameException("Short frame - expected " +
+                                                      payloadSize + " bytes, got " +
+                                                      payload.Length + " bytes");
+                }
             }
 
             byte frameEndMarker = reader.ReadByte();
@@ -358,8 +400,20 @@ namespace RabbitMQ.Client.Impl
                 throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker);
             }
 
-            return new InboundFrame((FrameType)type, channel, payload);
+            return new InboundFrame((FrameType)type, channel, payload, m_method, m_content, totalBodyBytes);
         }
+
+        public MethodBase Method
+        {
+            get;
+            private set;
+        }
+        public ContentHeaderBase Header
+        {
+            get;
+            private set;
+        }
+        public ulong TotalBodyBytes { get; private set; }
 
         public NetworkBinaryReader GetReader()
         {

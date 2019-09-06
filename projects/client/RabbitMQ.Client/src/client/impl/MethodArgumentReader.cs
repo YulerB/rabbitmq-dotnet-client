@@ -57,7 +57,7 @@ namespace RabbitMQ.Client.Impl
         }
 
 
-        public bool ReadBit()
+        public virtual bool ReadBit()
         {
             if (m_bit > 0x80)
             {
@@ -70,54 +70,54 @@ namespace RabbitMQ.Client.Impl
             return result;
         }
 
-        public byte[] ReadContent()
+        public virtual byte[] ReadContent()
         {
             throw new NotSupportedException("ReadContent should not be called");
         }
 
-        public uint ReadLong()
+        public virtual uint ReadLong()
         {
             ClearBits();
             return WireFormatting.ReadLong(BaseReader);
         }
 
-        public ulong ReadLonglong()
+        public virtual ulong ReadLonglong()
         {
             ClearBits();
             return WireFormatting.ReadLonglong(BaseReader);
         }
 
-        public byte[] ReadLongstr()
+        public virtual byte[] ReadLongstr()
         {
             ClearBits();
             return WireFormatting.ReadLongstr(BaseReader);
         }
 
-        public byte ReadOctet()
+        public virtual byte ReadOctet()
         {
             ClearBits();
             return WireFormatting.ReadOctet(BaseReader);
         }
 
-        public ushort ReadShort()
+        public virtual ushort ReadShort()
         {
             ClearBits();
             return WireFormatting.ReadShort(BaseReader);
         }
 
-        public string ReadShortstr()
+        public virtual string ReadShortstr()
         {
             ClearBits();
             return WireFormatting.ReadShortstr(BaseReader);
         }
 
-        public IDictionary<string, object> ReadTable()
+        public virtual IDictionary<string, object> ReadTable()
         {
             ClearBits();
             return WireFormatting.ReadTable(BaseReader);
         }
 
-        public AmqpTimestamp ReadTimestamp()
+        public virtual AmqpTimestamp ReadTimestamp()
         {
             ClearBits();
             return WireFormatting.ReadTimestamp(BaseReader);
@@ -132,5 +132,96 @@ namespace RabbitMQ.Client.Impl
         // TODO: Consider using NotImplementedException (?)
         // This is a completely bizarre consequence of the way the
         // Message.Transfer method is marked up in the XML spec.
+    }
+    public class MethodArgumentReader2 : MethodArgumentReader
+    {
+        private int m_bit;
+        private int m_bits;
+        private readonly NetworkArraySegmentsReader BaseReader;
+
+        public MethodArgumentReader2(NetworkArraySegmentsReader reader) : base(null)
+        {
+            BaseReader = reader;
+            ClearBits();
+        }
+
+
+        public override bool ReadBit()
+        {
+            if (m_bit > 0x80)
+            {
+                m_bits = BaseReader.ReadByte();
+                m_bit = 0x01;
+            }
+
+            bool result = (m_bits & m_bit) != 0;
+            m_bit = m_bit << 1;
+            return result;
+        }
+
+        public override uint ReadLong()
+        {
+            ClearBits();
+            return BaseReader.ReadUInt32();
+        }
+
+        public override ulong ReadLonglong()
+        {
+            ClearBits();
+            return BaseReader.ReadUInt64();
+        }
+
+        public override byte[] ReadLongstr()
+        {
+            ClearBits();
+            uint byteCount = BaseReader.ReadUInt32();
+            if (byteCount > int.MaxValue)
+            {
+                throw new SyntaxError("Long string too long; " +
+                                      "byte length=" + byteCount + ", max=" + int.MaxValue);
+            }
+            return BaseReader.ReadBytes((int)byteCount);
+        }
+
+        public override byte ReadOctet()
+        {
+            ClearBits();
+            return BaseReader.ReadByte();
+        }
+  
+        public override ushort ReadShort()
+        {
+            ClearBits();
+            return BaseReader.ReadUInt16();
+        }
+
+        public override string ReadShortstr()
+        {
+            ClearBits();
+            int byteCount = BaseReader.ReadByte();
+            byte[] readBytes = BaseReader.ReadBytes(byteCount);
+            return System.Text.Encoding.UTF8.GetString(readBytes, 0, readBytes.Length);
+        }
+
+        public override IDictionary<string, object> ReadTable()
+        {
+            ClearBits();
+            return WireFormatting2.ReadTable(BaseReader);
+        }
+
+        public override AmqpTimestamp ReadTimestamp()
+        {
+            ClearBits();
+            ulong stamp = BaseReader.ReadUInt64();
+            // 0-9 is afaict silent on the signedness of the timestamp.
+            // See also MethodArgumentWriter.WriteTimestamp and AmqpTimestamp itself
+            return new AmqpTimestamp((long)stamp);
+        }
+
+        private void ClearBits()
+        {
+            m_bits = 0;
+            m_bit = 0x100;
+        }
     }
 }

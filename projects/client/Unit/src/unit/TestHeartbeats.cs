@@ -98,26 +98,45 @@ namespace RabbitMQ.Client.Unit
         public void TestHundredsOfConnectionsWithRandomHeartbeatInterval()
         {
             var rnd = new Random();
-            List<IConnection> xs = new List<IConnection>();
+            List<IModel> ms = new List<IModel>(200);
+            List<IConnection> xs = new List<IConnection>(200);
             for (var i = 0; i < 200; i++)
             {
-                var n = Convert.ToUInt16(rnd.Next(2, 6));
-                var cf = new ConnectionFactory() { RequestedHeartbeat = n, AutomaticRecoveryEnabled = false };
+                var cf = new ConnectionFactory() { RequestedHeartbeat = Convert.ToUInt16(rnd.Next(2, 6)), AutomaticRecoveryEnabled = false };
                 var conn = cf.CreateConnection();
+                conn.ConnectionShutdown += (sender, evt) =>
+                {
+                    CheckInitiator(evt);
+                };
                 xs.Add(conn);
                 var ch = conn.CreateModel();
-
-                conn.ConnectionShutdown += (sender, evt) =>
-                    {
-                        CheckInitiator(evt);
-                    };
+                ms.Add(ch);
             }
 
             SleepFor(60);
 
+            foreach (var x in ms)
+            {
+                x.Close();
+            }
+            foreach (var x in xs)
+            {
+                x.ConnectionShutdown -= (sender, evt) =>
+                {
+                    CheckInitiator(evt);
+                };
+            }
             foreach (var x in xs)
             {
                 x.Close();
+            }
+            foreach (var x in ms)
+            {
+                x.Dispose();
+            }
+            foreach (var x in xs)
+            {
+                x.Dispose();
             }
         }
 

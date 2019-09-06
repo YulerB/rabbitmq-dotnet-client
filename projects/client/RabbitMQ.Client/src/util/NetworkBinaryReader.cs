@@ -305,5 +305,154 @@ namespace RabbitMQ.Util
             }
             return BitConverter.ToUInt64(bytes, 0);
         }
+
+
+
+
+        public short ReadInt16()
+        {
+            var data = input.Read(2);
+
+            if (data.Length == 1)
+            {
+                return BinaryPrimitives.ReadInt16BigEndian(data[0].Span);
+            }
+
+
+            var arrayIndex = 0;
+            var offset = 0;
+            byte[] bytes = new byte[2];
+
+
+            var count = data[arrayIndex].Length;
+            for (int i = 1; i > -1; i--)
+            {
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToInt16(bytes, 0);
+        }
+        public int ReadInt32()
+        {
+            var data = input.Read(4);
+            if (data.Length == 1)
+            {
+                return BinaryPrimitives.ReadInt32BigEndian(data[0].Span);
+            }
+
+            byte[] bytes = new byte[4];
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Length;
+            for (int i = 3; i > -1; i--)
+            {
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToInt32(bytes, 0);
+        }
+        public long ReadInt64()
+        {
+            var data = input.Read(8);
+            if (data.Length == 1)
+            {
+                return BinaryPrimitives.ReadInt64BigEndian(data[0].Span);
+            }
+
+            byte[] bytes = new byte[8];
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Length;
+            for (int i = 7; i > -1; i--)
+            {
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToInt64(bytes, 0);
+        }
+
+
+
+
+        public float ReadSingle()
+        {
+            var data = input.Read(4);
+            if (data.Length == 1)
+            {
+                return (float) BinaryPrimitives.ReadUInt32BigEndian(data[0].Span);
+            }
+
+            byte[] bytes = new byte[4];
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Length;
+            for (int i = 3; i > -1; i--)
+            {
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToSingle(bytes, 0);
+        }
+        public double ReadDouble()
+        {
+            var data = input.Read(4);
+            if (data.Length == 1)
+            {
+                return (double)BinaryPrimitives.ReadUInt64BigEndian(data[0].Span);
+            }
+
+            byte[] bytes = new byte[4];
+            var arrayIndex = 0;
+            var offset = 0;
+            var count = data[arrayIndex].Length;
+            for (int i = 3; i > -1; i--)
+            {
+                var segment = data[arrayIndex].ToArray();
+                bytes[i] = segment[offset];
+                offset++;
+                count--;
+
+                if (count == 0)
+                {
+                    arrayIndex++;
+                    offset = 0;
+                }
+            }
+            return BitConverter.ToDouble(bytes, 0);
+        }
+
+
     }
 }

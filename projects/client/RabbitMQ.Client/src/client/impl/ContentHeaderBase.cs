@@ -73,7 +73,15 @@ namespace RabbitMQ.Client.Impl
             ReadPropertiesFrom(new ContentHeaderPropertyReader(reader));
             return bodySize;
         }
+        public ulong ReadFrom(NetworkArraySegmentsReader reader)
+        {
+            reader.ReadUInt16(); // weight - not currently used
+            ulong bodySize = reader.ReadUInt64();
+            ReadPropertiesFrom(new ContentHeaderPropertyReader2(reader));
+            return bodySize;
+        }
 
+        public abstract void ReadPropertiesFrom(ContentHeaderPropertyReader2 reader);
         public abstract void ReadPropertiesFrom(ContentHeaderPropertyReader reader);
         public abstract void WritePropertiesTo(ContentHeaderPropertyWriter writer);
 
