@@ -62,7 +62,7 @@ namespace RabbitMQ.Client.Impl
         public MethodBase m_method;
         public ContentHeaderBase m_header;
         public MemoryStream m_bodyStream;
-        public int m_remainingBodyBytes;
+        public ulong m_remainingBodyBytes;
         public AssemblyState m_state;
       
         public CommandAssembler(ProtocolBase protocol)
@@ -80,10 +80,8 @@ namespace RabbitMQ.Client.Impl
                         {
                             throw new UnexpectedFrameException(f);
                         }
-                        m_method = f.Method;// m_protocol.DecodeMethodFrom(f.GetReader());
-                        m_state = f.Method.HasContent
-                            ? AssemblyState.ExpectingContentHeader
-                            : AssemblyState.Complete;
+                        m_method = f.Method;
+                        m_state = f.Method.HasContent ? AssemblyState.ExpectingContentHeader : AssemblyState.Complete;
                         return CompletedCommand();
                     }
                 case AssemblyState.ExpectingContentHeader:
@@ -92,18 +90,13 @@ namespace RabbitMQ.Client.Impl
                         {
                             throw new UnexpectedFrameException(f);
                         }
-                        //NetworkBinaryReader reader = f.GetReader();
-                        //m_header = m_protocol.DecodeContentHeaderFrom(reader);
                         m_header = f.Header;
-                        ulong totalBodyBytes = f.TotalBodyBytes;// f.Header.ReadFrom(reader);
+                        ulong totalBodyBytes = f.TotalBodyBytes;
                         if (totalBodyBytes > MaxArrayOfBytesSize)
                         {
                             throw new UnexpectedFrameException(f);
                         }
-                        m_remainingBodyBytes = (int)totalBodyBytes;
-                        // Avoid double copy
-                        //m_body = new byte[m_remainingBodyBytes];
-                        //m_bodyStream = new MemoryStream(m_body, true);
+                        m_remainingBodyBytes = totalBodyBytes;
                         UpdateContentBodyState();
                         return CompletedCommand();
                     }
@@ -113,7 +106,7 @@ namespace RabbitMQ.Client.Impl
                         {
                             throw new UnexpectedFrameException(f);
                         }
-                        if (f.Payload.Length > m_remainingBodyBytes)
+                        if ((ulong)f.Payload.Length > m_remainingBodyBytes)
                         {
                             throw new MalformedFrameException
                                 (string.Format("Overlong content body received - {0} bytes remaining, {1} bytes received",
@@ -122,14 +115,13 @@ namespace RabbitMQ.Client.Impl
                         }
                         if (m_bodyStream == null)
                         {
-                            // Avoid double copy
                             m_bodyStream = new MemoryStream(f.Payload, true);
                         }
                         else
                         {
                             m_bodyStream.Write(f.Payload, 0, f.Payload.Length);
                         }
-                        m_remainingBodyBytes -= f.Payload.Length;
+                        m_remainingBodyBytes -= (ulong)f.Payload.Length;
                         UpdateContentBodyState();
                         return CompletedCommand();
                     }
@@ -138,8 +130,6 @@ namespace RabbitMQ.Client.Impl
                 default:
 #if NETFX_CORE
                     Debug.WriteLine("Received frame in invalid state {0}; {1}", m_state, f);
-#else
-                    //Trace.Fail(string.Format("Received frame in invalid state {0}; {1}", m_state, f));
 #endif
                     return null;
             }

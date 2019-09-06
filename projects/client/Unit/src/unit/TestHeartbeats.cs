@@ -142,27 +142,29 @@ namespace RabbitMQ.Client.Unit
 
         protected void RunSingleConnectionTest(ConnectionFactory cf)
         {
-            var conn = cf.CreateConnection();
-            var ch = conn.CreateModel();
-            bool wasShutdown = false;
-
-            conn.ConnectionShutdown += (sender, evt) =>
+            using (var conn = cf.CreateConnection())
             {
-                lock (conn)
+                var ch = conn.CreateModel();
+                bool wasShutdown = false;
+
+                conn.ConnectionShutdown += (sender, evt) =>
                 {
-                    if (InitiatedByPeerOrLibrary(evt))
+                    lock (conn)
                     {
-                        CheckInitiator(evt);
-                        wasShutdown = true;
+                        if (InitiatedByPeerOrLibrary(evt))
+                        {
+                            CheckInitiator(evt);
+                            wasShutdown = true;
+                        }
                     }
-                }
-            };
-            SleepFor(30);
+                };
+                SleepFor(30);
 
-            Assert.IsFalse(wasShutdown, "shutdown event should not have been fired");
-            Assert.IsTrue(conn.IsOpen, "connection should be open");
+                Assert.IsFalse(wasShutdown, "shutdown event should not have been fired");
+                Assert.IsTrue(conn.IsOpen, "connection should be open");
 
-            conn.Close();
+                conn.Close();
+            }
         }
 
         private void CheckInitiator(ShutdownEventArgs evt)

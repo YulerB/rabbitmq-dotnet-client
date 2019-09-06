@@ -39,6 +39,7 @@
 //---------------------------------------------------------------------------
 
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using RabbitMQ.Util;
 
@@ -68,11 +69,6 @@ namespace RabbitMQ.Client.Impl
             bool result = (m_bits & m_bit) != 0;
             m_bit = m_bit << 1;
             return result;
-        }
-
-        public virtual byte[] ReadContent()
-        {
-            throw new NotSupportedException("ReadContent should not be called");
         }
 
         public virtual uint ReadLong()
@@ -180,7 +176,7 @@ namespace RabbitMQ.Client.Impl
                 throw new SyntaxError("Long string too long; " +
                                       "byte length=" + byteCount + ", max=" + int.MaxValue);
             }
-            return BaseReader.ReadBytes((int)byteCount);
+            return BaseReader.ReadMemory((int)byteCount).ToArray();
         }
 
         public override byte ReadOctet()
@@ -199,14 +195,14 @@ namespace RabbitMQ.Client.Impl
         {
             ClearBits();
             int byteCount = BaseReader.ReadByte();
-            byte[] readBytes = BaseReader.ReadBytes(byteCount);
-            return System.Text.Encoding.UTF8.GetString(readBytes, 0, readBytes.Length);
+            var readBytes = BaseReader.ReadMemory(byteCount);
+            return System.Text.Encoding.UTF8.GetString(readBytes.ToArray());
         }
 
         public override IDictionary<string, object> ReadTable()
         {
             ClearBits();
-            return WireFormatting2.ReadTable(BaseReader);
+            return BaseReader.ReadTable(out long read);
         }
 
         public override AmqpTimestamp ReadTimestamp()

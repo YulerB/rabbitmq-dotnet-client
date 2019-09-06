@@ -310,10 +310,7 @@ namespace RabbitMQ.Client.Impl
 
                 if (payload.Length != payloadSize)
                 {
-                    // Early EOF.
-                    throw new MalformedFrameException("Short frame - expected " +
-                                                      payloadSize + " bytes, got " +
-                                                      payload.Length + " bytes");
+                    throw new MalformedFrameException($"Short frame - expected {payloadSize} bytes, got {payload.Length} bytes");
                 }
             }
             
@@ -414,11 +411,6 @@ namespace RabbitMQ.Client.Impl
             private set;
         }
         public ulong TotalBodyBytes { get; private set; }
-
-        public NetworkBinaryReader GetReader()
-        {
-            return new NetworkBinaryReader(new MemoryStream(base.Payload));
-        }
     }
 
     public class Frame

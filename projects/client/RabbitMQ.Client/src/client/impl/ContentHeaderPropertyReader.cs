@@ -182,24 +182,24 @@ namespace RabbitMQ.Client.Impl
             m_bitCount = 0;
         }
 
-        public uint ReadLong()
+        public uint ReadUInt32()
         {
-            return WireFormatting2.ReadLong(BaseReader);
+            return BaseReader.ReadUInt32();
         }
 
-        public ulong ReadLonglong()
+        public ulong ReadUInt64()
         {
-            return WireFormatting2.ReadLonglong(BaseReader);
+            return BaseReader.ReadUInt64();
         }
 
-        public byte[] ReadLongstr()
+        public string ReadLongstr()
         {
-            return WireFormatting2.ReadLongstr(BaseReader);
+            return BaseReader.ReadLongString(out long read);
         }
 
         public byte ReadOctet()
         {
-            return WireFormatting2.ReadOctet(BaseReader);
+            return BaseReader.ReadByte();
         }
 
         public bool ReadPresence()
@@ -217,23 +217,23 @@ namespace RabbitMQ.Client.Impl
 
         public ushort ReadShort()
         {
-            return WireFormatting2.ReadShort(BaseReader);
+            return BaseReader.ReadUInt16();
         }
 
         public string ReadShortstr()
         {
-            return WireFormatting2.ReadShortstr(BaseReader);
+            return BaseReader.ReadShortString(out long read);
         }
 
         /// <returns>A type of <seealso cref="System.Collections.Generic.IDictionary{TKey,TValue}"/>.</returns>
         public IDictionary<string, object> ReadTable()
         {
-            return WireFormatting2.ReadTable(BaseReader);
+            return BaseReader.ReadTable(out long read);
         }
 
         public AmqpTimestamp ReadTimestamp()
         {
-            return WireFormatting2.ReadTimestamp(BaseReader);
+            return BaseReader.ReadTimestamp();
         }
     }
 }

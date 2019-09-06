@@ -85,16 +85,16 @@ namespace RabbitMQ.Client.Impl
 
             if (!m_closeServerInitiated && (frame.IsMethod()))
             {
-                MethodBase method = Connection.Protocol.DecodeMethodFrom(frame.GetReader());
-                if ((method.ProtocolClassId == m_closeClassId)
-                    && (method.ProtocolMethodId == m_closeMethodId))
+                //MethodBase method = Connection.Protocol.DecodeMethodFrom(frame.GetReader());
+                if ((frame.Method.ProtocolClassId == m_closeClassId)
+                    && (frame.Method.ProtocolMethodId == m_closeMethodId))
                 {
                     base.HandleFrame(frame);
                     return;
                 }
 
-                if ((method.ProtocolClassId == m_closeOkClassId)
-                    && (method.ProtocolMethodId == m_closeOkMethodId))
+                if ((frame.Method.ProtocolClassId == m_closeOkClassId)
+                    && (frame.Method.ProtocolMethodId == m_closeOkMethodId))
                 {
                     // This is the reply (CloseOk) we were looking for
                     // Call any listener attached to this session
