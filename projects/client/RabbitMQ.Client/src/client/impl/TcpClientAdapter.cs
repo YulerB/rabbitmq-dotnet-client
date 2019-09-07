@@ -25,6 +25,8 @@ namespace RabbitMQ.Client
         private const int BufferSegments = 20;
         private int bigBufferPosition = 0;
         private SemaphoreSlim buffersInPlay = new SemaphoreSlim(BufferSegments);
+        private readonly object _syncLock = new object();
+
         public HyperTcpClientAdapter(Socket socket, int RequestedHeartbeat)
         {
             socket.ReceiveTimeout = Math.Max(socket.ReceiveTimeout, RequestedHeartbeat * 1000);
@@ -38,7 +40,6 @@ namespace RabbitMQ.Client
         {
             buffersInPlay.Release();
         }
-
         public virtual void Close()
         {
             baseStream?.Close();
@@ -46,14 +47,12 @@ namespace RabbitMQ.Client
             sock?.Close();
             Closed?.Invoke(this, EventArgs.Empty);
         }
-
         private bool disposed;
         [Obsolete("Override Dispose(bool) instead.")]
         public virtual void Dispose()
         {
             Dispose(true);
         }
-
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
@@ -70,46 +69,7 @@ namespace RabbitMQ.Client
             baseSSLStream = null;
             sock = null;
         }
-
-        public virtual bool Connected
-        {
-            get
-            {
-                if (sock == null) return false;
-                return sock.Connected;
-            }
-        }
-
-        public virtual int ReceiveTimeout
-        {
-            get
-            {
-                AssertSocket();
-                return sock.ReceiveTimeout;
-            }
-        }
-
-        public EndPoint ClientLocalEndPoint => sock.LocalEndPoint;
-
-        public EndPoint ClientRemoteEndPoint => sock.RemoteEndPoint;
-
-        public int ClientReceiveBufferSize => sock.ReceiveBufferSize;
-
-        public int ClientSendTimeout { set { sock.SendTimeout = value; } }
-
-        private void AssertSocket()
-        {
-            if (sock == null)
-            {
-                throw new InvalidOperationException("Cannot perform operation as socket is null");
-            }
-        }
-
-        public bool ClientPollCanWrite(int m_writeableStateTimeout)
-        {
-            return true;
-        }
-
+        public int ClientLocalEndPointPort => ((IPEndPoint)sock.LocalEndPoint).Port;
         public virtual async Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation = false)
         {
             AssertSocket();
@@ -152,7 +112,28 @@ namespace RabbitMQ.Client
             buffersInPlay.Wait();
             baseStream.BeginRead(bigBuffer, 0, sock.ReceiveBufferSize, new AsyncCallback(Read), null);
         }
+        public void Write(ArraySegment<byte> data)
+        {
+            if (baseSSLStream != null)
+            {
+                lock (_syncLock)
+                {
+                    baseSSLStream.Write(data.Array, data.Offset, data.Count);
+                }
+            }
+            else
+            {
+                baseStream.Write(data.Array, data.Offset, data.Count);
+            }
+        }
 
+        private void AssertSocket()
+        {
+            if (sock == null)
+            {
+                throw new InvalidOperationException("Cannot perform operation as socket is null");
+            }
+        }
         private void Read(IAsyncResult result)
         {
             try
@@ -245,22 +226,6 @@ namespace RabbitMQ.Client
             if (protocols == SslProtocols.None) protocols = SslProtocols.Default;
 
             return protocols;
-        }
-
-        private readonly object _syncLock = new object();
-        public void Write(ArraySegment<byte> data)
-        {
-            if(baseSSLStream != null)
-            {
-                lock (_syncLock)
-                {
-                    baseSSLStream.Write(data.Array, data.Offset, data.Count);
-                }
-            }
-            else
-            {
-                baseStream.Write(data.Array, data.Offset, data.Count);
-            }
         }
     }
 }

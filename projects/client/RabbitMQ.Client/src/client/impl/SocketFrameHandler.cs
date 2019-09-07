@@ -122,25 +122,20 @@ namespace RabbitMQ.Client.Impl
 
         public AmqpTcpEndpoint Endpoint { get; set; }
 
-        public EndPoint LocalEndPoint
-        {
-            get { return m_socket.ClientLocalEndPoint; }
-        }
-
         public int LocalPort
         {
-            get { return ((IPEndPoint)LocalEndPoint).Port; }
+            get { return m_socket.ClientLocalEndPointPort; }
         }
 
-        public EndPoint RemoteEndPoint
-        {
-            get { return m_socket.ClientRemoteEndPoint; }
-        }
+        //public EndPoint RemoteEndPoint
+        //{
+        //    get { return m_socket.ClientRemoteEndPoint; }
+        //}
 
-        public int RemotePort
-        {
-            get { return ((IPEndPoint)LocalEndPoint).Port; }
-        }
+        //public int RemotePort
+        //{
+        //    get { return ((IPEndPoint)LocalEndPoint).Port; }
+        //}
 
         
         public void Close()
@@ -313,124 +308,6 @@ namespace RabbitMQ.Client.Impl
             Dispose(true);
         }
         #endregion
-    }
-    public class ArraySegmentStream : Stream
-    {
-        private BlockingCollection<ReadOnlyMemory<byte>> data = new BlockingCollection<ReadOnlyMemory<byte>>();
-        public event EventHandler BufferUsed;
-        public ArraySegmentStream(byte[] buffer) {
-            data.Add(new ArraySegment<byte>(buffer, 0, buffer.Length));
-        }
-        public ArraySegmentStream(ArraySegment<byte> buffer)
-        {
-            data.Add(buffer);
-        }
-        public ArraySegmentStream(IEnumerable<ArraySegment<byte>> buffers)
-        {
-            foreach(var buffer in buffers)
-                data.Add(buffer);
-        }
-        public ArraySegmentStream() { }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                cts.Dispose();
-                data.Dispose();
-            }
-            base.Dispose(disposing);
-            BufferUsed = null;
-            data = null;
-            cts = null;
-        }
-
-        public override bool CanRead => true;
-
-        public override bool CanSeek => false;
-
-        public override bool CanWrite => true;
-
-        public override long Length => 0;
-
-        public override long Position { get => 0; set => throw new NotImplementedException(); }
-
-        public override void Flush()
-        {
-
-        }
-
-        private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
-        private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
-        public ReadOnlyMemory<byte>[] Read(int count)
-        {
-            List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
-
-            while (count > 0)
-            {
-                if (top.Length == 0)
-                {
-                    try
-                    {
-                        top = data.Take(cts.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        throw new EndOfStreamException();
-                    }
-                }
-                if (top.Length > count)
-                {
-                    var read = top.Slice(0, count);
-                    top = top.Slice(count, top.Length - count);
-                    result.Add(read);
-                    return result.ToArray();
-                }
-                else
-                {
-                    var read = top.Slice(0, top.Length);
-                    count -= top.Length;
-                    top = empty;
-                    BufferUsed?.Invoke(this, EventArgs.Empty);
-                    result.Add(read);
-                }
-            }
-            return result.ToArray();
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
-
-        public new int ReadByte()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override long Seek(long offset, SeekOrigin origin)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void SetLength(long value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            data.Add(new ArraySegment<byte>(buffer, offset, count));
-        }
-        public void Write(ReadOnlyMemory<byte> buffer)
-        {
-            data.Add(buffer);
-        }
-        private CancellationTokenSource cts = new CancellationTokenSource();
-        internal void NotifyClosed()
-        {
-            cts.Cancel();
-        }
     }
 }
 #endif

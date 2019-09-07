@@ -64,7 +64,7 @@ namespace RabbitMQ.Client
     /// appropriate.
     /// </para>
     /// </remarks>
-    public interface IConnection : NetworkConnection, IDisposable
+    public interface IConnection : INetworkConnection, IDisposable
     {
         /// <summary>
         /// If true, will close the whole connection as soon as there are no channels open on it;

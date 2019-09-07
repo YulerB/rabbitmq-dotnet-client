@@ -320,14 +320,7 @@ namespace RabbitMQ.Client.Framing.Impl
         }
 
         public AmqpTcpEndpoint[] KnownHosts { get; set; }
-
-#if !NETFX_CORE
-        public EndPoint LocalEndPoint
-        {
-            get { return m_frameHandler.LocalEndPoint; }
-        }
-#endif
-
+        
         public int LocalPort
         {
             get { return m_frameHandler.LocalPort; }
@@ -338,18 +331,6 @@ namespace RabbitMQ.Client.Framing.Impl
         public ProtocolBase Protocol
         {
             get { return (ProtocolBase)Endpoint.Protocol; }
-        }
-
-#if !NETFX_CORE
-        public EndPoint RemoteEndPoint
-        {
-            get { return m_frameHandler.RemoteEndPoint; }
-        }
-#endif
-
-        public int RemotePort
-        {
-            get { return m_frameHandler.RemotePort; }
         }
 
         public IDictionary<string, object> ServerProperties { get; set; }

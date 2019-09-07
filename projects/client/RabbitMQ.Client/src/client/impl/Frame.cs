@@ -182,18 +182,18 @@ namespace RabbitMQ.Client.Impl
         {
             try
             {
-                byte b1 = NetworkArraySegmentsReader.ReadByte(reader);
-                byte b2 = NetworkArraySegmentsReader.ReadByte(reader);
-                byte b3 = NetworkArraySegmentsReader.ReadByte(reader);
+                byte b1 = reader.ReadByte();
+                byte b2 = reader.ReadByte();
+                byte b3 = reader.ReadByte();
                 if (b1 != 'M' || b2 != 'Q' || b3 != 'P')
                 {
                     throw new MalformedFrameException("Invalid AMQP protocol header from server");
                 }
 
-                byte transportHigh = NetworkArraySegmentsReader.ReadByte(reader);
-                byte transportLow = NetworkArraySegmentsReader.ReadByte(reader);
-                byte serverMajor = NetworkArraySegmentsReader.ReadByte(reader);
-                byte serverMinor = NetworkArraySegmentsReader.ReadByte(reader);
+                byte transportHigh = reader.ReadByte();
+                byte transportLow = reader.ReadByte();
+                byte serverMajor = reader.ReadByte();
+                byte serverMinor = reader.ReadByte();
                 throw new PacketNotRecognizedException(transportHigh,
                     transportLow,
                     serverMajor,
@@ -217,7 +217,7 @@ namespace RabbitMQ.Client.Impl
 
             try
             {
-                type = NetworkArraySegmentsReader.ReadByte(reader);
+                type = reader.ReadByte();
             }
             catch (IOException ioe)
             {
@@ -280,7 +280,7 @@ namespace RabbitMQ.Client.Impl
                 }
             }
 
-            byte frameEndMarker = NetworkArraySegmentsReader.ReadByte(reader);
+            byte frameEndMarker = reader.ReadByte();
             if (frameEndMarker != 206)
             {
                 throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker);

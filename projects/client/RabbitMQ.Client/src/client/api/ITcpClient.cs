@@ -31,14 +31,8 @@ namespace RabbitMQ.Client
     public interface IHyperTcpClient : IDisposable
     {
         void BufferUsed();
-        bool Connected { get; }
-        int ReceiveTimeout { get; }
-        EndPoint ClientLocalEndPoint { get; }
-        EndPoint ClientRemoteEndPoint { get; }
-        int ClientReceiveBufferSize { get; }
-        int ClientSendTimeout { set; }
-        bool ClientPollCanWrite(int m_writeableStateTimeout);
-
+        int ClientLocalEndPointPort { get; }
+        
         Task ConnectAsync(string host, int port);
         Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation);
 

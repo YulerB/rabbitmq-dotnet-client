@@ -160,7 +160,7 @@ namespace RabbitMQ.Client.Impl
 
         public byte ReadOctet()
         {
-            return  NetworkArraySegmentsReader.ReadByte(BaseReader);
+            return BaseReader.ReadByte();
         }
 
         public bool ReadPresence()

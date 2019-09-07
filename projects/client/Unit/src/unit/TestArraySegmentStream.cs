@@ -16,8 +16,8 @@ namespace RabbitMQ.Client.Unit
         {
             byte[] buffer = new byte[] { 200, 199, 197, 196, 195};
             ArraySegmentStream stream = new ArraySegmentStream();
-            stream.Write(buffer, 0, buffer.Length);
-            stream.Write(buffer, 0, buffer.Length);
+            stream.Write(buffer);
+            stream.Write(buffer);
 
             var segments = stream.Read(1);
             Assert.AreEqual(1, segments[0].Length, "Test 1");
@@ -45,7 +45,7 @@ namespace RabbitMQ.Client.Unit
             ArraySegmentStream stream = new ArraySegmentStream();
             for (int i = 0; i < 300; i++)
             {
-                stream.Write(buffer, 0, buffer.Length);
+                stream.Write(buffer);
             }
 
             MemoryStream ms = new MemoryStream();
@@ -54,11 +54,11 @@ namespace RabbitMQ.Client.Unit
                 ms.Write(buffer, 0, 5);
             }
 
-            Assert.AreEqual(buffer[0], NetworkArraySegmentsReader.ReadByte(stream), "Test 3");
+            Assert.AreEqual(buffer[0], stream.ReadByte(), "Test 3");
             Assert.AreEqual(new byte[] { buffer[1], buffer[2], buffer[3] }, stream.ReadBytes(3), "Test 4");
             Assert.AreEqual(new byte[] { buffer[4], buffer[0], buffer[1] }, stream.ReadBytes(3), "Test 5");
             Assert.AreEqual(BitConverter.ToUInt16(new byte[] { buffer[3], buffer[2] }, 0), stream.ReadUInt16(), "Test 6");
-            Assert.AreEqual(buffer[4], NetworkArraySegmentsReader.ReadByte(stream), "Test 7");
+            Assert.AreEqual(buffer[4], stream.ReadByte(), "Test 7");
             Assert.AreEqual(BitConverter.ToDouble(new byte[] { buffer[2], buffer[1], buffer[0], buffer[4], buffer[3], buffer[2], buffer[1], buffer[0] }, 0), stream.ReadDouble(), "Test 8");
             Assert.AreEqual(BitConverter.ToInt16(new byte[] { buffer[4], buffer[3] }, 0), stream.ReadInt16(), "Test 9");
             Assert.AreEqual(BitConverter.ToInt64(new byte[] { buffer[2], buffer[1], buffer[0], buffer[4], buffer[3], buffer[2], buffer[1], buffer[0] }, 0), stream.ReadInt64(), "Test 10");
@@ -73,11 +73,11 @@ namespace RabbitMQ.Client.Unit
 
 
             stream = new ArraySegmentStream();
-            stream.Write(newBytes, 0, newBytes.Length);
+            stream.Write(newBytes);
             ms = new MemoryStream();
             for (int i = 0; i < FiveHundred/5; i++)
             {
-                stream.Write(buffer, 0, buffer.Length);
+                stream.Write(buffer);
                 ms.Write(buffer, 0, buffer.Length);
             }
 
@@ -88,18 +88,19 @@ namespace RabbitMQ.Client.Unit
             newBytes = new byte[] { bytes[3], bytes[2], bytes[1], bytes[0] };
 
             stream = new ArraySegmentStream();
-            stream.Write(newBytes, 0, newBytes.Length);
-            stream.WriteByte((byte) 'I');
-            stream.Write(buffer, 0, 4);
-            stream.WriteByte((byte)'I');
-            stream.Write(buffer, 0, 4);
-            stream.WriteByte((byte)'I');
-            stream.Write(buffer, 0, 4);
-            stream.WriteByte((byte)'I');
-            stream.Write(buffer, 0, 4);
-            stream.WriteByte((byte)'I');
-            stream.Write(buffer, 0, 4);
-            
+            stream.Write(newBytes);
+            stream.Write(new byte[] { (byte)'I' });
+            stream.Write(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3]});
+            stream.Write(new byte[] { (byte)'I' });
+            stream.Write(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3] });
+            stream.Write(new byte[] { (byte)'I' });
+            stream.Write(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3] });
+            stream.Write(new byte[] { (byte)'I' });
+            stream.Write(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3] });
+            stream.Write(new byte[] { (byte)'I' });
+            stream.Write(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3] });
+
+
             var result = stream.ReadArray(out long read2);
             Assert.AreEqual(5, result.Count, "Test 16");
             Assert.AreEqual(BitConverter.ToInt32(new byte[] { buffer[3], buffer[2],buffer[1], buffer[0] }, 0),result[0], "Test 17");

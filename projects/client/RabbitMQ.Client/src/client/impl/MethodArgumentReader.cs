@@ -85,7 +85,7 @@ namespace RabbitMQ.Client.Impl
         {
             if (m_bit > 0x80)
             {
-                m_bits = NetworkArraySegmentsReader.ReadByte(BaseReader);
+                m_bits = BaseReader.ReadByte();
                 m_bit = 0x01;
             }
 
@@ -121,7 +121,7 @@ namespace RabbitMQ.Client.Impl
         public override byte ReadOctet()
         {
             ClearBits();
-            return NetworkArraySegmentsReader.ReadByte(BaseReader);
+            return BaseReader.ReadByte();
         }
   
         public override ushort ReadShort()
@@ -133,7 +133,7 @@ namespace RabbitMQ.Client.Impl
         public override string ReadShortstr()
         {
             ClearBits();
-            int byteCount = NetworkArraySegmentsReader.ReadByte(BaseReader);
+            int byteCount = BaseReader.ReadByte();
             var readBytes = BaseReader.ReadMemory(byteCount);
             return System.Text.Encoding.UTF8.GetString(readBytes.ToArray());
         }

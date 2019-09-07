@@ -57,12 +57,14 @@ namespace RabbitMQ.Client.Unit
             var h  = "192.168.0.1";
             var p  = 5674;
 
-            var cf = new ConnectionFactory();
-            cf.UserName = u;
-            cf.Password = pw;
-            cf.VirtualHost = v;
-            cf.HostName = h;
-            cf.Port = p;
+            var cf = new ConnectionFactory
+            {
+                UserName = u,
+                Password = pw,
+                VirtualHost = v,
+                HostName = h,
+                Port = p
+            };
 
             Assert.AreEqual(cf.UserName, u);
             Assert.AreEqual(cf.Password, pw);
@@ -74,10 +76,12 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionUsesSpecifiedPort()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = true;
-            cf.HostName = "localhost";
-            cf.Port = 1234;
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = true,
+                HostName = "localhost",
+                Port = 1234
+            };
             Assert.That(() =>
                     {
                         using(var conn = cf.CreateConnection()) {}
@@ -87,10 +91,12 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionWithClientProvidedNameUsesSpecifiedPort()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = true;
-            cf.HostName = "localhost";
-            cf.Port = 1234;
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = true,
+                HostName = "localhost",
+                Port = 1234
+            };
             Assert.That(() =>
                     {
                         using(var conn = cf.CreateConnection("some_name")) {}
@@ -100,9 +106,11 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionWithClientProvidedNameUsesDefaultName()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = false;
-            cf.ClientProvidedName = "some_name";
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = false,
+                ClientProvidedName = "some_name"
+            };
             using (var conn = cf.CreateConnection())
             {
                 Assert.AreEqual("some_name", conn.ClientProvidedName);
@@ -113,9 +121,11 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionWithClientProvidedNameUsesName()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = false;
-            using(var conn = cf.CreateConnection("some_name"))
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = false
+            };
+            using (var conn = cf.CreateConnection("some_name"))
             {
                 Assert.AreEqual("some_name", conn.ClientProvidedName);
                 Assert.AreEqual("some_name", conn.ClientProperties["connection_name"]);
@@ -125,9 +135,11 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionWithClientProvidedNameAndAutorecoveryUsesName()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = true;
-            using(var conn = cf.CreateConnection("some_name"))
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = true
+            };
+            using (var conn = cf.CreateConnection("some_name"))
             {
                 Assert.AreEqual("some_name", conn.ClientProvidedName);
                 Assert.AreEqual("some_name", conn.ClientProperties["connection_name"]);
@@ -136,20 +148,23 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionUsesDefaultPort()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = true;
-            cf.HostName = "localhost";
-            using(var conn = cf.CreateConnection()){
-                Assert.AreEqual(5672, conn.Endpoint.Port);
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = true,
+                HostName = "localhost"
+            };
+            using (var conn = cf.CreateConnection()){
             }
         }
 
         [Test]
         public void TestCreateConnectionWithoutAutoRecoverySelectsAHostFromTheList()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = false;
-            cf.HostName = "not_localhost";
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = false,
+                HostName = "not_localhost"
+            };
             var conn = cf.CreateConnection(new System.Collections.Generic.List<string> { "localhost" }, "oregano");
             conn.Close();
             conn.Dispose();
@@ -160,10 +175,12 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionWithAutoRecoveryUsesAmqpTcpEndpoint()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = true;
-            cf.HostName = "not_localhost";
-            cf.Port = 1234 ;
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = true,
+                HostName = "not_localhost",
+                Port = 1234
+            };
             var ep = new AmqpTcpEndpoint("localhost");
             using(var conn = cf.CreateConnection(new System.Collections.Generic.List<AmqpTcpEndpoint> { ep })) {}
         }
@@ -171,8 +188,10 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionWithAutoRecoveryUsesInvalidAmqpTcpEndpoint()
         {
-            var cf = new ConnectionFactory();
-            cf.AutomaticRecoveryEnabled = true;
+            var cf = new ConnectionFactory
+            {
+                AutomaticRecoveryEnabled = true
+            };
             var ep = new AmqpTcpEndpoint("localhost", 1234);
             Assert.That(() =>
                     {
@@ -183,9 +202,11 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionUsesAmqpTcpEndpoint()
         {
-            var cf = new ConnectionFactory();
-            cf.HostName = "not_localhost";
-            cf.Port = 1234 ;
+            var cf = new ConnectionFactory
+            {
+                HostName = "not_localhost",
+                Port = 1234
+            };
             var ep = new AmqpTcpEndpoint("localhost");
             using(var conn = cf.CreateConnection(new System.Collections.Generic.List<AmqpTcpEndpoint> { ep })) {}
         }
@@ -193,11 +214,14 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateConnectionWithForcedAddressFamily()
         {
-            var cf = new ConnectionFactory();
-            cf.HostName = "not_localhost";
-            var ep = new AmqpTcpEndpoint("localhost");
-            ep.AddressFamily = System.Net.Sockets.AddressFamily.InterNetwork;
-            cf.Endpoint = ep;
+            var cf = new ConnectionFactory
+            {
+                HostName = "not_localhost",
+                Endpoint = new AmqpTcpEndpoint("localhost")
+                {
+                    AddressFamily = System.Net.Sockets.AddressFamily.InterNetwork
+                }
+            };
             using(var conn = cf.CreateConnection()){};
         }
 

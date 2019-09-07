@@ -48,19 +48,10 @@ namespace RabbitMQ.Client.Impl
     {
         AmqpTcpEndpoint Endpoint { get; }
 
-#if !NETFX_CORE
-        EndPoint LocalEndPoint { get; }
-#endif
 
         int LocalPort { get; }
 
-#if !NETFX_CORE
-        EndPoint RemoteEndPoint { get; }
-#endif
-
-        int RemotePort { get; }
-        
-        void Close();
+            void Close();
 
         ///<summary>Read a frame from the underlying
         ///transport. Returns null if the read operation timed out
