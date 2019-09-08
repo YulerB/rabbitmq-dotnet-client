@@ -99,19 +99,19 @@ namespace RabbitMQ.Client
     ///"amqp://foo/" (note the trailling slash) also represent the
     ///default virtual host.  The latter issue means that virtual
     ///hosts with an empty name are not addressable. </para></remarks>
-    public class ConnectionFactory : ConnectionFactoryBase, IAsyncConnectionFactory
+    public class ConnectionFactory :  IAsyncConnectionFactory
     {
-        public ConnectionFactory() : base()
+        public ConnectionFactory() 
         {
             HandshakeContinuationTimeout = TimeSpan.FromSeconds(10);
             ContinuationTimeout = TimeSpan.FromSeconds(20);
             ClientProperties = Connection.DefaultClientProperties();
         }
 
-    /// <summary>
-    /// Default value for the desired maximum channel number, with zero meaning unlimited (value: 0).
-    /// </summary>
-    /// <remarks>PLEASE KEEP THIS MATCHING THE DOC ABOVE.</remarks>
+        /// <summary>
+        /// Default value for the desired maximum channel number, with zero meaning unlimited (value: 0).
+        /// </summary>
+        /// <remarks>PLEASE KEEP THIS MATCHING THE DOC ABOVE.</remarks>
         public const ushort DefaultChannelMax = 0;
 
         /// <summary>
@@ -489,18 +489,9 @@ namespace RabbitMQ.Client
             return conn;
         }
 
-        public IFrameHandler CreateHyperFrameHandler()
-        {
-            var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(Endpoint, HyperSocketFactory,
-                RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return fh;
-        }
-
         public IFrameHandler CreateHyperFrameHandler(AmqpTcpEndpoint endpoint)
         {
-            var fh = Protocols.DefaultProtocol.CreateHyperFrameHandler(endpoint, HyperSocketFactory,
-                RequestedConnectionTimeout, SocketReadTimeout, SocketWriteTimeout);
-            return fh;
+            return new HyperSocketFrameHandler(new HyperSocketFrameSettings(endpoint,RequestedHeartbeat,RequestedConnectionTimeout,SocketReadTimeout,SocketWriteTimeout));
         }
 
 

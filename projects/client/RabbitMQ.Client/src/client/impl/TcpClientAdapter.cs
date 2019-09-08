@@ -27,11 +27,11 @@ namespace RabbitMQ.Client
         private SemaphoreSlim buffersInPlay = new SemaphoreSlim(BufferSegments);
         private readonly object _syncLock = new object();
 
-        public HyperTcpClientAdapter(Socket socket, int RequestedHeartbeat)
+        public HyperTcpClientAdapter(HyperTcpClientSettings settings)
         {
-            socket.ReceiveTimeout = Math.Max(socket.ReceiveTimeout, RequestedHeartbeat * 1000);
-            socket.SendTimeout = Math.Max(socket.SendTimeout, RequestedHeartbeat * 1000);
-            this.sock = socket ?? throw new InvalidOperationException("socket must not be null");
+            sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp){NoDelay = true};
+            sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
+            sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
             bigBuffer= new byte[sock.ReceiveBufferSize * BufferSegments];
             Memory = new ReadOnlyMemory<byte>(bigBuffer);
         }
@@ -48,7 +48,6 @@ namespace RabbitMQ.Client
             Closed?.Invoke(this, EventArgs.Empty);
         }
         private bool disposed;
-        [Obsolete("Override Dispose(bool) instead.")]
         public virtual void Dispose()
         {
             Dispose(true);
@@ -126,7 +125,6 @@ namespace RabbitMQ.Client
                 baseStream.Write(data.Array, data.Offset, data.Count);
             }
         }
-
         private void AssertSocket()
         {
             if (sock == null)
@@ -227,6 +225,16 @@ namespace RabbitMQ.Client
 
             return protocols;
         }
+    }
+    public class HyperTcpClientSettings
+    {
+        public HyperTcpClientSettings(AddressFamily addressFamily, int requestedHeartbeat)
+        {
+            this.AddressFamily = addressFamily;
+            this.RequestedHeartbeat = requestedHeartbeat;
+        }
+        public AddressFamily AddressFamily { get;private set; }
+        public int RequestedHeartbeat { get; private set; }
     }
 }
 #endif

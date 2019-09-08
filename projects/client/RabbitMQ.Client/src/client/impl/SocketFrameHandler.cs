@@ -70,32 +70,57 @@ namespace RabbitMQ.Client.Impl
     }
 
 
+    public class HyperSocketFrameSettings
+    {
+        public HyperSocketFrameSettings(
+            AmqpTcpEndpoint endpoint,
+            int requestedHeartbeat,
+            int connectionTimeout,
+                int readTimeout,
+                int writeTimeout
 
+
+
+            )
+        {
+            Endpoint = endpoint;
+            RequestedHeartbeat = requestedHeartbeat;
+            ConnectionTimeout = connectionTimeout;
+            ReadTimeout = readTimeout;
+            WriteTimeout = writeTimeout;
+        }
+        public AmqpTcpEndpoint Endpoint { get;private set; }
+        public int RequestedHeartbeat { get; private set; }
+        public int ConnectionTimeout { get; private set; }
+        public int ReadTimeout { get; private set; }
+        public int WriteTimeout { get; private set; }
+    }
     public class HyperSocketFrameHandler : IFrameHandler, IDisposable
     {
+        private readonly HyperSocketFrameSettings settings;
         private readonly ArraySegmentStream m_stream;
         private IHyperTcpClient m_socket;
         private readonly object _semaphore = new object();
         private bool _closed;
 
-        public HyperSocketFrameHandler(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int connectionTimeout, int readTimeout, int writeTimeout)
+        public HyperSocketFrameHandler(HyperSocketFrameSettings settings)
         {
-            Endpoint = endpoint;
+            this.settings = settings;
 
-            if (ShouldTryIPv6(endpoint))
+            if(Socket.OSSupportsIPv6 && settings.Endpoint.AddressFamily != AddressFamily.InterNetwork)
             {
                 try
                 {
-                    m_socket = ConnectUsingIPv6(endpoint, socketFactory, connectionTimeout);
+                    m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings (AddressFamily.InterNetworkV6, settings.RequestedHeartbeat));
                 }
                 catch (ConnectFailureException)
                 {
-                    m_socket = ConnectUsingIPv4(endpoint, socketFactory, connectionTimeout);
+                    m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings (AddressFamily.InterNetwork, settings.RequestedHeartbeat ));
                 }
             }
             else
             {
-                m_socket = ConnectUsingIPv4(endpoint, socketFactory, connectionTimeout);
+                m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings(AddressFamily.InterNetwork, settings.RequestedHeartbeat ));
             }
             
             m_socket.Receive += M_socket_Receive;
@@ -120,23 +145,12 @@ namespace RabbitMQ.Client.Impl
             m_stream.Write(e);
         }
 
-        public AmqpTcpEndpoint Endpoint { get; set; }
+        public AmqpTcpEndpoint Endpoint { get { return settings.Endpoint; } }
 
         public int LocalPort
         {
             get { return m_socket.ClientLocalEndPointPort; }
         }
-
-        //public EndPoint RemoteEndPoint
-        //{
-        //    get { return m_socket.ClientRemoteEndPoint; }
-        //}
-
-        //public int RemotePort
-        //{
-        //    get { return ((IPEndPoint)LocalEndPoint).Port; }
-        //}
-
         
         public void Close()
         {
@@ -199,27 +213,16 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        private bool ShouldTryIPv6(AmqpTcpEndpoint endpoint)
+        private IHyperTcpClient ConnectUsingAddressFamily(HyperTcpClientSettings settings)
         {
-            return (Socket.OSSupportsIPv6 && endpoint.AddressFamily != AddressFamily.InterNetwork);
-        }
+            IHyperTcpClient socket = new HyperTcpClientAdapter(settings);
 
-        private IHyperTcpClient ConnectUsingIPv6(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int timeout)
-        {
-            return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetworkV6);
-        }
-
-        private IHyperTcpClient ConnectUsingIPv4(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int timeout)
-        {
-            return ConnectUsingAddressFamily(endpoint, socketFactory, timeout, AddressFamily.InterNetwork);
-        }
-
-        private IHyperTcpClient ConnectUsingAddressFamily(AmqpTcpEndpoint endpoint, Func<AddressFamily, int, IHyperTcpClient> socketFactory, int timeout, AddressFamily family)
-        {
-            IHyperTcpClient socket = socketFactory(family, timeout );
             try
             {
-                if (endpoint.Ssl.Enabled) SecureConnectOrFail(socket, endpoint, timeout, false/*endpoint.Ssl.checkCertRevocation*/); else ConnectOrFail(socket, endpoint, timeout);
+                if (this.settings.Endpoint.Ssl.Enabled)
+                    SecureConnectOrFail(socket, false/*endpoint.Ssl.checkCertRevocation*/);
+                else
+                    ConnectOrFail(socket);
                 return socket;
             }
             catch (ConnectFailureException)
@@ -229,12 +232,12 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        private void ConnectOrFail(IHyperTcpClient socket, AmqpTcpEndpoint endpoint, int timeout)
+        private void ConnectOrFail(IHyperTcpClient socket)
         {
             try
             {
-                socket.ConnectAsync(endpoint.HostName, endpoint.Port)
-                      .TimeoutAfter(timeout)
+                socket.ConnectAsync(this.settings.Endpoint.HostName, this.settings.Endpoint.Port)
+                      .TimeoutAfter(this.settings.ConnectionTimeout)
                       .ConfigureAwait(false)
                       // this ensures exceptions aren't wrapped in an AggregateException
                       .GetAwaiter()
@@ -257,18 +260,18 @@ namespace RabbitMQ.Client.Impl
                 throw new ConnectFailureException("Connection failed", e);
             }
         }
-        private void SecureConnectOrFail(IHyperTcpClient socket, AmqpTcpEndpoint endpoint, int timeout, bool checkCertRevocation)
+        private void SecureConnectOrFail(IHyperTcpClient socket, bool checkCertRevocation)
         {
             try
             {
                 socket.SecureConnectAsync(
-                    endpoint.HostName, 
-                    endpoint.Port, 
-                    endpoint.Ssl.Certs, 
-                    endpoint.Ssl.CertificateValidationCallback, 
-                    endpoint.Ssl.CertificateSelectionCallback,
+                    this.settings.Endpoint.HostName,
+                    this.settings.Endpoint.Port,
+                    this.settings.Endpoint.Ssl.Certs,
+                    this.settings.Endpoint.Ssl.CertificateValidationCallback,
+                    this.settings.Endpoint.Ssl.CertificateSelectionCallback,
                     checkCertRevocation
-                ).TimeoutAfter(timeout)
+                ).TimeoutAfter(this.settings.ConnectionTimeout)
                  .ConfigureAwait(false) // this ensures exceptions aren't wrapped in an AggregateException
                  .GetAwaiter()
                  .GetResult();
