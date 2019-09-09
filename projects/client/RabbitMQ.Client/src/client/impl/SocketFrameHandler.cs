@@ -130,9 +130,9 @@ namespace RabbitMQ.Client.Impl
             m_stream.BufferUsed += M_stream_BufferUsed;
         }
 
-        private void M_stream_BufferUsed(object sender, EventArgs e)
+        private void M_stream_BufferUsed(object sender, BufferUsedEventArgs e)
         {
-            m_socket.BufferUsed();
+            m_socket.BufferUsed(e.Size);
         }
 
         private void M_socket_Closed(object sender, EventArgs e)
@@ -311,6 +311,10 @@ namespace RabbitMQ.Client.Impl
             Dispose(true);
         }
         #endregion
+    }
+    public class BufferUsedEventArgs: EventArgs
+    {
+        public int Size { get; set; }
     }
 }
 #endif

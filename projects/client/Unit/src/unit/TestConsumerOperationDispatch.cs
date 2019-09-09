@@ -53,7 +53,7 @@ namespace RabbitMQ.Client.Unit
     [TestFixture]
     internal class TestConsumerOperationDispatch : IntegrationFixture
     {
-        private string x = "dotnet.tests.consumer-operation-dispatch.fanout";
+        private const string x = "dotnet.tests.consumer-operation-dispatch.fanout";
         private List<IModel> channels = new List<IModel>();
         private List<string> queues = new List<string>();
         private List<CollectingConsumer> consumers = new List<CollectingConsumer>();

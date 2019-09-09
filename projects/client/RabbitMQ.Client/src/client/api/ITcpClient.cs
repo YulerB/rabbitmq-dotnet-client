@@ -30,7 +30,7 @@ namespace RabbitMQ.Client
     }
     public interface IHyperTcpClient : IDisposable
     {
-        void BufferUsed();
+        void BufferUsed(int size);
         int ClientLocalEndPointPort { get; }
         
         Task ConnectAsync(string host, int port);

@@ -50,7 +50,7 @@ namespace RabbitMQ.Client.Impl
     public class ArraySegmentStream 
     {
         private BlockingCollection<ReadOnlyMemory<byte>> data = new BlockingCollection<ReadOnlyMemory<byte>>();
-        public event EventHandler BufferUsed;
+        public event EventHandler<BufferUsedEventArgs> BufferUsed;
         public ArraySegmentStream(byte[] buffer) {
             data.Add(new ArraySegment<byte>(buffer, 0, buffer.Length));
         }
@@ -79,6 +79,7 @@ namespace RabbitMQ.Client.Impl
 
         private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
+        private int originalSize = 0;
         public ReadOnlyMemory<byte>[] Read(int count)
         {
             List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
@@ -90,6 +91,7 @@ namespace RabbitMQ.Client.Impl
                     try
                     {
                         top = data.Take(cts.Token);
+                        originalSize = top.Length;
                     }
                     catch (OperationCanceledException)
                     {
@@ -108,7 +110,7 @@ namespace RabbitMQ.Client.Impl
                     var read = top.Slice(0, top.Length);
                     count -= top.Length;
                     top = empty;
-                    BufferUsed?.Invoke(this, EventArgs.Empty);
+                    BufferUsed?.Invoke(this, new BufferUsedEventArgs { Size = originalSize });
                     result.Add(read);
                 }
             }
