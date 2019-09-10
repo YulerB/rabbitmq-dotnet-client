@@ -146,7 +146,7 @@ namespace RabbitMQ.Client.Unit {
         [Test]
         public void TestEventingConsumerDeliveryEvents1()
         {
-            int messages = 1000000;
+            int messages = 300000;
             int received = 0;
             string q = Model.QueueDeclare();
 
@@ -162,9 +162,37 @@ namespace RabbitMQ.Client.Unit {
 
                 ec.Received += (s, args) =>
                 {
-                    Interlocked.Increment(ref received);
-                    Model.BasicAck(args.DeliveryTag, false);
-                    if (received == messages) reset.Set();
+   //                 Model.BasicAck(args.DeliveryTag, false);
+                    if (++received == messages) reset.Set();
+                };
+
+                Model.BasicConsume(q, true, ec);
+                reset.WaitOne(TimeSpan.FromMinutes(5));
+            }
+            Console.WriteLine(received);
+            Model.Close();
+        }
+        [Test]
+        public void TestEventingConsumerDeliveryEvents2s()
+        {
+            int messages = 300000;
+            int received = 0;
+            string q = Model.QueueDeclare();
+
+            var data = new byte[1024];
+            for (int i = 0; i < messages; i++)
+            {
+                Model.BasicPublish(string.Empty, q, null, data);
+            }
+
+            using (ManualResetEvent reset = new ManualResetEvent(false))
+            {
+                EventingBasicConsumer ec = new EventingBasicConsumer(Model);
+
+                ec.Received += (s, args) =>
+                {
+                                   Model.BasicAck(args.DeliveryTag, false);
+                    if (++received == messages) reset.Set();
                 };
 
                 Model.BasicConsume(q, false, ec);

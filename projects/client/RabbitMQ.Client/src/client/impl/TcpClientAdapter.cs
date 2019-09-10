@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 namespace RabbitMQ.Client
 {
-    public class RingBuffer : IDisposable
+    public class StreamRingBuffer
     {
         private ReadOnlyMemory<byte> Memory = null;
         private byte[] bigBuffer = null;
@@ -21,8 +21,8 @@ namespace RabbitMQ.Client
         private int available = 0;
         private int capacity = 0;
         private int end = 0;
-        private SemaphoreSlim resetEvent = new SemaphoreSlim(1);
-        public RingBuffer(int capacity)
+        private object _synclock = new object();
+        public StreamRingBuffer(int capacity)
         {
             this.capacity = capacity;
             bigBuffer = new byte[capacity];
@@ -31,53 +31,26 @@ namespace RabbitMQ.Client
             end = capacity - 1;
         }
 
-        public async Task<ArraySegment<byte>> PeekAsync()
+        public ArraySegment<byte> Peek()
         {
-            if(available == 0) await resetEvent.WaitAsync();
-            var availableToEnd = Math.Min(available, capacity - position);
-            return new ArraySegment<byte>(bigBuffer, position, availableToEnd);
+            return new ArraySegment<byte>(bigBuffer, position, Math.Min(available, capacity - position));
         }
 
         public ReadOnlyMemory<byte> Take(int usedSize)
         {
-            Console.WriteLine($"Available:{available}, Actual Available:{Math.Min(available, capacity - position)}, Used:{usedSize}");
             int change = Math.Abs(usedSize);
             ReadOnlyMemory<byte> mem = Memory.Slice(position, change);
             position += change;
-            available-= change;
+            Interlocked.Add(ref available, -change);
             if (position > end) position = 0;
             return mem;
         }
 
         public void Release(int releaseSize)
         {
-            available += Math.Abs(releaseSize);
-            resetEvent.Release();
+            Interlocked.Add(ref available , releaseSize);
         }
 
-        #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    resetEvent.Dispose();
-                }
-                resetEvent = null;
-                bigBuffer = null;
-                Memory = null;
-
-                disposedValue = true;
-            }
-        }
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        #endregion
     }
     public class HyperTcpClientAdapter : IHyperTcpClient
     {
@@ -87,15 +60,16 @@ namespace RabbitMQ.Client
         private SslStream baseSSLStream;
         public event EventHandler<ReadOnlyMemory<byte>> Receive;
         private readonly object _syncLock = new object();
+        private AsyncCallback asyncCallback;
 
-        private RingBuffer ringBuffer;
+        private StreamRingBuffer ringBuffer;
 
         public HyperTcpClientAdapter(HyperTcpClientSettings settings)
         {
             sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp){NoDelay = true};
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
-            ringBuffer = new RingBuffer(sock.ReceiveBufferSize * 20);
+            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 10);
         }
 
         public virtual void BufferUsed(int size)
@@ -109,6 +83,7 @@ namespace RabbitMQ.Client
             sock?.Close();
             Closed?.Invoke(this, EventArgs.Empty);
         }
+        #region IDisposable Support
         private bool disposed;
         public virtual void Dispose()
         {
@@ -121,7 +96,6 @@ namespace RabbitMQ.Client
                 baseStream?.Dispose();
                 baseSSLStream?.Dispose();
                 sock.Dispose();
-                ringBuffer.Dispose();
                 disposed = true;
             }
             ringBuffer = null;
@@ -129,11 +103,12 @@ namespace RabbitMQ.Client
             baseStream = null;
             baseSSLStream = null;
             sock = null;
+            asyncCallback = null;
         }
+        #endregion
         public int ClientLocalEndPointPort => ((IPEndPoint)sock.LocalEndPoint).Port;
         public virtual async Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation = false)
         {
-            AssertSocket();
             var adds = await Dns.GetHostAddressesAsync(host);
             var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
             if (ep == default(IPAddress))
@@ -151,18 +126,19 @@ namespace RabbitMQ.Client
 
             await baseSSLStream.AuthenticateAsClientAsync(host, certs, Convert(System.Net.ServicePointManager.SecurityProtocol), checkCertRevocation);
 
-            var peek = ringBuffer.PeekAsync().GetAwaiter().GetResult();
+            asyncCallback = new AsyncCallback(SecureRead);
+
+            var peek = ringBuffer.Peek();
                 baseSSLStream.BeginRead(
                     peek.Array,
                     peek.Offset,
                     peek.Count,
-                    new AsyncCallback(SecureRead),
+                    asyncCallback,
                     null
                 );
         }
         public virtual async Task ConnectAsync(string host, int port)
         {
-            AssertSocket();
             var adds = await Dns.GetHostAddressesAsync(host).ConfigureAwait(false);
             var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
             if (ep == default(IPAddress))
@@ -176,12 +152,14 @@ namespace RabbitMQ.Client
 #endif
             baseStream = new NetworkStream(sock);
 
-            var peek = ringBuffer.PeekAsync().GetAwaiter().GetResult();
+            asyncCallback = new AsyncCallback(Read);
+
+            var peek = ringBuffer.Peek();
             baseStream.BeginRead(
                 peek.Array,
                 peek.Offset,
                 peek.Count,
-                new AsyncCallback(Read),
+                asyncCallback,
                 null
             );
         }
@@ -199,13 +177,6 @@ namespace RabbitMQ.Client
                 baseStream.Write(data.Array, data.Offset, data.Count);
             }
         }
-        private void AssertSocket()
-        {
-            if (sock == null)
-            {
-                throw new InvalidOperationException("Cannot perform operation as socket is null");
-            }
-        }
         private void Read(IAsyncResult result)
         {
             try
@@ -214,22 +185,17 @@ namespace RabbitMQ.Client
                 {
                     int read = baseStream.EndRead(result);
 
-                    this.Receive(this, ringBuffer.Take(read));
+                    if (read > 0) this.Receive?.Invoke(this, ringBuffer.Take(read));
 
-                    ringBuffer
-                        .PeekAsync()
-                        .ContinueWith(async (t) =>
-                        {
-                            var peek = await t;
-                            baseStream.BeginRead(
-                                peek.Array,
-                                peek.Offset,
-                                peek.Count,
-                                new AsyncCallback(Read),
-                                null
-                            );
-                        })
-                        .ConfigureAwait(false); 
+                    var peek = ringBuffer.Peek();
+                    
+                    baseStream.BeginRead(
+                        peek.Array,
+                        peek.Offset,
+                        peek.Count,
+                        asyncCallback,
+                        null
+                    );
                 }
             }
             catch (System.Net.Sockets.SocketException)
@@ -256,18 +222,15 @@ namespace RabbitMQ.Client
                 if (!disposed)
                 {
                     int read = baseSSLStream.EndRead(result);
-                    this.Receive(this, ringBuffer.Take(read));
-                    ringBuffer.PeekAsync().ContinueWith(async (t) =>
-                    {
-                        var peek = await t;
-                        baseSSLStream.BeginRead(
-                            peek.Array,
-                            peek.Offset,
-                            peek.Count,
-                            new AsyncCallback(SecureRead),
-                            null
-                        );
-                    }).ConfigureAwait(false);
+                    if (read > 0) this.Receive?.Invoke(this, ringBuffer.Take(read));
+                    var peek = ringBuffer.Peek();
+                    baseSSLStream.BeginRead(
+                        peek.Array,
+                        peek.Offset,
+                        peek.Count,
+                        asyncCallback,
+                        null
+                    );
                 }
             }
             catch (System.Net.Sockets.SocketException) {
