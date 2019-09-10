@@ -40,6 +40,7 @@ namespace RabbitMQ.Client
 
         public ReadOnlyMemory<byte> Take(int usedSize)
         {
+            Console.WriteLine($"Available:{available}, Actual Available:{Math.Min(available, capacity - position)}, Used:{usedSize}");
             int change = Math.Abs(usedSize);
             ReadOnlyMemory<byte> mem = Memory.Slice(position, change);
             position += change;
@@ -263,7 +264,7 @@ namespace RabbitMQ.Client
                             peek.Array,
                             peek.Offset,
                             peek.Count,
-                            new AsyncCallback(Read),
+                            new AsyncCallback(SecureRead),
                             null
                         );
                     }).ConfigureAwait(false);
