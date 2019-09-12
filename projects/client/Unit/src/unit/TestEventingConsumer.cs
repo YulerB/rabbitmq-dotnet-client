@@ -201,5 +201,72 @@ namespace RabbitMQ.Client.Unit {
                 Assert.AreEqual(messages, received);
             }
         }
+
+
+        [Test]
+        public void TestEventingConsumerDeliveryEventsNoAck1()
+        {
+            int messages = 300000;
+            int received = 0;
+            string q = Model.QueueDeclare();
+
+            var data = new byte[1024];
+
+            using (ManualResetEvent reset = new ManualResetEvent(false))
+            {
+                EventingBasicConsumer ec = new EventingBasicConsumer(Model);
+
+                ec.Received += (s, args) =>
+                {
+                    if (++received == messages) reset.Set();
+                };
+
+                Model.BasicConsume(q, true, ec);
+
+                for (int i = 0; i < messages; i++)
+                {
+                    Model.BasicPublish(string.Empty, q, null, data);
+                }
+
+                reset.WaitOne(TimeSpan.FromMinutes(2));
+
+                Model.BasicCancel(ec.ConsumerTag);
+                Assert.AreEqual(messages, received);
+            }
+        }
+        [Test]
+        public void TestEventingConsumerDeliveryEventsWithAck1()
+        {
+            int messages = 300000;
+            int received = 0;
+            string q = Model.QueueDeclare();
+
+            var data = new byte[1024];
+
+            using (ManualResetEvent reset = new ManualResetEvent(false))
+            {
+                EventingBasicConsumer ec = new EventingBasicConsumer(Model);
+
+                ec.Received += (s, args) =>
+                {
+                    Model.BasicAck(args.DeliveryTag, false);
+                    if (++received == messages) reset.Set();
+                };
+
+                Model.BasicConsume(q, false, ec);
+
+                for (int i = 0; i < messages; i++)
+                {
+                    Model.BasicPublish(string.Empty, q, null, data);
+                }
+
+                reset.WaitOne(TimeSpan.FromMinutes(2));
+
+                Model.BasicCancel(ec.ConsumerTag);
+
+                Assert.AreEqual(messages, received);
+            }
+        }
+
     }
 }

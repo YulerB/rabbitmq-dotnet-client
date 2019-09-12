@@ -85,12 +85,12 @@ namespace RabbitMQ.Client.Unit
 
         private class CollectingConsumer : DefaultBasicConsumer
         {
-            public List<ulong> DeliveryTags { get; private set; }
+            public ConcurrentBag<ulong> DeliveryTags { get; private set; }
 
             public CollectingConsumer(IModel model)
                 : base(model)
             {
-                this.DeliveryTags = new List<ulong>();
+                this.DeliveryTags = new ConcurrentBag<ulong>();
             }
 
             public override void HandleBasicDeliver(string consumerTag,
@@ -121,12 +121,13 @@ namespace RabbitMQ.Client.Unit
             {
                 var ch = Conn.CreateModel();
                 channels.Add(ch);
+
                 var cons = new CollectingConsumer(ch);
                 consumers.Add(cons);
 
                 var q = ch.QueueDeclare(string.Empty, durable: false, exclusive: true, autoDelete: true, arguments: null);
-                queues.Add(q);
                 ch.QueueBind(queue: q, exchange: x, routingKey: string.Empty);
+                queues.Add(q);
 
                 ch.BasicConsume(queue: q, autoAck: false, consumer: cons);
             }
@@ -141,17 +142,30 @@ namespace RabbitMQ.Client.Unit
 
             foreach (var cons in consumers)
             {
-                Assert.That(cons.DeliveryTags, Has.Count.EqualTo(n));
-                var ary = cons.DeliveryTags.ToArray();
-                Assert.AreEqual(ary[0], 1);
-                Assert.AreEqual(ary[n - 1], n);
-                for (int i = 0; i < (n - 1); i++)
+                
+                Assert.AreEqual(n,cons.DeliveryTags.Count, "Messages Not Received");
+            }
+
+            for (int i = 1; i < y; i++)
+            {
+                for (int j = 0; j < n; j++)
                 {
-                    var a = ary[i];
-                    var b = ary[i + 1];
-                    Assert.IsTrue(a < b);
+                    Assert.AreEqual(consumers[0].DeliveryTags.ToArray()[j], consumers[i].DeliveryTags.ToArray()[j], "DeliveryTag Different accross consumers");
                 }
             }
+
+            for (int i = 0; i < y; i++)
+            {
+                for (int j = 1; j < n; j++)
+                {
+                    Assert.IsTrue(
+                        consumers[i].DeliveryTags.ToArray()[j] - consumers[i].DeliveryTags.ToArray()[j - 1] == 1 ||
+                        (long)consumers[i].DeliveryTags.ToArray()[j] - (long)consumers[i].DeliveryTags.ToArray()[j - 1] == -1,
+                        "Sequence out of order");
+                }
+            }
+
+
         }
 
         // see rabbitmq/rabbitmq-dotnet-client#61
