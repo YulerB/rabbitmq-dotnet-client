@@ -171,13 +171,32 @@ namespace RabbitMQ.Client.Impl
 
     public class InboundFrame : Frame
     {
-        private InboundFrame(FrameType type, ushort channel, byte[] payload, MethodBase method, ContentHeaderBase header, ulong totalBodyBytes) : base(type, channel, payload)
+        internal InboundFrame(FrameType type, ushort channel, byte[] payload, MethodBase method, ContentHeaderBase header, ulong totalBodyBytes) : base(type, channel, payload)
         {
             this.Method = method;
             this.Header = header;
             this.TotalBodyBytes = totalBodyBytes;
         }
-    
+
+
+
+
+        public MethodBase Method
+        {
+            get;
+            private set;
+        }
+        public ContentHeaderBase Header
+        {
+            get;
+            private set;
+        }
+        public ulong TotalBodyBytes { get; private set; }
+    }
+    public static class FrameReader
+    {
+        private static readonly Protocol m_protocol = new Protocol();
+
         private static void ProcessProtocolHeader(ArraySegmentStream reader)
         {
             try
@@ -250,14 +269,13 @@ namespace RabbitMQ.Client.Impl
             }
 
             ushort channel = reader.ReadUInt16();
-            uint payloadSize =  reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
+            uint payloadSize = reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
 
             ContentHeaderBase m_content = null;
             byte[] payload = new byte[] { };
             MethodBase m_method = null;
-            ulong totalBodyBytes=0;
+            ulong totalBodyBytes = 0;
 
-            Protocol m_protocol = new Protocol();
             if (type == (int)FrameType.FrameMethod)
             {
                 m_method = m_protocol.DecodeMethodFrom(reader);
@@ -289,19 +307,7 @@ namespace RabbitMQ.Client.Impl
             return new InboundFrame((FrameType)type, channel, payload, m_method, m_content, totalBodyBytes);
         }
 
-        public MethodBase Method
-        {
-            get;
-            private set;
-        }
-        public ContentHeaderBase Header
-        {
-            get;
-            private set;
-        }
-        public ulong TotalBodyBytes { get; private set; }
     }
-
     public class Frame
     {
         public Frame(FrameType type, ushort channel)

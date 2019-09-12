@@ -144,7 +144,7 @@ namespace RabbitMQ.Client.Unit {
 
 
         [Test]
-        public void TestEventingConsumerDeliveryEvents1()
+        public void TestEventingConsumerDeliveryEventsNoAck()
         {
             int messages = 300000;
             int received = 0;
@@ -162,18 +162,18 @@ namespace RabbitMQ.Client.Unit {
 
                 ec.Received += (s, args) =>
                 {
-   //                 Model.BasicAck(args.DeliveryTag, false);
                     if (++received == messages) reset.Set();
                 };
 
                 Model.BasicConsume(q, true, ec);
-                reset.WaitOne(TimeSpan.FromMinutes(5));
+                reset.WaitOne(TimeSpan.FromMinutes(2));
+                
+                Model.BasicCancel(ec.ConsumerTag);
+                Assert.AreEqual(messages, received);
             }
-            Console.WriteLine(received);
-            Model.Close();
         }
         [Test]
-        public void TestEventingConsumerDeliveryEvents2s()
+        public void TestEventingConsumerDeliveryEventsWithAck()
         {
             int messages = 300000;
             int received = 0;
@@ -191,15 +191,15 @@ namespace RabbitMQ.Client.Unit {
 
                 ec.Received += (s, args) =>
                 {
-                                   Model.BasicAck(args.DeliveryTag, false);
+                    Model.BasicAck(args.DeliveryTag, false);
                     if (++received == messages) reset.Set();
                 };
 
                 Model.BasicConsume(q, false, ec);
-                reset.WaitOne(TimeSpan.FromMinutes(5));
+                reset.WaitOne(TimeSpan.FromMinutes(2));
+                Model.BasicCancel(ec.ConsumerTag);
+                Assert.AreEqual(messages, received);
             }
-            Console.WriteLine(received);
-            Model.Close();
         }
     }
 }

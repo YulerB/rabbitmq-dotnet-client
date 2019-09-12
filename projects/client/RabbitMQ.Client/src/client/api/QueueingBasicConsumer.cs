@@ -137,17 +137,7 @@ namespace RabbitMQ.Client
             IBasicProperties properties,
             byte[] body)
         {
-            var eventArgs = new BasicDeliverEventArgs
-            {
-                ConsumerTag = consumerTag,
-                DeliveryTag = deliveryTag,
-                Redelivered = redelivered,
-                Exchange = exchange,
-                RoutingKey = routingKey,
-                BasicProperties = properties,
-                Body = body
-            };
-            Queue.Enqueue(eventArgs);
+            Queue.Enqueue(new BasicDeliverEventArgs(consumerTag, deliveryTag, redelivered, exchange, routingKey, properties, body));
         }
 
         /// <summary>

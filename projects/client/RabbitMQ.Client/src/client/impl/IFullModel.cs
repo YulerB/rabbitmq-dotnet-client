@@ -381,23 +381,37 @@ namespace RabbitMQ.Client.Impl
 
     ///<summary>Essential information from an incoming Connection.Tune
     ///method.</summary>
-    public struct ConnectionTuneDetails
+    public class ConnectionTuneDetails
     {
+        public ConnectionTuneDetails(ushort m_channelMax, uint m_frameMax, ushort m_heartbeat)
+        {
+            this.m_channelMax = m_channelMax;
+            this.m_frameMax = m_frameMax;
+            this.m_heartbeat = m_heartbeat;
+        }
         ///<summary>The peer's suggested channel-max parameter.</summary>
-        public ushort m_channelMax;
+        public ushort m_channelMax { get; private set; }
 
         ///<summary>The peer's suggested frame-max parameter.</summary>
-        public uint m_frameMax;
+        public uint m_frameMax { get; private set; }
 
         ///<summary>The peer's suggested heartbeat parameter.</summary>
-        public ushort m_heartbeat;
+        public ushort m_heartbeat { get; private set; }
     }
 
 
     public class ConnectionSecureOrTune
     {
-        public byte[] m_challenge;
-        public ConnectionTuneDetails m_tuneDetails;
+        public ConnectionSecureOrTune(byte[] m_challenge)
+        {
+            this.m_challenge = m_challenge;
+        }
+        public ConnectionSecureOrTune(ConnectionTuneDetails m_tuneDetails)
+        {
+            this.m_tuneDetails = m_tuneDetails;
+        }
+        public byte[] m_challenge { get; private set; }
+        public ConnectionTuneDetails m_tuneDetails { get; private set; }
     }
 }
 

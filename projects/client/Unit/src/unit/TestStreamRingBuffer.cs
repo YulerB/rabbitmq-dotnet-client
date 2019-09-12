@@ -53,7 +53,7 @@ namespace RabbitMQ.Client.Unit {
             Random r = new Random();
             const int capacity = 2;
             ReadOnlyMemory<byte> taken=null;
-            ArraySegment<byte> peek=default(ArraySegment<byte>);
+            ArraySegment<byte> peek= default;
             StreamRingBuffer ringBuffer = new StreamRingBuffer(capacity);
             for (int i = 0; i < 2; i++)
             {

@@ -79,8 +79,7 @@ namespace RabbitMQ.Client.Impl
             BaseReader = reader;
             ClearBits();
         }
-
-
+        
         public override bool ReadBit()
         {
             if (m_bit > 0x80)

@@ -348,7 +348,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public static IDictionary<string, object> DefaultClientProperties()
         {
-            IDictionary<string, object> table = new Dictionary<string, object>
+            return new Dictionary<string, object>
             {
                 {"product" , Encoding.UTF8.GetBytes("RabbitMQ")},
                 {"version", Encoding.UTF8.GetBytes(version)},
@@ -356,7 +356,6 @@ namespace RabbitMQ.Client.Framing.Impl
                 {"copyright", Encoding.UTF8.GetBytes("Copyright (c) 2007-2016 Pivotal Software, Inc.")},
                 {"information", Encoding.UTF8.GetBytes("Licensed under the MPL.  See http://www.rabbitmq.com/")}
             };
-            return table;
         }
 
         public void Abort(ushort reasonCode, string reasonText,

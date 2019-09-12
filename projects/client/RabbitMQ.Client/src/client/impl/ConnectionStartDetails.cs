@@ -45,10 +45,26 @@ namespace RabbitMQ.Client.Impl
 {
     public class ConnectionStartDetails : EventArgs
     {
-        public byte[] m_locales;
-        public byte[] m_mechanisms;
-        public IDictionary<string, object> m_serverProperties;
-        public byte m_versionMajor;
-        public byte m_versionMinor;
+        public ConnectionStartDetails(
+            byte versionMajor,
+            byte versionMinor,
+            IDictionary<string, object> serverProperties,
+            byte[] mechanisms,
+            byte[] locales
+            )
+        {
+            m_versionMajor = versionMajor;
+            m_versionMinor = versionMinor;
+            m_serverProperties = serverProperties;
+            m_mechanisms = mechanisms;
+            m_locales = locales;
+        }
+
+
+        public byte[] m_locales { get; private set; }
+        public byte[] m_mechanisms { get; private set; }
+        public IDictionary<string, object> m_serverProperties { get; private set; }
+        public byte m_versionMajor { get; private set; }
+        public byte m_versionMinor { get; private set; }
     }
 }

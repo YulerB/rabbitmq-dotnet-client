@@ -16,12 +16,11 @@ namespace RabbitMQ.Client
     public class StreamRingBuffer
     {
         private ReadOnlyMemory<byte> Memory = null;
-        private byte[] bigBuffer = null;
+        private readonly byte[] bigBuffer = null;
         private int position = 0;
         private int available = 0;
-        private int capacity = 0;
-        private int end = 0;
-        private object _synclock = new object();
+        private readonly int capacity = 0;
+        private readonly int end = 0;
         public StreamRingBuffer(int capacity)
         {
             this.capacity = capacity;

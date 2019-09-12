@@ -179,7 +179,7 @@ namespace RabbitMQ.Client.Impl
 
         public InboundFrame ReadFrame()
         {
-            return RabbitMQ.Client.Impl.InboundFrame.ReadFrom(m_stream);
+            return FrameReader.ReadFrom(m_stream);
         }
 
         private static readonly byte[] amqp = Encoding.ASCII.GetBytes("AMQP");

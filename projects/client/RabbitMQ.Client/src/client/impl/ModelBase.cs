@@ -68,10 +68,9 @@ namespace RabbitMQ.Client.Impl
         private TimeSpan m_continuationTimeout = TimeSpan.FromSeconds(20);
 
         private RpcContinuationQueue m_continuationQueue = new RpcContinuationQueue();
-        private ManualResetEvent m_flowControlBlock = new ManualResetEvent(true);
+        //private ManualResetEvent m_flowControlBlock = new ManualResetEvent(true);
 
         private readonly object m_eventLock = new object();
-        private readonly object m_flowSendLock = new object();
         private readonly object m_shutdownLock = new object();
         private readonly object _rpcLock = new object();
 
@@ -478,7 +477,10 @@ namespace RabbitMQ.Client.Impl
         {
             if (method.HasContent)
             {
-                m_flowControlBlock.WaitOne();
+                if (controllingFlow)
+                {
+                    SpinWait.SpinUntil(() => !controllingFlow);
+                }
                 Session.Transmit(new Command(method, header, body));
             }
             else
@@ -670,7 +672,8 @@ namespace RabbitMQ.Client.Impl
             lock (m_unconfirmedSet.SyncRoot)
                 Monitor.Pulse(m_unconfirmedSet.SyncRoot);
 
-            m_flowControlBlock.Set();
+            controllingFlow = false;
+            //m_flowControlBlock.Set();
         }
 
         public void OnSessionShutdown(object sender, ShutdownEventArgs reason)
@@ -759,11 +762,7 @@ namespace RabbitMQ.Client.Impl
         public void HandleBasicAck(ulong deliveryTag,
             bool multiple)
         {
-            var e = new BasicAckEventArgs
-            {
-                DeliveryTag = deliveryTag,
-                Multiple = multiple
-            };
+            var e = new BasicAckEventArgs(deliveryTag, multiple);
             OnBasicAck(e);
         }
 
@@ -942,16 +941,21 @@ namespace RabbitMQ.Client.Impl
             FinishClose();
         }
 
+        private bool controllingFlow;
         public void HandleChannelFlow(bool active)
         {
+            controllingFlow = !active;
+
             if (active)
             {
-                m_flowControlBlock.Set();
+
+            //    m_flowControlBlock.Set();
                 _Private_ChannelFlowOk(active);
             }
             else
             {
-                m_flowControlBlock.Reset();
+                //controllingFlow = true;
+              //  m_flowControlBlock.Reset();
                 _Private_ChannelFlowOk(active);
             }
             OnFlowControl(new FlowControlEventArgs(active));
@@ -1004,10 +1008,7 @@ namespace RabbitMQ.Client.Impl
         public void HandleConnectionSecure(byte[] challenge)
         {
             var k = (ConnectionStartRpcContinuation)m_continuationQueue.Next();
-            k.m_result = new ConnectionSecureOrTune
-            {
-                m_challenge = challenge
-            };
+            k.m_result = new ConnectionSecureOrTune(challenge);
             k.HandleCommand(null); // release the continuation.
         }
 
@@ -1025,14 +1026,7 @@ namespace RabbitMQ.Client.Impl
                         "Unexpected Connection.Start");
                 ((Connection)Session.Connection).Close(reason);
             }
-            var details = new ConnectionStartDetails
-            {
-                m_versionMajor = versionMajor,
-                m_versionMinor = versionMinor,
-                m_serverProperties = serverProperties,
-                m_mechanisms = mechanisms,
-                m_locales = locales
-            };
+            var details = new ConnectionStartDetails(versionMajor,versionMinor,serverProperties,mechanisms,locales);
             m_connectionStartCell.ContinueWithValue(details);
             m_connectionStartCell = null;
         }
@@ -1044,15 +1038,7 @@ namespace RabbitMQ.Client.Impl
             ushort heartbeat)
         {
             var k = (ConnectionStartRpcContinuation)m_continuationQueue.Next();
-            k.m_result = new ConnectionSecureOrTune
-            {
-                m_tuneDetails =
-                {
-                    m_channelMax = channelMax,
-                    m_frameMax = frameMax,
-                    m_heartbeat = heartbeat
-                }
-            };
+            k.m_result = new ConnectionSecureOrTune(new ConnectionTuneDetails(channelMax,frameMax,heartbeat));
             k.HandleCommand(null); // release the continuation.
         }
 
@@ -1186,7 +1172,7 @@ namespace RabbitMQ.Client.Impl
 
         public void BasicCancel(string consumerTag)
         {
-            var k = new BasicConsumerRpcContinuation { m_consumerTag = consumerTag };
+            var k = new BasicConsumerRpcContinuation (consumerTag);
 
             lock(_rpcLock)
             {
@@ -1220,7 +1206,7 @@ namespace RabbitMQ.Client.Impl
                 }
             }
 
-            var k = new BasicConsumerRpcContinuation { m_consumer = consumer };
+            var k = new BasicConsumerRpcContinuation ( consumer );
 
             lock(_rpcLock)
             {
@@ -1571,7 +1557,11 @@ namespace RabbitMQ.Client.Impl
 
         internal void SendCommands(IList<Command> commands)
         {
-            m_flowControlBlock.WaitOne();
+            if (controllingFlow)
+            {
+                SpinWait.SpinUntil(() => !controllingFlow);
+            }
+            //m_flowControlBlock.WaitOne();
             AllocatatePublishSeqNos(commands.Count);
             Session.Transmit(commands);
         }
@@ -1621,8 +1611,16 @@ namespace RabbitMQ.Client.Impl
 
         public class BasicConsumerRpcContinuation : SimpleBlockingRpcContinuation
         {
-            public IBasicConsumer m_consumer;
-            public string m_consumerTag;
+            public BasicConsumerRpcContinuation(string consumerTag)
+            {
+                this.m_consumerTag = consumerTag;
+            }
+            public BasicConsumerRpcContinuation(IBasicConsumer consumer)
+            {
+                this.m_consumer = consumer;
+            }
+            public IBasicConsumer m_consumer { get; set; }
+            public string m_consumerTag { get; set; }
         }
 
         public class BasicGetRpcContinuation : SimpleBlockingRpcContinuation

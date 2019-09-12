@@ -22,12 +22,11 @@ namespace RabbitMQ.Client.Impl
             }
             catch (Exception e)
             {
-                var details = new Dictionary<string, object>
+                model.OnCallbackException(CallbackExceptionEventArgs.Build(e, new Dictionary<string, object>
                 {
                     {"consumer", consumer},
                     {"context",  "HandleBasicCancel"}
-                };
-                model.OnCallbackException(CallbackExceptionEventArgs.Build(e, details));
+                }));
             }
         }
     }

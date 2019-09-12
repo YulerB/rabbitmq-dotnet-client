@@ -99,11 +99,10 @@ namespace RabbitMQ.Client.Events
         public static CallbackExceptionEventArgs Build(Exception e,
                                                        string context)
         {
-            var details = new Dictionary<string, object>
+            return Build(e, new Dictionary<string, object>
             {
                 {"context", context}
-            };
-            return Build(e, details);
+            });
         }
 
         public static CallbackExceptionEventArgs Build(Exception e,
