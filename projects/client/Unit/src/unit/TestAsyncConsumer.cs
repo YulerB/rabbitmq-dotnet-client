@@ -58,7 +58,45 @@ namespace RabbitMQ.Client.Unit
     [TestFixture]
     public class TestAsyncConsumer
     {
+        [Test]
+        public void TestAsyncEventingConsumerDeliveryEventsNoAck1()
+        {
+            int messages = 300000;
+            int received = 0;
 
+            using (var c = new ConnectionFactory { DispatchConsumersAsync = true }.CreateConnection())
+            {
+                using (var Model = c.CreateModel())
+                {
+                    string q = Model.QueueDeclare();
+
+                    var data = new byte[1024];
+
+                    using (ManualResetEvent reset = new ManualResetEvent(false))
+                    {
+                        AsyncEventingBasicConsumer ec = new AsyncEventingBasicConsumer(Model);
+
+                        ec.Received += async (e, args) =>
+                        {
+                            if (++received == messages) reset.Set();
+                        };
+
+                        Model.BasicConsume(q, true, ec);
+
+                        for (int i = 0; i < messages; i++)
+                        {
+                            Model.BasicPublish(string.Empty, q, null, data);
+                        }
+
+                        reset.WaitOne(TimeSpan.FromMinutes(2));
+
+                        Model.BasicCancel(ec.ConsumerTag);
+                        Assert.AreEqual(messages, received);
+                    }
+                }
+            }
+        }
+        
         [Test]
         public void TestBasicRoundtrip()
         {
