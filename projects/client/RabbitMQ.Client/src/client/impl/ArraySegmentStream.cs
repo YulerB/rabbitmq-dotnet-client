@@ -69,12 +69,10 @@ namespace RabbitMQ.Client.Impl
         {
             if (disposing)
             {
-                cts.Dispose();
                 data.Dispose();
             }
             BufferUsed = null;
             data = null;
-            cts = null;
         }
 
         private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
@@ -88,16 +86,14 @@ namespace RabbitMQ.Client.Impl
             {
                 if (top.Length == 0)
                 {
-                    try
-                    {
-                        top = data.Take(cts.Token);
-                        originalSize = top.Length;
-                    }
-                    catch (OperationCanceledException)
-                    {
+                    top = data.Take();
+
+                    if (data.IsCompleted && top.IsEmpty)
                         throw new EndOfStreamException();
-                    }
+
+                    originalSize = top.Length;
                 }
+
                 if (top.Length > count)
                 {
                     var read = top.Slice(0, count);
@@ -120,10 +116,9 @@ namespace RabbitMQ.Client.Impl
         {
             data.Add(buffer);
         }
-        private CancellationTokenSource cts = new CancellationTokenSource();
         internal void NotifyClosed()
         {
-            cts.Cancel();
+            data.CompleteAdding();
         }
     }
 }

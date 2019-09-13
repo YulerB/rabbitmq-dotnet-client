@@ -13,44 +13,6 @@ using System.Collections.Generic;
 
 namespace RabbitMQ.Client
 {
-    public class StreamRingBuffer
-    {
-        private ReadOnlyMemory<byte> Memory = null;
-        private readonly byte[] bigBuffer = null;
-        private int position = 0;
-        private int available = 0;
-        private readonly int capacity = 0;
-        private readonly int end = 0;
-        public StreamRingBuffer(int capacity)
-        {
-            this.capacity = capacity;
-            bigBuffer = new byte[capacity];
-            Memory = new ReadOnlyMemory<byte>(bigBuffer);
-            available = capacity;
-            end = capacity - 1;
-        }
-
-        public ArraySegment<byte> Peek()
-        {
-            return new ArraySegment<byte>(bigBuffer, position, Math.Min(available, capacity - position));
-        }
-
-        public ReadOnlyMemory<byte> Take(int usedSize)
-        {
-            int change = Math.Abs(usedSize);
-            ReadOnlyMemory<byte> mem = Memory.Slice(position, change);
-            position += change;
-            Interlocked.Add(ref available, -change);
-            if (position > end) position = 0;
-            return mem;
-        }
-
-        public void Release(int releaseSize)
-        {
-            Interlocked.Add(ref available , releaseSize);
-        }
-
-    }
     public class HyperTcpClientAdapter : IHyperTcpClient
     {
         public event EventHandler Closed;
@@ -204,10 +166,12 @@ namespace RabbitMQ.Client
             catch (System.ObjectDisposedException)
             {
                 // Nothing to do here.
+                Closed?.Invoke(this, EventArgs.Empty);
             }
             catch (System.IO.FileNotFoundException)
             {
                 // Nothing to do here.
+                Closed?.Invoke(this, EventArgs.Empty);
             }
             catch (IOException)
             {

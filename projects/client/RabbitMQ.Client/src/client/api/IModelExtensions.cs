@@ -60,7 +60,7 @@ namespace RabbitMQ.Client
         /// <summary>Start a Basic content-class consumer.</summary>
         public static string BasicConsume(this IModel model, string queue, bool autoAck, IBasicConsumer consumer)
         {
-            return model.BasicConsume(queue, autoAck, "", false, false, null, consumer);
+            return model.BasicConsume(queue, autoAck, string.Empty, false, false, null, consumer);
         }
 
         /// <summary>Start a Basic content-class consumer.</summary>

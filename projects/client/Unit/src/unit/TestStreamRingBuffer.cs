@@ -86,5 +86,22 @@ namespace RabbitMQ.Client.Unit {
             Assert.IsTrue(peek.Count == 0);
 
         }
+
+
+        [Test]
+        public void StreamRingBufferTest2()
+        {
+            Random r = new Random();
+            const int capacity = 2;
+            StreamRingBuffer ringBuffer = new StreamRingBuffer(capacity);
+
+            int runs = 1000000;
+            while (runs--  > 0)
+            {
+                ringBuffer.Peek();
+                ringBuffer.Take(1);
+                ringBuffer.Release(1);
+            }
+        }
     }
 }

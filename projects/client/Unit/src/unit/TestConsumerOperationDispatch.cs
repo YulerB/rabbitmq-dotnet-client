@@ -102,7 +102,7 @@ namespace RabbitMQ.Client.Unit
                 // (per-channel) by the concurrent dispatcher.
                 this.DeliveryTags.Add(deliveryTag);
 
-                if (deliveryTag == n)
+                if (DeliveryTags.Count == n)
                 {
                     counter.Signal();
                 }
@@ -132,17 +132,16 @@ namespace RabbitMQ.Client.Unit
                 ch.BasicConsume(queue: q, autoAck: false, consumer: cons);
             }
 
+            var messageBody = encoding.GetBytes("msg");
+            var props = new BasicProperties();
             for (int i = 0; i < n; i++)
             {
-                Ch.BasicPublish(exchange: x, routingKey: string.Empty,
-                    basicProperties: new BasicProperties(),
-                    body: encoding.GetBytes("msg"));
+                Ch.BasicPublish(exchange: x, routingKey: string.Empty, basicProperties: props, body: messageBody);
             }
             counter.Wait(TimeSpan.FromSeconds(30));
 
             foreach (var cons in consumers)
             {
-                
                 Assert.AreEqual(n,cons.DeliveryTags.Count, "Messages Not Received");
             }
 
@@ -172,27 +171,40 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestChannelShutdownDoesNotShutDownDispatcher()
         {
-            var ch1 = Conn.CreateModel();
-            var ch2 = Conn.CreateModel();
-            Model.ExchangeDeclare(x, "fanout", durable: false);
-
-            var q1 = ch1.QueueDeclare().QueueName;
-            var q2 = ch2.QueueDeclare().QueueName;
-            ch2.QueueBind(queue: q2, exchange: x, routingKey: "");
-
-            var latch = new ManualResetEvent(false);
-            ch1.BasicConsume(q1, true, new EventingBasicConsumer(ch1));
-            var c2 = new EventingBasicConsumer(ch2);
-            c2.Received += (object sender, BasicDeliverEventArgs e) =>
+            using (var ch1 = Conn.CreateModel())
             {
-                latch.Set();
-            };
-            ch2.BasicConsume(q2, true, c2);
-            // closing this channel must not affect ch2
-            ch1.Close();
+                using (var ch2 = Conn.CreateModel())
+                {
+                    Model.ExchangeDeclare(x, "fanout", durable: false);
 
-            ch2.BasicPublish(exchange: x, basicProperties: null, body: encoding.GetBytes("msg"), routingKey: "");
-            Wait(latch);
+                    var q1 = ch1.QueueDeclare().QueueName;
+                    var q2 = ch2.QueueDeclare().QueueName;
+                    ch2.QueueBind(queue: q2, exchange: x, routingKey: string.Empty);
+
+                    using (var latch = new ManualResetEvent(false))
+                    {
+                        var cons = new EventingBasicConsumer(ch1);
+                        ch1.BasicConsume(q1, true, cons);
+                        var c2 = new EventingBasicConsumer(ch2);
+                        c2.Received += (object sender, BasicDeliverEventArgs e) =>
+                        {
+                            latch.Set();
+                        };
+                        ch2.BasicConsume(q2, true, c2);
+                        // closing this channel must not affect ch2
+                        ch1.Close();
+
+                        ch2.BasicPublish(
+                            exchange: x, 
+                            basicProperties: null, 
+                            body: encoding.GetBytes("msg"), 
+                            routingKey: string.Empty);
+
+                        Wait(latch);
+                    }
+                    ch2.Close();
+                }
+            }
         }
 
         private class ShutdownLatchConsumer : DefaultBasicConsumer

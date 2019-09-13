@@ -68,7 +68,7 @@ namespace RabbitMQ.Client.Impl
         private TimeSpan m_continuationTimeout = TimeSpan.FromSeconds(20);
 
         private RpcContinuationQueue m_continuationQueue = new RpcContinuationQueue();
-        //private ManualResetEvent m_flowControlBlock = new ManualResetEvent(true);
+        private ManualResetEvent m_flowControlBlock = new ManualResetEvent(true);
 
         private readonly object m_eventLock = new object();
         private readonly object m_shutdownLock = new object();
@@ -477,10 +477,7 @@ namespace RabbitMQ.Client.Impl
         {
             if (method.HasContent)
             {
-                if (controllingFlow)
-                {
-                    SpinWait.SpinUntil(() => !controllingFlow);
-                }
+                m_flowControlBlock.WaitOne();
                 Session.Transmit(new Command(method, header, body));
             }
             else
@@ -671,9 +668,7 @@ namespace RabbitMQ.Client.Impl
             }
             lock (m_unconfirmedSet.SyncRoot)
                 Monitor.Pulse(m_unconfirmedSet.SyncRoot);
-
-            controllingFlow = false;
-            //m_flowControlBlock.Set();
+            m_flowControlBlock.Set();
         }
 
         public void OnSessionShutdown(object sender, ShutdownEventArgs reason)
@@ -941,23 +936,10 @@ namespace RabbitMQ.Client.Impl
             FinishClose();
         }
 
-        private bool controllingFlow;
         public void HandleChannelFlow(bool active)
         {
-            controllingFlow = !active;
-
-            if (active)
-            {
-
-            //    m_flowControlBlock.Set();
-                _Private_ChannelFlowOk(active);
-            }
-            else
-            {
-                //controllingFlow = true;
-              //  m_flowControlBlock.Reset();
-                _Private_ChannelFlowOk(active);
-            }
+            if (active) m_flowControlBlock.Set(); else m_flowControlBlock.Reset();
+            _Private_ChannelFlowOk(active);
             OnFlowControl(new FlowControlEventArgs(active));
         }
 
@@ -1557,11 +1539,7 @@ namespace RabbitMQ.Client.Impl
 
         internal void SendCommands(IList<Command> commands)
         {
-            if (controllingFlow)
-            {
-                SpinWait.SpinUntil(() => !controllingFlow);
-            }
-            //m_flowControlBlock.WaitOne();
+            m_flowControlBlock.WaitOne();
             AllocatatePublishSeqNos(commands.Count);
             Session.Transmit(commands);
         }
