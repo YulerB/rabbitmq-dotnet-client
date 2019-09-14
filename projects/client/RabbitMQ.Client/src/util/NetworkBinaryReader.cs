@@ -64,7 +64,7 @@ namespace RabbitMQ.Util
             //Think of ways to remove memory copying
 
             var data = input.Read(payloadSize);
-            if(data.Length == 1)
+            if(data.Count == 1)
             {
                 byte[] bytes = new byte[payloadSize];
                 Memory<byte> memory = new Memory<byte>(bytes);
@@ -88,7 +88,7 @@ namespace RabbitMQ.Util
         public static ReadOnlyMemory<byte> ReadMemory(this ArraySegmentStream input, int payloadSize)
         {
             var data = input.Read(payloadSize);
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return data[0];
             }
@@ -112,7 +112,7 @@ namespace RabbitMQ.Util
         {
             var data = input.Read(2);
 
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return BinaryPrimitives.ReadUInt16BigEndian(data[0].Span);
             }
@@ -143,7 +143,7 @@ namespace RabbitMQ.Util
         public static uint ReadUInt32(this ArraySegmentStream input)
         {
             var data = input.Read(4);
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return BinaryPrimitives.ReadUInt32BigEndian(data[0].Span);
             }
@@ -171,7 +171,7 @@ namespace RabbitMQ.Util
         public static ulong ReadUInt64(this ArraySegmentStream input)
         {
             var data = input.Read(8);
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return BinaryPrimitives.ReadUInt64BigEndian(data[0].Span);
             }
@@ -200,7 +200,7 @@ namespace RabbitMQ.Util
         {
             var data = input.Read(2);
 
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return BinaryPrimitives.ReadInt16BigEndian(data[0].Span);
             }
@@ -231,7 +231,7 @@ namespace RabbitMQ.Util
         public static int ReadInt32(this ArraySegmentStream input)
         {
             var data = input.Read(4);
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return BinaryPrimitives.ReadInt32BigEndian(data[0].Span);
             }
@@ -259,7 +259,7 @@ namespace RabbitMQ.Util
         public static long ReadInt64(this ArraySegmentStream input)
         {
             var data = input.Read(8);
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return BinaryPrimitives.ReadInt64BigEndian(data[0].Span);
             }
@@ -287,7 +287,7 @@ namespace RabbitMQ.Util
         public static float ReadSingle(this ArraySegmentStream input)
         {
             var data = input.Read(4);
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return (float) BinaryPrimitives.ReadUInt32BigEndian(data[0].Span);
             }
@@ -315,7 +315,7 @@ namespace RabbitMQ.Util
         public static double ReadDouble(this ArraySegmentStream input)
         {
             var data = input.Read(8);
-            if (data.Length == 1)
+            if (data.Count == 1)
             {
                 return (double)BinaryPrimitives.ReadUInt64BigEndian(data[0].Span);
             }

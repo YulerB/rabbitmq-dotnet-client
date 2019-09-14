@@ -78,7 +78,7 @@ namespace RabbitMQ.Client.Impl
         private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private int originalSize = 0;
-        public ReadOnlyMemory<byte>[] Read(int count)
+        public List<ReadOnlyMemory<byte>> Read(int count)
         {
             List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
 
@@ -99,18 +99,18 @@ namespace RabbitMQ.Client.Impl
                     var read = top.Slice(0, count);
                     top = top.Slice(count, top.Length - count);
                     result.Add(read);
-                    return result.ToArray();
+                    return result;
                 }
                 else
                 {
                     var read = top.Slice(0, top.Length);
                     count -= top.Length;
                     top = empty;
-                    BufferUsed?.Invoke(this, new BufferUsedEventArgs { Size = originalSize });
+                    BufferUsed?.Invoke(this, new BufferUsedEventArgs ( originalSize ));
                     result.Add(read);
                 }
             }
-            return result.ToArray();
+            return result;
         }
         public void Write(ReadOnlyMemory<byte> buffer)
         {

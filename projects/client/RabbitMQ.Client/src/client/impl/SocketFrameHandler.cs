@@ -314,7 +314,11 @@ namespace RabbitMQ.Client.Impl
     }
     public class BufferUsedEventArgs: EventArgs
     {
-        public int Size { get; set; }
+        public BufferUsedEventArgs(int size)
+        {
+            this.Size = size;
+        }
+        public int Size { get; private set; }
     }
 }
 #endif
