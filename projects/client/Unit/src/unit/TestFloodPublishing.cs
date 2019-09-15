@@ -76,7 +76,7 @@ namespace RabbitMQ.Client.Unit
             long sent = 0;
             bool elapsed = false;
             IBasicPublishBatch batch = null;
-            using (var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1))
+            using (var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 60, -1))
             {
                 while (!elapsed)
                 {
@@ -105,7 +105,7 @@ namespace RabbitMQ.Client.Unit
 
             long sent = 0;
             bool elapsed = false;
-            using (var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 185, -1))
+            using (var t = new System.Threading.Timer((_obj) => { elapsed = true; }, null, 1000 * 60, -1))
             {
                 while (!elapsed)
                 {

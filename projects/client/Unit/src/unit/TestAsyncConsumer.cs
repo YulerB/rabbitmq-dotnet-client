@@ -78,7 +78,7 @@ namespace RabbitMQ.Client.Unit
 
                         ec.Received += async (e, args) =>
                         {
-                            if (++received == messages) reset.Set();
+                            if (Interlocked.Increment(ref received) == messages) reset.Set();
                         };
 
                         Model.BasicConsume(q, true, ec);
@@ -117,12 +117,12 @@ namespace RabbitMQ.Client.Unit
                     };
                 var tag = m.BasicConsume(q.QueueName, true, consumer);
                 // ensure we get a delivery
-                var waitRes = are.WaitOne(2000);
+                var waitRes = are.WaitOne(500);
                 Assert.IsTrue(waitRes);
                 // unsubscribe and ensure no further deliveries
                 m.BasicCancel(tag);
                 m.BasicPublish("", q.QueueName, bp, body);
-                var waitResFalse = are.WaitOne(2000);
+                var waitResFalse = are.WaitOne(500);
                 Assert.IsFalse(waitResFalse);
             }
         }

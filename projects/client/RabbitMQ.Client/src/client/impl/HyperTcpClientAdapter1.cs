@@ -1,18 +1,17 @@
 ﻿#if !NETFX_CORE
 using System;
+using System.Linq;
 using System.Net.Sockets;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.IO;
-using System.Collections.Generic;
 
 namespace RabbitMQ.Client
 {
-    public class HyperTcpClientAdapter : IHyperTcpClient
+    public class HyperTcpClientAdapter1 : IHyperTcpClient
     {
         public event EventHandler Closed;
         private Socket sock;
@@ -23,14 +22,13 @@ namespace RabbitMQ.Client
         private AsyncCallback asyncCallback;
 
         private StreamRingBuffer ringBuffer;
-        SocketAsyncEventArgs sEvent;
-        public HyperTcpClientAdapter(HyperTcpClientSettings settings)
+
+        public HyperTcpClientAdapter1(HyperTcpClientSettings settings)
         {
-            sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp){NoDelay = true};
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
-            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 20);
-            sEvent = new SocketAsyncEventArgs { AcceptSocket = sock };
+            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 10);
         }
 
         public virtual void BufferUsed(int size)
@@ -58,14 +56,12 @@ namespace RabbitMQ.Client
                 baseSSLStream?.Dispose();
                 sock.Dispose();
                 disposed = true;
-                sEvent.Dispose();
             }
             ringBuffer = null;
             Receive = null;
             baseStream = null;
             baseSSLStream = null;
             sock = null;
-            sEvent = null;
             asyncCallback = null;
         }
         #endregion
@@ -92,13 +88,13 @@ namespace RabbitMQ.Client
             asyncCallback = new AsyncCallback(SecureRead);
 
             var peek = ringBuffer.Peek();
-            baseSSLStream.BeginRead(
-                peek.Array,
-                peek.Offset,
-                peek.Count,
-                asyncCallback,
-                null
-            );
+                baseSSLStream.BeginRead(
+                    peek.Array,
+                    peek.Offset,
+                    peek.Count,
+                    asyncCallback,
+                    null
+                );
         }
         public virtual async Task ConnectAsync(string host, int port)
         {
@@ -108,51 +104,24 @@ namespace RabbitMQ.Client
             {
                 throw new ArgumentException("No ip address could be resolved for " + host);
             }
-
 #if CORECLR
             await sock.ConnectAsync(ep, port).ConfigureAwait(false);
 #else
             sock.Connect(ep, port);
 #endif
-
             baseStream = new NetworkStream(sock);
 
-            var peek = ringBuffer.Peek();
+            asyncCallback = new AsyncCallback(Read);
 
-            sEvent.SetBuffer(
+            var peek = ringBuffer.Peek();
+            baseStream.BeginRead(
                 peek.Array,
                 peek.Offset,
-                peek.Count
+                peek.Count,
+                asyncCallback,
+                null
             );
-            sEvent.Completed += SEvent_Completed;
-            
-            ProcessReceive(sEvent);
         }
-
-        private void SEvent_Completed(object sender, SocketAsyncEventArgs e)
-        {
-            ProcessReceive(e);
-        }
-        private void ProcessReceive(SocketAsyncEventArgs e)
-        {
-            do
-            {
-                if (e.BytesTransferred > 0)
-                    this.Receive?.Invoke(this, ringBuffer.Take(e.BytesTransferred));
-
-                if (e.SocketError != SocketError.Success)
-                {
-                    Close();
-                    break;
-                }
-
-                var peek = ringBuffer.Peek();
-                e.SetBuffer(peek.Offset, peek.Count);
-            } while (!sock.ReceiveAsync(e));
-
-        }
-
-
         public void Write(ArraySegment<byte> data)
         {
             if (baseSSLStream != null)
@@ -165,6 +134,46 @@ namespace RabbitMQ.Client
             else
             {
                 baseStream.Write(data.Array, data.Offset, data.Count);
+            }
+        }
+        private void Read(IAsyncResult result)
+        {
+            try
+            {
+                if (!disposed)
+                {
+                    int read = baseStream.EndRead(result);
+
+                    if (read > 0) this.Receive?.Invoke(this, ringBuffer.Take(read));
+
+                    var peek = ringBuffer.Peek();
+                    
+                    baseStream.BeginRead(
+                        peek.Array,
+                        peek.Offset,
+                        peek.Count,
+                        asyncCallback,
+                        null
+                    );
+                }
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                Close();
+            }
+            catch (System.ObjectDisposedException)
+            {
+                // Nothing to do here.
+                Closed?.Invoke(this, EventArgs.Empty);
+            }
+            catch (System.IO.FileNotFoundException)
+            {
+                // Nothing to do here.
+                Closed?.Invoke(this, EventArgs.Empty);
+            }
+            catch (IOException)
+            {
+                Close();
             }
         }
         private void SecureRead(IAsyncResult result)
@@ -185,8 +194,7 @@ namespace RabbitMQ.Client
                     );
                 }
             }
-            catch (System.Net.Sockets.SocketException)
-            {
+            catch (System.Net.Sockets.SocketException) {
                 Close();
             }
             catch (System.ObjectDisposedException)
@@ -215,16 +223,6 @@ namespace RabbitMQ.Client
 
             return protocols;
         }
-    }
-    public class HyperTcpClientSettings
-    {
-        public HyperTcpClientSettings(AddressFamily addressFamily, int requestedHeartbeat)
-        {
-            this.AddressFamily = addressFamily;
-            this.RequestedHeartbeat = requestedHeartbeat;
-        }
-        public AddressFamily AddressFamily { get;private set; }
-        public int RequestedHeartbeat { get; private set; }
     }
 }
 #endif
