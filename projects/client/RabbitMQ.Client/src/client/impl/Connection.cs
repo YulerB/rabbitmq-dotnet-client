@@ -768,7 +768,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_closed = true;
         }
 
-        protected virtual void OnCallbackException(CallbackExceptionEventArgs args)
+        internal void OnCallbackException(CallbackExceptionEventArgs args)
         {
             EventHandler<CallbackExceptionEventArgs> handler;
             lock (m_eventLock)
@@ -1150,12 +1150,12 @@ namespace RabbitMQ.Client.Framing.Impl
             return string.Format("Connection({0},{1})", m_id, Endpoint);
         }
 
-        private void WriteFrame(OutboundFrame f)
+        internal void WriteFrame(OutboundFrame f)
         {
             m_frameHandler.WriteFrame(f);
         }
 
-        private void WriteFrameSet(IList<OutboundFrame> f)
+        internal void WriteFrameSet(IList<OutboundFrame> f)
         {
             m_frameHandler.WriteFrameSet(f);
         }
@@ -1218,13 +1218,13 @@ namespace RabbitMQ.Client.Framing.Impl
             return model;
         }
 
-        private void HandleConnectionBlocked(string reason)
+        internal void HandleConnectionBlocked(string reason)
         {
             var args = new ConnectionBlockedEventArgs(reason);
             OnConnectionBlocked(args);
         }
 
-        private void HandleConnectionUnblocked()
+        internal void HandleConnectionUnblocked()
         {
             OnConnectionUnblocked();
         }
