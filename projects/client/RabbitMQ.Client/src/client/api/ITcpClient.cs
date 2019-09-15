@@ -32,10 +32,7 @@ namespace RabbitMQ.Client
     {
         void BufferUsed(int size);
         int ClientLocalEndPointPort { get; }
-        
-        Task ConnectAsync(string host, int port);
-        Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation);
-
+        Task ConnectAsync();
         void Write(ArraySegment<byte> data);
         event EventHandler<ReadOnlyMemory<byte>> Receive;
         event EventHandler Closed;

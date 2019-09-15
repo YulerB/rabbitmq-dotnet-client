@@ -53,52 +53,10 @@ using System.Collections.Concurrent;
 
 namespace RabbitMQ.Client.Impl
 {
-    static class TaskExtensions
-    {
-        public static readonly Task CompletedTask = Task.FromResult(0);
-
-        public static async Task TimeoutAfter(this Task task, int millisecondsTimeout)
-        {
-            if (task == await Task.WhenAny(task, Task.Delay(millisecondsTimeout)).ConfigureAwait(false))
-                await task;
-            else
-            {
-                var supressErrorTask = task.ContinueWith(t => t.Exception.Handle(e => true), TaskContinuationOptions.OnlyOnFaulted);
-                throw new TimeoutException();
-            }
-        }
-    }
-
-
-    public class HyperSocketFrameSettings
-    {
-        public HyperSocketFrameSettings(
-            AmqpTcpEndpoint endpoint,
-            int requestedHeartbeat,
-            int connectionTimeout,
-                int readTimeout,
-                int writeTimeout
-
-
-
-            )
-        {
-            Endpoint = endpoint;
-            RequestedHeartbeat = requestedHeartbeat;
-            ConnectionTimeout = connectionTimeout;
-            ReadTimeout = readTimeout;
-            WriteTimeout = writeTimeout;
-        }
-        public AmqpTcpEndpoint Endpoint { get;private set; }
-        public int RequestedHeartbeat { get; private set; }
-        public int ConnectionTimeout { get; private set; }
-        public int ReadTimeout { get; private set; }
-        public int WriteTimeout { get; private set; }
-    }
     public class HyperSocketFrameHandler : IFrameHandler, IDisposable
     {
         private readonly HyperSocketFrameSettings settings;
-        private readonly ArraySegmentStream m_stream;
+        private ArraySegmentStream m_stream;
         private IHyperTcpClient m_socket;
         private readonly object _semaphore = new object();
         private bool _closed;
@@ -111,16 +69,16 @@ namespace RabbitMQ.Client.Impl
             {
                 try
                 {
-                    m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings (AddressFamily.InterNetworkV6, settings.RequestedHeartbeat));
+                    m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings (settings.Endpoint , AddressFamily.InterNetworkV6, settings.RequestedHeartbeat));
                 }
                 catch (ConnectFailureException)
                 {
-                    m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings (AddressFamily.InterNetwork, settings.RequestedHeartbeat ));
+                    m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings (settings.Endpoint, AddressFamily.InterNetwork, settings.RequestedHeartbeat ));
                 }
             }
             else
             {
-                m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings(AddressFamily.InterNetwork, settings.RequestedHeartbeat ));
+                m_socket = ConnectUsingAddressFamily(new HyperTcpClientSettings(settings.Endpoint, AddressFamily.InterNetwork, settings.RequestedHeartbeat ));
             }
             
             m_socket.Receive += M_socket_Receive;
@@ -182,13 +140,15 @@ namespace RabbitMQ.Client.Impl
             return FrameReader.ReadFrom(m_stream);
         }
 
+
         private static readonly byte[] amqp = Encoding.ASCII.GetBytes("AMQP");
         public void SendHeader()
         {
-            byte[] header = Endpoint.Protocol.Revision != 0 ?
-                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)0, (byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion, (byte)Endpoint.Protocol.Revision }
+            var prot = settings.Endpoint.Protocol;
+            byte[] header = prot.Revision != 0 ?
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)0, (byte)prot.MajorVersion, (byte)prot.MinorVersion, (byte)prot.Revision }
                     :
-                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)1, (byte)1, (byte)Endpoint.Protocol.MajorVersion, (byte)Endpoint.Protocol.MinorVersion };
+                    new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)1, (byte)1, (byte)prot.MajorVersion, (byte)prot.MinorVersion };
 
             m_socket.Write(new ArraySegment<byte>(header));
         }
@@ -215,14 +175,13 @@ namespace RabbitMQ.Client.Impl
 
         private IHyperTcpClient ConnectUsingAddressFamily(HyperTcpClientSettings settings)
         {
-            IHyperTcpClient socket = new HyperTcpClientAdapter(settings);
+            IHyperTcpClient socket = settings.EndPoint.Ssl.Enabled ? 
+                new HyperTcpSecureClientAdapter(settings) as IHyperTcpClient : 
+                new HyperTcpClientAdapter(settings) as IHyperTcpClient;
 
             try
             {
-                if (this.settings.Endpoint.Ssl.Enabled)
-                    SecureConnectOrFail(socket, false/*endpoint.Ssl.checkCertRevocation*/);
-                else
-                    ConnectOrFail(socket);
+                ConnectOrFail(socket);
                 return socket;
             }
             catch (ConnectFailureException)
@@ -236,45 +195,12 @@ namespace RabbitMQ.Client.Impl
         {
             try
             {
-                socket.ConnectAsync(this.settings.Endpoint.HostName, this.settings.Endpoint.Port)
+                socket.ConnectAsync()
                       .TimeoutAfter(this.settings.ConnectionTimeout)
                       .ConfigureAwait(false)
                       // this ensures exceptions aren't wrapped in an AggregateException
                       .GetAwaiter()
                       .GetResult();
-            }
-            catch (ArgumentException e)
-            {
-                throw new ConnectFailureException("Connection failed", e);
-            }
-            catch (SocketException e)
-            {
-                throw new ConnectFailureException("Connection failed", e);
-            }
-            catch (NotSupportedException e)
-            {
-                throw new ConnectFailureException("Connection failed", e);
-            }
-            catch (TimeoutException e)
-            {
-                throw new ConnectFailureException("Connection failed", e);
-            }
-        }
-        private void SecureConnectOrFail(IHyperTcpClient socket, bool checkCertRevocation)
-        {
-            try
-            {
-                socket.SecureConnectAsync(
-                    this.settings.Endpoint.HostName,
-                    this.settings.Endpoint.Port,
-                    this.settings.Endpoint.Ssl.Certs,
-                    this.settings.Endpoint.Ssl.CertificateValidationCallback,
-                    this.settings.Endpoint.Ssl.CertificateSelectionCallback,
-                    checkCertRevocation
-                ).TimeoutAfter(this.settings.ConnectionTimeout)
-                 .ConfigureAwait(false) // this ensures exceptions aren't wrapped in an AggregateException
-                 .GetAwaiter()
-                 .GetResult();
             }
             catch (ArgumentException e)
             {
@@ -300,25 +226,17 @@ namespace RabbitMQ.Client.Impl
             if (disposing)
             {
                 m_socket?.Dispose();
+                m_stream.Dispose();
             }
             m_socket = null;
+            m_stream = null;
         }
-
-        // This code added to correctly implement the disposable pattern.
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
         }
         #endregion
-    }
-    public class BufferUsedEventArgs: EventArgs
-    {
-        public BufferUsedEventArgs(int size)
-        {
-            this.Size = size;
-        }
-        public int Size { get; private set; }
     }
 }
 #endif

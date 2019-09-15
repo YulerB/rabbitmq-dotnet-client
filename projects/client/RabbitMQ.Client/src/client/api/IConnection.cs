@@ -312,16 +312,6 @@ namespace RabbitMQ.Client
         /// </summary>
         IModel CreateModel();
 
-        /// <summary>
-        /// Handle incoming Connection.Blocked methods.
-        /// </summary>
-        void HandleConnectionBlocked(string reason);
-
-        /// <summary>
-        /// Handle incoming Connection.Unblocked methods.
-        /// </summary>
-        void HandleConnectionUnblocked();
-
         ConsumerWorkService ConsumerWorkService { get; }
     }
 }

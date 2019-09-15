@@ -87,6 +87,11 @@ namespace RabbitMQ.Client
         {
         }
 
+        public bool CheckCertificateRevocation
+        {
+            get;set;
+        }
+
 #if !NETFX_CORE
         /// <summary>
         /// Retrieve or set the set of ssl policy errors that are deemed acceptable.

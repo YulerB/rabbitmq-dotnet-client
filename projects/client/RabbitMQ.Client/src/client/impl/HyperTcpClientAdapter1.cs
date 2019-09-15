@@ -20,12 +20,13 @@ namespace RabbitMQ.Client
         public event EventHandler<ReadOnlyMemory<byte>> Receive;
         private readonly object _syncLock = new object();
         private AsyncCallback asyncCallback;
-
+        private readonly HyperTcpClientSettings settings;
         private StreamRingBuffer ringBuffer;
 
         public HyperTcpClientAdapter1(HyperTcpClientSettings settings)
         {
-            sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp){NoDelay = true};
+            this.settings = settings;
+            sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
             ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 10);
@@ -66,7 +67,7 @@ namespace RabbitMQ.Client
         }
         #endregion
         public int ClientLocalEndPointPort => ((IPEndPoint)sock.LocalEndPoint).Port;
-        public virtual async Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation = false)
+        private async Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation = false)
         {
             var adds = await Dns.GetHostAddressesAsync(host);
             var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
@@ -83,20 +84,34 @@ namespace RabbitMQ.Client
             baseStream = new NetworkStream(sock);
             baseSSLStream = new SslStream(baseStream, true, remoteCertValidator, localCertSelector);
 
-            await baseSSLStream.AuthenticateAsClientAsync(host, certs, Convert(System.Net.ServicePointManager.SecurityProtocol), checkCertRevocation);
+            await baseSSLStream.AuthenticateAsClientAsync(host, certs, settings.EndPoint.Ssl.Version, 
+                settings.EndPoint.Ssl.CheckCertificateRevocation);
 
             asyncCallback = new AsyncCallback(SecureRead);
 
             var peek = ringBuffer.Peek();
-                baseSSLStream.BeginRead(
-                    peek.Array,
-                    peek.Offset,
-                    peek.Count,
-                    asyncCallback,
-                    null
-                );
+            baseSSLStream.BeginRead(
+                peek.Array,
+                peek.Offset,
+                peek.Count,
+                asyncCallback,
+                null
+            );
         }
-        public virtual async Task ConnectAsync(string host, int port)
+        public virtual Task ConnectAsync()
+        {
+            if (settings.EndPoint.Ssl.Enabled)
+            {
+                return SecureConnectAsync(settings.EndPoint.HostName, settings.EndPoint.Port, 
+                    settings.EndPoint.Ssl.Certs, settings.EndPoint.Ssl.CertificateValidationCallback, 
+                    settings.EndPoint.Ssl.CertificateSelectionCallback);
+            }
+            else
+            {
+                return ConnectAsync(settings.EndPoint.HostName, settings.EndPoint.Port);
+            }
+        }
+        private async Task ConnectAsync(string host, int port)
         {
             var adds = await Dns.GetHostAddressesAsync(host).ConfigureAwait(false);
             var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
@@ -147,7 +162,7 @@ namespace RabbitMQ.Client
                     if (read > 0) this.Receive?.Invoke(this, ringBuffer.Take(read));
 
                     var peek = ringBuffer.Peek();
-                    
+
                     baseStream.BeginRead(
                         peek.Array,
                         peek.Offset,
@@ -194,7 +209,8 @@ namespace RabbitMQ.Client
                     );
                 }
             }
-            catch (System.Net.Sockets.SocketException) {
+            catch (System.Net.Sockets.SocketException)
+            {
                 Close();
             }
             catch (System.ObjectDisposedException)
@@ -209,19 +225,6 @@ namespace RabbitMQ.Client
             {
                 Close();
             }
-        }
-        private SslProtocols Convert(SecurityProtocolType securityProtocol)
-        {
-            SslProtocols protocols = SslProtocols.Default;
-
-            if ((securityProtocol & SecurityProtocolType.Ssl3) == SecurityProtocolType.Ssl3) protocols |= SslProtocols.Ssl3;
-            if ((securityProtocol & SecurityProtocolType.Tls) == SecurityProtocolType.Tls) protocols |= SslProtocols.Tls;
-            if ((securityProtocol & SecurityProtocolType.Tls11) == SecurityProtocolType.Tls11) protocols |= SslProtocols.Tls11;
-            if ((securityProtocol & SecurityProtocolType.Tls12) == SecurityProtocolType.Tls12) protocols |= SslProtocols.Tls12;
-
-            if (protocols == SslProtocols.None) protocols = SslProtocols.Default;
-
-            return protocols;
         }
     }
 }

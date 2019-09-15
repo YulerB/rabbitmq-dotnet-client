@@ -16,21 +16,19 @@ namespace RabbitMQ.Client
     {
         public event EventHandler Closed;
         private Socket sock;
-        private NetworkStream baseStream;
-        private SslStream baseSSLStream;
         public event EventHandler<ReadOnlyMemory<byte>> Receive;
-        private readonly object _syncLock = new object();
-        private AsyncCallback asyncCallback;
-
+        private readonly HyperTcpClientSettings settings;
         private StreamRingBuffer ringBuffer;
-        SocketAsyncEventArgs sEvent;
+        private SocketAsyncEventArgs sEvent;
         public HyperTcpClientAdapter(HyperTcpClientSettings settings)
         {
+            this.settings = settings;
             sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
             ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 20);
             sEvent = new SocketAsyncEventArgs { AcceptSocket = sock };
+            sEvent.Completed += SEvent_Completed;
         }
 
         public virtual void BufferUsed(int size)
@@ -39,13 +37,10 @@ namespace RabbitMQ.Client
         }
         public virtual void Close()
         {
-            baseStream?.Close();
-            baseSSLStream?.Close();
             sock?.Close();
             Closed?.Invoke(this, EventArgs.Empty);
         }
         #region IDisposable Support
-        private bool disposed;
         public virtual void Dispose()
         {
             Dispose(true);
@@ -54,68 +49,31 @@ namespace RabbitMQ.Client
         {
             if (disposing)
             {
-                baseStream?.Dispose();
-                baseSSLStream?.Dispose();
                 sock.Dispose();
-                disposed = true;
                 sEvent.Dispose();
             }
             ringBuffer = null;
             Receive = null;
-            baseStream = null;
-            baseSSLStream = null;
             sock = null;
             sEvent = null;
-            asyncCallback = null;
+            Closed = null;
         }
         #endregion
         public int ClientLocalEndPointPort => ((IPEndPoint)sock.LocalEndPoint).Port;
-        public virtual async Task SecureConnectAsync(string host, int port, X509CertificateCollection certs, RemoteCertificateValidationCallback remoteCertValidator, LocalCertificateSelectionCallback localCertSelector, bool checkCertRevocation = false)
+        public virtual async Task ConnectAsync()
         {
-            var adds = await Dns.GetHostAddressesAsync(host);
+            var adds = await Dns.GetHostAddressesAsync(settings.EndPoint.HostName).ConfigureAwait(false);
             var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
             if (ep == default(IPAddress))
             {
-                throw new ArgumentException("No ip address could be resolved for " + host);
+                throw new ArgumentException("No ip address could be resolved for " + settings.EndPoint.HostName);
             }
 
 #if CORECLR
-            await sock.ConnectAsync(ep, port);
+            await sock.ConnectAsync(ep, settings.EndPoint.Port).ConfigureAwait(false);
 #else
-            sock.Connect(ep, port);
+            sock.Connect(ep, settings.EndPoint.Port);
 #endif
-            baseStream = new NetworkStream(sock);
-            baseSSLStream = new SslStream(baseStream, true, remoteCertValidator, localCertSelector);
-
-            await baseSSLStream.AuthenticateAsClientAsync(host, certs, Convert(System.Net.ServicePointManager.SecurityProtocol), checkCertRevocation);
-
-            asyncCallback = new AsyncCallback(SecureRead);
-
-            var peek = ringBuffer.Peek();
-            baseSSLStream.BeginRead(
-                peek.Array,
-                peek.Offset,
-                peek.Count,
-                asyncCallback,
-                null
-            );
-        }
-        public virtual async Task ConnectAsync(string host, int port)
-        {
-            var adds = await Dns.GetHostAddressesAsync(host).ConfigureAwait(false);
-            var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
-            if (ep == default(IPAddress))
-            {
-                throw new ArgumentException("No ip address could be resolved for " + host);
-            }
-
-#if CORECLR
-            await sock.ConnectAsync(ep, port).ConfigureAwait(false);
-#else
-            sock.Connect(ep, port);
-#endif
-
-            baseStream = new NetworkStream(sock);
 
             var peek = ringBuffer.Peek();
 
@@ -124,8 +82,7 @@ namespace RabbitMQ.Client
                 peek.Offset,
                 peek.Count
             );
-            sEvent.Completed += SEvent_Completed;
-            
+
             ProcessReceive(sEvent);
         }
 
@@ -152,21 +109,110 @@ namespace RabbitMQ.Client
 
         }
 
+        public void Write(ArraySegment<byte> data)
+        {
+            sock.Send(data.Array, data.Offset, data.Count, SocketFlags.None);
+        }
+    }
+    public class HyperTcpSecureClientAdapter : IHyperTcpClient
+    {
+        private readonly HyperTcpClientSettings settings;
+        public event EventHandler Closed;
+        private Socket sock;
+        private SslStream baseSSLStream;
+        public event EventHandler<ReadOnlyMemory<byte>> Receive;
+        private readonly object _syncLock = new object();
+        private AsyncCallback asyncCallback;
+        private StreamRingBuffer ringBuffer;
+        public HyperTcpSecureClientAdapter(HyperTcpClientSettings settings)
+        {
+            this.settings = settings;
+            sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+            sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
+            sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
+            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 20);
+            asyncCallback = new AsyncCallback(SecureRead);
+        }
+
+        public virtual void BufferUsed(int size)
+        {
+            ringBuffer.Release(size);
+        }
+        public virtual void Close()
+        {
+            baseSSLStream?.Close();
+            sock?.Close();
+            Closed?.Invoke(this, EventArgs.Empty);
+        }
+        #region IDisposable Support
+        private bool disposed;
+        public virtual void Dispose()
+        {
+            Dispose(true);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                baseSSLStream?.Dispose();
+                sock.Dispose();
+                disposed = true;
+            }
+            ringBuffer = null;
+            Receive = null;
+            baseSSLStream = null;
+            sock = null;
+            asyncCallback = null;
+        }
+        #endregion
+        public int ClientLocalEndPointPort => ((IPEndPoint)sock.LocalEndPoint).Port;
+        public virtual async Task ConnectAsync()
+        {
+            var adds = await Dns.GetHostAddressesAsync(settings.EndPoint.HostName);
+            var ep = TcpClientAdapterHelper.GetMatchingHost(adds, sock.AddressFamily);
+
+            if (ep == default(IPAddress))
+            {
+                throw new ArgumentException("No ip address could be resolved for " + settings.EndPoint.HostName);
+            }
+
+#if CORECLR
+            await sock.ConnectAsync(ep, settings.EndPoint.Port);
+#else
+            sock.Connect(ep, settings.EndPoint.Port);
+#endif
+
+            baseSSLStream = new SslStream(
+                new NetworkStream(sock), 
+                false, 
+                settings.EndPoint.Ssl.CertificateValidationCallback, 
+                settings.EndPoint.Ssl.CertificateSelectionCallback);
+
+            await baseSSLStream.AuthenticateAsClientAsync(
+                settings.EndPoint.HostName, 
+                settings.EndPoint.Ssl.Certs, 
+                settings.EndPoint.Ssl.Version,
+                settings.EndPoint.Ssl.CheckCertificateRevocation);
+            
+            var peek = ringBuffer.Peek();
+
+            baseSSLStream.BeginRead(
+                peek.Array,
+                peek.Offset,
+                peek.Count,
+                asyncCallback,
+                null
+            );
+        }
 
         public void Write(ArraySegment<byte> data)
         {
-            if (baseSSLStream != null)
+            lock (_syncLock)
             {
-                lock (_syncLock)
-                {
-                    baseSSLStream.Write(data.Array, data.Offset, data.Count);
-                }
-            }
-            else
-            {
-                baseStream.Write(data.Array, data.Offset, data.Count);
+                baseSSLStream.Write(data.Array, data.Offset, data.Count);
             }
         }
+
         private void SecureRead(IAsyncResult result)
         {
             try
@@ -202,29 +248,7 @@ namespace RabbitMQ.Client
                 Close();
             }
         }
-        private SslProtocols Convert(SecurityProtocolType securityProtocol)
-        {
-            SslProtocols protocols = SslProtocols.Default;
-
-            if ((securityProtocol & SecurityProtocolType.Ssl3) == SecurityProtocolType.Ssl3) protocols |= SslProtocols.Ssl3;
-            if ((securityProtocol & SecurityProtocolType.Tls) == SecurityProtocolType.Tls) protocols |= SslProtocols.Tls;
-            if ((securityProtocol & SecurityProtocolType.Tls11) == SecurityProtocolType.Tls11) protocols |= SslProtocols.Tls11;
-            if ((securityProtocol & SecurityProtocolType.Tls12) == SecurityProtocolType.Tls12) protocols |= SslProtocols.Tls12;
-
-            if (protocols == SslProtocols.None) protocols = SslProtocols.Default;
-
-            return protocols;
-        }
     }
-    public class HyperTcpClientSettings
-    {
-        public HyperTcpClientSettings(AddressFamily addressFamily, int requestedHeartbeat)
-        {
-            this.AddressFamily = addressFamily;
-            this.RequestedHeartbeat = requestedHeartbeat;
-        }
-        public AddressFamily AddressFamily { get;private set; }
-        public int RequestedHeartbeat { get; private set; }
-    }
+
 }
 #endif
