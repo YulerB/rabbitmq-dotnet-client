@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Impl
     public class HyperSocketFrameHandler : IFrameHandler, IDisposable
     {
         private readonly HyperSocketFrameSettings settings;
-        private ArraySegmentStream m_stream;
+        private ArraySegmentSequence m_stream;
         private IHyperTcpClient m_socket;
         private readonly object _semaphore = new object();
         private bool _closed;
@@ -84,7 +84,7 @@ namespace RabbitMQ.Client.Impl
             m_socket.Receive += M_socket_Receive;
             m_socket.Closed += M_socket_Closed;
 
-            m_stream = new ArraySegmentStream();
+            m_stream = new ArraySegmentSequence();
             m_stream.BufferUsed += M_stream_BufferUsed;
         }
 
@@ -171,6 +171,22 @@ namespace RabbitMQ.Client.Impl
                 foreach (var f in frames) f.WriteTo(nbw);
                 m_socket.Write(ms.Instance.GetBufferSegment());
             }
+        }
+
+        public void WriteFrame1(OutboundFrame frame)
+        {
+            ArraySegmentStream stream = new ArraySegmentStream();
+            var nbw = new NetworkBinaryWriter(stream);
+            frame.WriteTo(nbw);
+            m_socket.Write(stream.Data);
+        }
+
+        public void WriteFrameSet1(IList<OutboundFrame> frames)
+        {
+            ArraySegmentStream stream = new ArraySegmentStream();
+            var nbw = new NetworkBinaryWriter(stream);
+            foreach (var f in frames) f.WriteTo(nbw);
+            m_socket.Write(stream.Data);
         }
 
         private IHyperTcpClient ConnectUsingAddressFamily(HyperTcpClientSettings settings)

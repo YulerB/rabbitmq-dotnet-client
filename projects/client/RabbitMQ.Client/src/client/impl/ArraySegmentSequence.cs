@@ -47,7 +47,7 @@ using System.Collections.Concurrent;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class ArraySegmentStream : IDisposable
+    public class ArraySegmentSequence : IDisposable
     {
         private BlockingCollection<ReadOnlyMemory<byte>> data = new BlockingCollection<ReadOnlyMemory<byte>>();
         public event EventHandler<BufferUsedEventArgs> BufferUsed;
@@ -55,19 +55,19 @@ namespace RabbitMQ.Client.Impl
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private int originalSize = 0;
 
-        public ArraySegmentStream(byte[] buffer) {
+        public ArraySegmentSequence(byte[] buffer) {
             data.Add(new ArraySegment<byte>(buffer, 0, buffer.Length));
         }
-        public ArraySegmentStream(ArraySegment<byte> buffer)
+        public ArraySegmentSequence(ArraySegment<byte> buffer)
         {
             data.Add(buffer);
         }
-        public ArraySegmentStream(IEnumerable<ArraySegment<byte>> buffers)
+        public ArraySegmentSequence(IEnumerable<ArraySegment<byte>> buffers)
         {
             foreach(var buffer in buffers)
                 data.Add(buffer);
         }
-        public ArraySegmentStream() { }
+        public ArraySegmentSequence() { }
 
         public void Dispose()
         {

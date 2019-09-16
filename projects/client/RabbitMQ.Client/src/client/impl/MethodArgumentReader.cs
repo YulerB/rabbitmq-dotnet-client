@@ -72,9 +72,9 @@ namespace RabbitMQ.Client.Impl
     {
         private int m_bit;
         private int m_bits;
-        private readonly ArraySegmentStream BaseReader;
+        private readonly ArraySegmentSequence BaseReader;
 
-        public MethodArgumentReader2(ArraySegmentStream reader) : base()
+        public MethodArgumentReader2(ArraySegmentSequence reader) : base()
         {
             BaseReader = reader;
             ClearBits();

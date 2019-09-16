@@ -106,14 +106,14 @@ namespace RabbitMQ.Client.Impl
         protected ushort m_bitCount;
         protected ushort m_flagWord;
 
-        public ContentHeaderPropertyReader2(ArraySegmentStream reader)
+        public ContentHeaderPropertyReader2(ArraySegmentSequence reader)
         {
             BaseReader = reader;
             m_flagWord = 1; // just the continuation bit
             m_bitCount = 15; // the correct position to force a m_flagWord read
         }
 
-        public ArraySegmentStream BaseReader { get; private set; }
+        public ArraySegmentSequence BaseReader { get; private set; }
 
         public bool ContinuationBitSet
         {

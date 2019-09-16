@@ -5,6 +5,8 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Net.Security;
 using System.IO;
+using System.Collections.Generic;
+using RabbitMQ.Client.Impl;
 
 namespace RabbitMQ.Client
 {
@@ -77,17 +79,17 @@ namespace RabbitMQ.Client
 #endif
 
             baseSSLStream = new SslStream(
-                new NetworkStream(sock), 
-                false, 
-                settings.EndPoint.Ssl.CertificateValidationCallback, 
+                new NetworkStream(sock),
+                false,
+                settings.EndPoint.Ssl.CertificateValidationCallback,
                 settings.EndPoint.Ssl.CertificateSelectionCallback);
 
             await baseSSLStream.AuthenticateAsClientAsync(
-                settings.EndPoint.HostName, 
-                settings.EndPoint.Ssl.Certs, 
+                settings.EndPoint.HostName,
+                settings.EndPoint.Ssl.Certs,
                 settings.EndPoint.Ssl.Version,
                 settings.EndPoint.Ssl.CheckCertificateRevocation);
-            
+
             var peek = ringBuffer.Peek();
 
             baseSSLStream.BeginRead(
@@ -142,7 +144,20 @@ namespace RabbitMQ.Client
                 Close();
             }
         }
-    }
 
+        public void Write(IList<ArraySegment<byte>> data)
+        {
+            using (var ms = MemoryStreamPool.GetObject())
+            {
+                foreach (var segment in data)
+                {
+                    ms.Instance.Write(segment.Array, segment.Offset, segment.Count);
+                }
+                lock (_syncLock) {
+                    Write(new ArraySegment<byte>(ms.Instance.GetBuffer(), 0, Convert.ToInt32(ms.Instance.Length)));
+                }
+            }
+        }
+    }
 }
 #endif

@@ -53,13 +53,13 @@ namespace RabbitMQ.Util
     public static class NetworkArraySegmentsReader 
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte ReadByte(this ArraySegmentStream input)
+        public static byte ReadByte(this ArraySegmentSequence input)
         {
             var data = input.Read(1);
             return data[0].Span[0];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte[] ReadBytes(this ArraySegmentStream input,int payloadSize)
+        public static byte[] ReadBytes(this ArraySegmentSequence input,int payloadSize)
         {
             //Think of ways to remove memory copying
 
@@ -85,7 +85,7 @@ namespace RabbitMQ.Util
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlyMemory<byte> ReadMemory(this ArraySegmentStream input, int payloadSize)
+        public static ReadOnlyMemory<byte> ReadMemory(this ArraySegmentSequence input, int payloadSize)
         {
             var data = input.Read(payloadSize);
             if (data.Count == 1)
@@ -108,7 +108,7 @@ namespace RabbitMQ.Util
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ushort ReadUInt16(this ArraySegmentStream input)
+        public static ushort ReadUInt16(this ArraySegmentSequence input)
         {
             var data = input.Read(2);
 
@@ -140,7 +140,7 @@ namespace RabbitMQ.Util
             return BitConverter.ToUInt16(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static uint ReadUInt32(this ArraySegmentStream input)
+        public static uint ReadUInt32(this ArraySegmentSequence input)
         {
             var data = input.Read(4);
             if (data.Count == 1)
@@ -168,7 +168,7 @@ namespace RabbitMQ.Util
             return BitConverter.ToUInt32(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ulong ReadUInt64(this ArraySegmentStream input)
+        public static ulong ReadUInt64(this ArraySegmentSequence input)
         {
             var data = input.Read(8);
             if (data.Count == 1)
@@ -196,7 +196,7 @@ namespace RabbitMQ.Util
             return BitConverter.ToUInt64(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static short ReadInt16(this ArraySegmentStream input)
+        public static short ReadInt16(this ArraySegmentSequence input)
         {
             var data = input.Read(2);
 
@@ -228,7 +228,7 @@ namespace RabbitMQ.Util
             return BitConverter.ToInt16(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ReadInt32(this ArraySegmentStream input)
+        public static int ReadInt32(this ArraySegmentSequence input)
         {
             var data = input.Read(4);
             if (data.Count == 1)
@@ -256,7 +256,7 @@ namespace RabbitMQ.Util
             return BitConverter.ToInt32(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static long ReadInt64(this ArraySegmentStream input)
+        public static long ReadInt64(this ArraySegmentSequence input)
         {
             var data = input.Read(8);
             if (data.Count == 1)
@@ -284,7 +284,7 @@ namespace RabbitMQ.Util
             return BitConverter.ToInt64(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float ReadSingle(this ArraySegmentStream input)
+        public static float ReadSingle(this ArraySegmentSequence input)
         {
             var data = input.Read(4);
             if (data.Count == 1)
@@ -312,7 +312,7 @@ namespace RabbitMQ.Util
             return BitConverter.ToSingle(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double ReadDouble(this ArraySegmentStream input)
+        public static double ReadDouble(this ArraySegmentSequence input)
         {
             var data = input.Read(8);
             if (data.Count == 1)
@@ -340,21 +340,21 @@ namespace RabbitMQ.Util
             return BitConverter.ToDouble(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ReadLongString(this ArraySegmentStream input, out long read)
+        public static string ReadLongString(this ArraySegmentSequence input, out long read)
         {
             int size = Convert.ToInt32(ReadUInt32(input));
             read = size + 4;
             return System.Text.Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ReadShortString(this ArraySegmentStream input,out long read)
+        public static string ReadShortString(this ArraySegmentSequence input,out long read)
         {
             int size = (int)ReadByte(input);
             read = size + 1;
             return Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static decimal ReadDecimal(this ArraySegmentStream input, out long read)
+        public static decimal ReadDecimal(this ArraySegmentSequence input, out long read)
         {
             byte scale = ReadByte(input);
             uint unsignedMantissa = ReadUInt32(input);
@@ -371,12 +371,12 @@ namespace RabbitMQ.Util
                 scale);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static AmqpTimestamp ReadTimestamp(this ArraySegmentStream input)
+        public static AmqpTimestamp ReadTimestamp(this ArraySegmentSequence input)
         {
             return new AmqpTimestamp(ReadInt64(input));
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDictionary<string, object> ReadTable(this ArraySegmentStream input, out long read)
+        public static IDictionary<string, object> ReadTable(this ArraySegmentSequence input, out long read)
         {
             IDictionary<string, object> table = new Dictionary<string, object>();
             UInt32 tableLength = ReadUInt32(input);
@@ -397,7 +397,7 @@ namespace RabbitMQ.Util
             return table;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IList<object> ReadArray(this ArraySegmentStream input, out long read)
+        public static IList<object> ReadArray(this ArraySegmentSequence input, out long read)
         {
             IList<object> array = new List<object>();
             long arrayLength = ReadUInt32(input);
@@ -426,7 +426,7 @@ namespace RabbitMQ.Util
         private const byte t = 116;
         private const byte x = 120;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object ReadFieldValue(this ArraySegmentStream input, out long read)
+        public static object ReadFieldValue(this ArraySegmentSequence input, out long read)
         {
             byte discriminator = ReadByte(input);
             object value;

@@ -197,7 +197,7 @@ namespace RabbitMQ.Client.Impl
     {
         private static readonly Protocol m_protocol = new Protocol();
 
-        private static void ProcessProtocolHeader(ArraySegmentStream reader)
+        private static void ProcessProtocolHeader(ArraySegmentSequence reader)
         {
             try
             {
@@ -230,7 +230,7 @@ namespace RabbitMQ.Client.Impl
                 throw new MalformedFrameException("Invalid AMQP protocol header from server");
             }
         }
-        public static InboundFrame ReadFrom(ArraySegmentStream reader)
+        public static InboundFrame ReadFrom(ArraySegmentSequence reader)
         {
             byte type;
 

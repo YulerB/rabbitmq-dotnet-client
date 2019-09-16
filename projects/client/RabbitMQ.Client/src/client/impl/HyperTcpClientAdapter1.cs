@@ -8,6 +8,8 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.IO;
+using System.Collections.Generic;
+using RabbitMQ.Client.Impl;
 
 namespace RabbitMQ.Client
 {
@@ -135,6 +137,18 @@ namespace RabbitMQ.Client
             catch (IOException)
             {
                 Close();
+            }
+        }
+
+        public void Write(IList<ArraySegment<byte>> data)
+        {
+            using (var ms = MemoryStreamPool.GetObject())
+            {
+                foreach (var segment in data)
+                {
+                    ms.Instance.Write(segment.Array, segment.Offset, segment.Count);
+                }
+                Write(new ArraySegment<byte>(ms.Instance.GetBuffer(), 0, Convert.ToInt32(ms.Instance.Length)));
             }
         }
     }

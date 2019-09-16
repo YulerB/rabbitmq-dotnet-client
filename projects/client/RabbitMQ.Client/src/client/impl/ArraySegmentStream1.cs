@@ -1,4 +1,4 @@
-// This source code is dual-licensed under the Apache License, version
+﻿// This source code is dual-licensed under the Apache License, version
 // 2.0, and the Mozilla Public License, version 1.1.
 //
 // The APL v2.0:
@@ -38,52 +38,61 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+#if !NETFX_CORE
 using System;
-using System.Text;
-using RabbitMQ.Util;
+using System.IO;
+using System.Collections.Generic;
+using System.Threading;
+using System.Collections.Concurrent;
 
 namespace RabbitMQ.Client.Impl
 {
-    public abstract class ContentHeaderBase : IContentHeader
+    public class ArraySegmentStream : Stream 
     {
-        ///<summary>
-        /// Retrieve the AMQP class ID of this content header.
-        ///</summary>
-        public abstract ushort ProtocolClassId { get; }
+        private long len = 0;
+        private List<ArraySegment<byte>> data = new List<ArraySegment<byte>>();
+        public ArraySegmentStream()
+        {
+            data = new List<ArraySegment<byte>>();
+        }
 
-        ///<summary>
-        /// Retrieve the AMQP class name of this content header.
-        ///</summary>
-        public abstract string ProtocolClassName { get; }
+        public override bool CanRead => false;
 
-        public virtual object Clone()
+        public override bool CanSeek => false;
+
+        public override bool CanWrite => true;
+
+        public override long Length => len;
+
+        public override long Position { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        public override void Flush()
         {
             throw new NotImplementedException();
         }
 
-        public abstract void AppendPropertyDebugStringTo(StringBuilder stringBuilder);
-
-        ///<summary>
-        /// Fill this instance from the given byte buffer stream.
-        ///</summary>
-        public ulong ReadFrom(ArraySegmentSequence stream)
+        public override int Read(byte[] buffer, int offset, int count)
         {
-            stream.ReadUInt16(); // weight - not currently used
-            ulong bodySize = stream.ReadUInt64();
-            ReadPropertiesFrom(new ContentHeaderPropertyReader2(stream));
-            return bodySize;
+            throw new NotImplementedException();
         }
 
-        public abstract void ReadPropertiesFrom(ContentHeaderPropertyReader2 reader);
-        public abstract void WritePropertiesTo(ContentHeaderPropertyWriter writer);
-
-        private const ushort ZERO = 0;
-
-        public void WriteTo(NetworkBinaryWriter writer, ulong bodySize)
+        public override long Seek(long offset, SeekOrigin origin)
         {
-            writer.Write(ZERO); // weight - not currently used
-            writer.Write(bodySize);
-            WritePropertiesTo(new ContentHeaderPropertyWriter(writer));
+            throw new NotImplementedException();
+        }
+
+        public override void SetLength(long value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IList<ArraySegment<byte>> Data { get { return data; } }
+
+        public override void Write(byte[] buffer, int offset, int count)
+        {
+            data.Add(new ArraySegment<byte>(buffer, offset, count));
+            len += count;
         }
     }
 }
+#endif

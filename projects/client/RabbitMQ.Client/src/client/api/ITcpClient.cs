@@ -8,6 +8,7 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Collections.Generic;
 
 namespace RabbitMQ.Client
 {
@@ -34,6 +35,7 @@ namespace RabbitMQ.Client
         int ClientLocalEndPointPort { get; }
         Task ConnectAsync();
         void Write(ArraySegment<byte> data);
+        void Write(IList<ArraySegment<byte>> data);
         event EventHandler<ReadOnlyMemory<byte>> Receive;
         event EventHandler Closed;
 

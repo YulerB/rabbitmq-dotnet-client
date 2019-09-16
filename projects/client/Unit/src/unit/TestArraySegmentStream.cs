@@ -15,7 +15,7 @@ namespace RabbitMQ.Client.Unit
         public void ArraySegmentStreamTest()
         {
             byte[] buffer = new byte[] { 200, 199, 197, 196, 195};
-            ArraySegmentStream stream = new ArraySegmentStream();
+            ArraySegmentSequence stream = new ArraySegmentSequence();
             stream.Write(buffer);
             stream.Write(buffer);
 
@@ -42,7 +42,7 @@ namespace RabbitMQ.Client.Unit
             Random r = new Random();
             byte[] buffer = new byte[5];// {r.Next(65, 198) , 199, 197, 196, 195 };
             r.NextBytes(buffer);
-            ArraySegmentStream stream = new ArraySegmentStream();
+            ArraySegmentSequence stream = new ArraySegmentSequence();
             for (int i = 0; i < 300; i++)
             {
                 stream.Write(buffer);
@@ -72,7 +72,7 @@ namespace RabbitMQ.Client.Unit
             byte[] newBytes = new byte[] { bytes[3], bytes[2], bytes[1], bytes[0] };
 
 
-            stream = new ArraySegmentStream();
+            stream = new ArraySegmentSequence();
             stream.Write(newBytes);
             ms = new MemoryStream();
             for (int i = 0; i < FiveHundred/5; i++)
@@ -87,7 +87,7 @@ namespace RabbitMQ.Client.Unit
             bytes = BitConverter.GetBytes(twentyFive);
             newBytes = new byte[] { bytes[3], bytes[2], bytes[1], bytes[0] };
 
-            stream = new ArraySegmentStream();
+            stream = new ArraySegmentSequence();
             stream.Write(newBytes);
             stream.Write(new byte[] { (byte)'I' });
             stream.Write(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3]});
