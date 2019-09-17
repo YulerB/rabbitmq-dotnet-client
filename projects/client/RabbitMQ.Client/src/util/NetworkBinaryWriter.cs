@@ -305,13 +305,11 @@ namespace RabbitMQ.Util
                 8);
         }
 
-        public void WriteLongstr(string val, out int written)
+        public void WriteLongstr(byte[] val, out int written)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(val);
-            int len = bytes.Length;
-            Write((uint)len);
-            Write(bytes);
-            written = len + 4;
+            Write((uint)val.Length);
+            Write(val);
+            written = val.Length + 4;
         }
 
         public void Write(byte val)
@@ -339,17 +337,14 @@ namespace RabbitMQ.Util
         ///</remarks>
         public IList<ArraySegment<byte>> GetTableContent(IDictionary<string, dynamic> val, out int written)
         {
-            written = 0;
             var stream1 = new ArraySegmentStream();
             NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
             foreach (var entry in val)
             {
                 bw.WriteShortstr(entry.Key, out int written1);
-                written += written1;
-                object value = entry.Value;
-                bw.WriteFieldValue(value, out int written2);
-                written += written2;
+                bw.WriteFieldValue(entry.Value, out int written2);
             }
+            written = Convert.ToInt32(stream.Length);
             return stream1.Data;
         }
 
@@ -417,7 +412,6 @@ namespace RabbitMQ.Util
 
         public IList<ArraySegment<byte>> GetArrayContent(IList val, out int written)
         {
-            written = 0;
             var stream1 = new ArraySegmentStream();
             NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
             if (val != null)
@@ -425,9 +419,9 @@ namespace RabbitMQ.Util
                 foreach (object entry in val)
                 {
                     bw.WriteFieldValue(entry, out int written1);
-                    written += written1;
                 }
             }
+            written = Convert.ToInt32(stream1.Length);
             return stream1.Data;
         }
 
@@ -468,7 +462,7 @@ namespace RabbitMQ.Util
             else if (value is string)
             {
                 Write((byte)'S');
-                WriteLongstr((string)value, out int written1);
+                WriteLongstr(Encoding.UTF8.GetBytes((string)value), out int written1);
                 written = written1 + 1;
             }
             else if (value is byte[])

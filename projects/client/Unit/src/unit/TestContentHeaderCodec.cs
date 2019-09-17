@@ -48,6 +48,7 @@ using System.Collections;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Impl;
 using RabbitMQ.Util;
+using System.Collections.Generic;
 
 namespace RabbitMQ.Client.Unit
 {
@@ -94,34 +95,27 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestPresence()
         {
-            m_w.WritePresence(false);
-            m_w.WritePresence(true);
-            m_w.WritePresence(false);
-            m_w.WritePresence(true);
-            m_w.FinishPresence();
+            m_w.WriteBits(new bool[] { false, true, false, true });
             Check(m_w, new byte[] { 0x50, 0x00 });
         }
 
         [Test]
         public void TestLongPresence()
         {
-            m_w.WritePresence(false);
-            m_w.WritePresence(true);
-            m_w.WritePresence(false);
-            m_w.WritePresence(true);
+            var bits = new List<bool> { false, true, false, true };
             for (int i = 0; i < 20; i++)
             {
-                m_w.WritePresence(false);
+                bits.Add(false);
             }
-            m_w.WritePresence(true);
-            m_w.FinishPresence();
+            bits.Add(true);
+            m_w.WriteBits(bits.ToArray());
             Check(m_w, new byte[] { 0x50, 0x01, 0x00, 0x40 });
         }
 
         [Test]
         public void TestNoPresence()
         {
-            m_w.FinishPresence();
+            m_w.WriteBits(new bool[] { });
             Check(m_w, new byte[] { 0x00, 0x00 });
         }
 

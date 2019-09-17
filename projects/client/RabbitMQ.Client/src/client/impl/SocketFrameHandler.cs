@@ -153,27 +153,27 @@ namespace RabbitMQ.Client.Impl
             m_socket.Write(new ArraySegment<byte>(header));
         }
 
+        //public void WriteFrame(OutboundFrame frame)
+        //{
+        //    using (var ms = MemoryStreamPool.GetObject())
+        //    {
+        //        var nbw = new NetworkBinaryWriter(ms.Instance);
+        //        frame.WriteTo(nbw);
+        //        m_socket.Write(ms.Instance.GetBufferSegment());
+        //    }
+        //}
+
+        //public void WriteFrameSet(IList<OutboundFrame> frames)
+        //{
+        //    using (var ms = MemoryStreamPool.GetObject())
+        //    {
+        //        var nbw = new NetworkBinaryWriter(ms.Instance);
+        //        foreach (var f in frames) f.WriteTo(nbw);
+        //        m_socket.Write(ms.Instance.GetBufferSegment());
+        //    }
+        //}
+
         public void WriteFrame(OutboundFrame frame)
-        {
-            using (var ms = MemoryStreamPool.GetObject())
-            {
-                var nbw = new NetworkBinaryWriter(ms.Instance);
-                frame.WriteTo(nbw);
-                m_socket.Write(ms.Instance.GetBufferSegment());
-            }
-        }
-
-        public void WriteFrameSet(IList<OutboundFrame> frames)
-        {
-            using (var ms = MemoryStreamPool.GetObject())
-            {
-                var nbw = new NetworkBinaryWriter(ms.Instance);
-                foreach (var f in frames) f.WriteTo(nbw);
-                m_socket.Write(ms.Instance.GetBufferSegment());
-            }
-        }
-
-        public void WriteFrame1(OutboundFrame frame)
         {
             ArraySegmentStream stream = new ArraySegmentStream();
             var nbw = new NetworkBinaryWriter(stream);
@@ -181,7 +181,7 @@ namespace RabbitMQ.Client.Impl
             m_socket.Write(stream.Data);
         }
 
-        public void WriteFrameSet1(IList<OutboundFrame> frames)
+        public void WriteFrameSet(IList<OutboundFrame> frames)
         {
             ArraySegmentStream stream = new ArraySegmentStream();
             var nbw = new NetworkBinaryWriter(stream);

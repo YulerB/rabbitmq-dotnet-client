@@ -127,7 +127,6 @@ namespace RabbitMQ.Client.Impl
                     {
                         var argWriter = new MethodArgumentWriter(nw);
                         method.WriteArgumentsTo(argWriter);
-                        argWriter.Flush();
                     }
                 }
 
