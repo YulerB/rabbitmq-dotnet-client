@@ -84,16 +84,10 @@ namespace RabbitMQ.Client.Impl
         {
             long actualLength = 0;
             {
-                using (var stream = MemoryStreamPool.GetObject())
-                {
-                    {
-                        var writer = new NetworkBinaryWriter(stream.Instance);
-                        {
-                            new EmptyOutboundFrame().WriteTo(writer);
-                        }
-                    }
-                    actualLength = stream.Instance.Position;
-                }
+                ArraySegmentStream stream = new ArraySegmentStream();
+                var writer = new NetworkBinaryWriter(stream);
+                new EmptyOutboundFrame().WriteTo(writer);
+                actualLength = stream.Length;
             }
 
             if (EmptyFrameSize != actualLength)

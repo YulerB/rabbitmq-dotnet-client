@@ -86,27 +86,7 @@ namespace RabbitMQ.Client.Content
         /// Retrieve the <see cref="IBasicProperties"/> associated with this instance.
         /// </summary>
         public IBasicProperties Properties { get; protected set; }
-
-        /// <summary>
-        /// Retrieve this instance's <see cref="NetworkBinaryWriter"/> writing to BodyStream.
-        /// </summary>
-        /// <remarks>
-        /// If no <see cref="NetworkBinaryWriter"/> instance exists, one is created,
-        /// pointing at the beginning of the accumulator. If one
-        /// already exists, the existing instance is returned. The
-        /// instance is not reset.
-        /// </remarks>
-        public NetworkBinaryWriter Writer
-        {
-            get
-            {
-                if (m_writer == null)
-                {
-                    m_writer = new NetworkBinaryWriter(m_accumulator);
-                }
-                return m_writer;
-            }
-        }
+        
 
         /// <summary>
         /// Retrieve the <see cref="Stream"/> being used to construct the message body.

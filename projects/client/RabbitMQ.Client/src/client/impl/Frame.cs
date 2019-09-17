@@ -67,25 +67,21 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(NetworkBinaryWriter writer)
         {
-            using (var ms = MemoryStreamPool.GetObject())
-            {
-                {
-                    var nw = new NetworkBinaryWriter(ms.Instance);
-                    {
-                        nw.Write(header.ProtocolClassId);
-                        header.WriteTo(nw, (ulong)bodyLength);
-                    }
-                }
 
-                {
-                    var bufferSegment = ms.Instance.GetBufferSegment();
-                    writer.Write((uint)bufferSegment.Count);
-                    writer.Write(bufferSegment.Array, bufferSegment.Offset, bufferSegment.Count);
-                }
+            ArraySegmentStream stream = new ArraySegmentStream();
+            var nw = new NetworkBinaryWriter(stream);
+            {
+                nw.Write(header.ProtocolClassId);
+                header.WriteTo(nw, (ulong)bodyLength);
+            }
+
+            writer.Write((uint)stream.Length);
+            foreach (var item in stream.Data)
+            {
+                writer.Write(item);
             }
         }
     }
-
     public class BodySegmentOutboundFrame : OutboundFrame
     {
         private readonly byte[] body;
@@ -117,25 +113,21 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(NetworkBinaryWriter writer)
         {
-            using (var ms = MemoryStreamPool.GetObject())
+            ArraySegmentStream stream = new ArraySegmentStream();
+            var nw = new NetworkBinaryWriter(stream);
             {
-                {
-                    var nw = new NetworkBinaryWriter(ms.Instance);
-                    nw.Write(method.ProtocolClassId);
-                    nw.Write(method.ProtocolMethodId);
-
-                    {
-                        var argWriter = new MethodArgumentWriter(nw);
-                        method.WriteArgumentsTo(argWriter);
-                    }
-                }
-
-                {
-                    var bufferSegment = ms.Instance.GetBufferSegment();
-                    writer.Write((uint)bufferSegment.Count);
-                    writer.Write(bufferSegment.Array, bufferSegment.Offset, bufferSegment.Count);
-                }
+                nw.Write(method.ProtocolClassId);
+                nw.Write(method.ProtocolMethodId);
+                var argWriter = new MethodArgumentWriter(nw);
+                method.WriteArgumentsTo(argWriter);
             }
+
+            writer.Write((uint)stream.Length);
+            foreach (var item in stream.Data)
+            {
+                writer.Write(item);
+            }
+
         }
     }
 
