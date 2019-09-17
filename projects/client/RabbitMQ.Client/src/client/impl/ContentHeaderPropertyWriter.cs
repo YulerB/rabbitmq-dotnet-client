@@ -44,12 +44,12 @@ using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class ContentHeaderPropertyWriter
+    public class ContentHeaderPropertyWriter2
     {
         protected int m_bitCount;
         protected ushort m_flagWord;
 
-        public ContentHeaderPropertyWriter(NetworkBinaryWriter writer)
+        public ContentHeaderPropertyWriter2(NetworkBinaryWriter writer)
         {
             BaseWriter = writer;
             m_flagWord = 0;

@@ -54,17 +54,17 @@ namespace RabbitMQ.Client.Unit
     [TestFixture]
     public class TestContentHeaderCodec
     {
-        public static ContentHeaderPropertyWriter Writer()
+        public static ContentHeaderPropertyWriter2 Writer()
         {
-            return new ContentHeaderPropertyWriter(new NetworkBinaryWriter(new MemoryStream()));
+            return new ContentHeaderPropertyWriter2(new NetworkBinaryWriter(new MemoryStream()));
         }
 
-        public byte[] Contents(ContentHeaderPropertyWriter w)
+        public byte[] Contents(ContentHeaderPropertyWriter2 w)
         {
             return ((MemoryStream)w.BaseWriter.BaseStream).ToArray();
         }
 
-        public void Check(ContentHeaderPropertyWriter w, byte[] expected)
+        public void Check(ContentHeaderPropertyWriter2 w, byte[] expected)
         {
             byte[] actual = Contents(w);
             try
@@ -83,7 +83,7 @@ namespace RabbitMQ.Client.Unit
             }
         }
 
-        public ContentHeaderPropertyWriter m_w;
+        public ContentHeaderPropertyWriter2 m_w;
 
         [SetUp]
         public void SetUp()

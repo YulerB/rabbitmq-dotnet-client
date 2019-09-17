@@ -17,7 +17,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../RabbitMQ.Client/RabbitMQ.Client.csproj" />
-    <ProjectReference Include="..\..\..\RabbitMQ.Client.Unsafe\RabbitMQ.Client.Unsafe.csproj" />
   </ItemGroup>
 
   <ItemGroup>

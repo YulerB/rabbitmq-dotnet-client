@@ -75,7 +75,7 @@ namespace RabbitMQ.Client.Impl
         }
 
         public abstract void ReadPropertiesFrom(ContentHeaderPropertyReader2 reader);
-        public abstract void WritePropertiesTo(ContentHeaderPropertyWriter writer);
+        public abstract void WritePropertiesTo(ContentHeaderPropertyWriter2 writer);
 
         private const ushort ZERO = 0;
 
@@ -83,7 +83,7 @@ namespace RabbitMQ.Client.Impl
         {
             writer.Write(ZERO); // weight - not currently used
             writer.Write(bodySize);
-            WritePropertiesTo(new ContentHeaderPropertyWriter(writer));
+            WritePropertiesTo(new ContentHeaderPropertyWriter2(writer));
         }
     }
 }
