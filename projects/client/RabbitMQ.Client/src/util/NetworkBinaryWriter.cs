@@ -161,11 +161,6 @@ namespace RabbitMQ.Util
                 offset,
                 count);
         }
-
-
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(ushort i)
         {
             var bytes = BitConverter.GetBytes(i);
@@ -177,11 +172,6 @@ namespace RabbitMQ.Util
                 0,
                 2);
         }
-
-
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(int i)
         {
             var bytes = BitConverter.GetBytes(i);
@@ -195,10 +185,6 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(uint i)
         {
             var bytes = BitConverter.GetBytes(i);
@@ -212,10 +198,6 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(long i)
         {
             var bytes = BitConverter.GetBytes(i);
@@ -233,10 +215,6 @@ namespace RabbitMQ.Util
                 0,
                 8);
         }
-
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(ulong i)
         {
             var bytes = BitConverter.GetBytes(i);
@@ -254,7 +232,7 @@ namespace RabbitMQ.Util
                 0,
                 8);
         }
-        public void WriteShortstr(string val, out int written)
+        public void WriteShortstr(string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             int len = bytes.Length;
@@ -265,11 +243,7 @@ namespace RabbitMQ.Util
             }
             Write((byte)len);
             Write(bytes);
-            written = len + 1;
         }
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(float f)
         {
             var bytes = BitConverter.GetBytes(f);
@@ -283,10 +257,6 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(double d)
         {
             var bytes = BitConverter.GetBytes(d);
@@ -304,14 +274,11 @@ namespace RabbitMQ.Util
                 0,
                 8);
         }
-
-        public void WriteLongstr(byte[] val, out int written)
+        public void WriteLongstr(byte[] val)
         {
             Write((uint)val.Length);
             Write(val);
-            written = val.Length + 4;
         }
-
         public void Write(byte val)
         {
             stream.WriteByte(val);
@@ -320,7 +287,6 @@ namespace RabbitMQ.Util
         {
             stream.WriteByte((byte)val);
         }
-        #region Todo
         ///<summary>Writes an AMQP "table" to the writer.</summary>
         ///<remarks>
         ///<para>
@@ -335,16 +301,28 @@ namespace RabbitMQ.Util
         /// x and V types and the AMQP 0-9-1 A type.
         ///</para>
         ///</remarks>
-        public IList<ArraySegment<byte>> GetTableContent(IDictionary<string, dynamic> val, out int written)
+        public IList<ArraySegment<byte>> GetTableContent(IDictionary<string, object> val, out int written)
         {
             var stream1 = new ArraySegmentStream();
             NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
             foreach (var entry in val)
             {
-                bw.WriteShortstr(entry.Key, out int written1);
-                bw.WriteFieldValue(entry.Value, out int written2);
+                bw.WriteShortstr(entry.Key);
+                bw.WriteFieldValue(entry.Value);
             }
-            written = Convert.ToInt32(stream.Length);
+            written = Convert.ToInt32(stream1.Length);
+            return stream1.Data;
+        }
+        public IList<ArraySegment<byte>> GetTableContent(IDictionary<string, bool> val, out int written)
+        {
+            var stream1 = new ArraySegmentStream();
+            NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
+            foreach (var entry in val)
+            {
+                bw.WriteShortstr(entry.Key);
+                bw.WriteFieldValue(entry.Value);
+            }
+            written = Convert.ToInt32(stream1.Length);
             return stream1.Data;
         }
 
@@ -369,7 +347,24 @@ namespace RabbitMQ.Util
         /// x and V types and the AMQP 0-9-1 A type.
         ///</para>
         ///</remarks>
-        public void WriteTable(IDictionary<string, dynamic> val, out int written)
+        public void WriteTable(IDictionary<string, object> val, out int written)
+        {
+            if (val == null)
+            {
+                Write((uint)0);
+                written = 4;
+                return;
+            }
+
+            var content = GetTableContent(val, out int written1);
+            Write((uint)written1);
+            foreach (var item in content)
+            {
+                Write(item);
+            }
+            written = written1 + 4;
+        }
+        public void WriteTable(IDictionary<string, bool> val, out int written)
         {
             if (val == null)
             {
@@ -410,22 +405,19 @@ namespace RabbitMQ.Util
                              (((uint)bitRepresentation[0]) & 0x7FFFFFFF));
         }
 
-        public IList<ArraySegment<byte>> GetArrayContent(IList val, out int written)
+        private IList<ArraySegment<byte>> GetArrayContent(IList val, out int written)
         {
             var stream1 = new ArraySegmentStream();
             NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
-            if (val != null)
+            foreach (object entry in val)
             {
-                foreach (object entry in val)
-                {
-                    bw.WriteFieldValue(entry, out int written1);
-                }
+                bw.WriteFieldValue(entry);
             }
             written = Convert.ToInt32(stream1.Length);
             return stream1.Data;
         }
 
-        public void WriteArray(IList val, out int written)
+        private void WriteArray(IList val, out int written)
         {
             if (val == null)
             {
@@ -443,7 +435,7 @@ namespace RabbitMQ.Util
             written = written1 + 4;
         }
 
-        public void WriteDecimal(decimal value)
+        private void WriteDecimal(decimal value)
         {
             byte scale;
             int mantissa;
@@ -452,98 +444,104 @@ namespace RabbitMQ.Util
             Write((uint)mantissa);
         }
 
-        public void WriteFieldValue(object value, out int written)
+        private void WriteFieldValue(object value)
         {
             if (value == null)
             {
                 Write((byte)'V');
-                written = 1;
             }
             else if (value is string)
             {
                 Write((byte)'S');
-                WriteLongstr(Encoding.UTF8.GetBytes((string)value), out int written1);
-                written = written1 + 1;
+                var bytes = Encoding.UTF8.GetBytes((string)value);
+                WriteLongstr(bytes);
             }
             else if (value is byte[])
             {
                 byte[] val = (byte[])value;
                 Write((byte)'S');
-                Write(val);
-                written = val.Length + 1;
+                WriteLongstr(val);
             }
             else if (value is int)
             {
                 Write((byte)'I');
                 Write((int)value);
-                written = 5;
             }
             else if (value is decimal)
             {
                 Write((byte)'D');
                 WriteDecimal((decimal)value);
-                written = 6;
             }
             else if (value is AmqpTimestamp)
             {
                 Write((byte)'T');
                 WriteTimestamp((AmqpTimestamp)value);
-                written = 9;
+            }
+            else if (value is IDictionary<string, bool>)
+            {
+                Write((byte)'F');
+                WriteTable((IDictionary<string, bool>)value, out int written1);
             }
             else if (value is IDictionary)
             {
                 Write((byte)'F');
                 WriteTable((IDictionary<string, dynamic>)value, out int written1);
-                written = written1 + 1;
             }
             else if (value is IList)
             {
                 Write((byte)'A');
                 WriteArray((IList)value, out int written1);
-                written = written1 + 1;
             }
             else if (value is sbyte)
             {
                 Write((byte)'b');
                 Write((sbyte)value);
-                written = 2;
             }
             else if (value is double)
             {
                 Write((byte)'d');
                 Write((double)value);
-                written = 9;
             }
             else if (value is float)
             {
                 Write((byte)'f');
                 Write((float)value);
-                written = 5;
             }
             else if (value is long)
             {
                 Write((byte)'l');
                 Write((long)value);
-                written = 9;
+            }
+            else if (value is ulong)
+            {
+                Write((byte)'l');
+                Write((ulong)value);
+            }
+            else if (value is uint)
+            {
+                Write((byte)'I');
+                Write((uint)value);
             }
             else if (value is short)
             {
                 Write((byte)'s');
                 Write((short)value);
-                written = 3;
+            }
+            else if (value is ushort)
+            {
+                Write((byte)'s');
+                Write((ushort)value);
             }
             else if (value is bool)
             {
                 Write((byte)'t');
                 Write((byte)(((bool)value) ? 1 : 0));
-                written = 2;
             }
             else if (value is BinaryTableValue)
             {
                 var val = ((BinaryTableValue)value).Bytes;
                 Write((byte)'x');
                 Write(val);
-                written = val.Length + 1;
             }
             else
             {
@@ -556,7 +554,6 @@ namespace RabbitMQ.Util
         {
             stream.Write(segment.Array, segment.Offset, segment.Count);
         }
-        #endregion
     }
 }
 

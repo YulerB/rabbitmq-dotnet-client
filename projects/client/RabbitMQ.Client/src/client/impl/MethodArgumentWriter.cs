@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteLongstr(byte[] val)
         {
-            BaseWriter.WriteLongstr(val, out int written);
+            BaseWriter.WriteLongstr(val);
         }
 
         public void WriteOctet(byte val)
@@ -86,7 +86,7 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteShortstr(string val)
         {
-            BaseWriter.WriteShortstr(val, out int written);
+            BaseWriter.WriteShortstr(val);
         }
         
         public void WriteTable(IDictionary<string, object> val)

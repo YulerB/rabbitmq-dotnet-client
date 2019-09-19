@@ -54,7 +54,7 @@ namespace RabbitMQ.Client.Framing.Impl
 {
     public abstract class ProtocolBase : IProtocol
     {
-        public IDictionary<string, object> Capabilities = new Dictionary<string, object>();
+        public IDictionary<string, bool> Capabilities = new Dictionary<string, bool>();
 
         public ProtocolBase()
         {

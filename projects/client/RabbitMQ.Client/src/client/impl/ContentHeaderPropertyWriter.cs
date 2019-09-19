@@ -70,7 +70,7 @@ namespace RabbitMQ.Client.Impl
         
         public void WriteShortstr(string val)
         {
-            BaseWriter.WriteShortstr(val, out int written);
+            BaseWriter.WriteShortstr(val);
         }
 
         public void WriteTable(IDictionary<string, object> val)
