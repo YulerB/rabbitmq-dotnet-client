@@ -75,7 +75,7 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteTable(IDictionary<string, object> val)
         {
-            BaseWriter.WriteTable(val, out int written);
+            BaseWriter.WriteTable(val);
         }
 
         public void WriteTimestamp(AmqpTimestamp val)

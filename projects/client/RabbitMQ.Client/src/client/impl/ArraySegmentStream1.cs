@@ -51,10 +51,6 @@ namespace RabbitMQ.Client.Impl
     {
         private long len = 0;
         private List<ArraySegment<byte>> data = new List<ArraySegment<byte>>();
-        public ArraySegmentStream()
-        {
-            data = new List<ArraySegment<byte>>();
-        }
 
         public override bool CanRead => false;
 
@@ -92,6 +88,11 @@ namespace RabbitMQ.Client.Impl
         {
             data.Add(new ArraySegment<byte>(buffer, offset, count));
             len += count;
+        }
+        public void Write(ArraySegment<byte> segment)
+        {
+            data.Add(segment);
+            len += segment.Count;
         }
     }
 }

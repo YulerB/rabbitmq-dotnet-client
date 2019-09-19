@@ -52,7 +52,7 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateHeaderOutboundFrame()
         {
-            using (var ms = new System.IO.MemoryStream())
+            using (var ms = new ArraySegmentStream())
             {
                 var writter = new RabbitMQ.Util.NetworkBinaryWriter(ms);
                 ushort channel = 1;

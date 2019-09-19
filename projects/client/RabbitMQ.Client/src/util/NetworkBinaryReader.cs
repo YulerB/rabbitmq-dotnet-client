@@ -380,6 +380,13 @@ namespace RabbitMQ.Util
         {
             IDictionary<string, object> table = new Dictionary<string, object>();
             UInt32 tableLength = ReadUInt32(input);
+
+            if(tableLength == 0)
+            {
+                read = 4;
+                return null;
+            }
+
             long left = tableLength;
             while (left> 0)
             {
@@ -401,6 +408,13 @@ namespace RabbitMQ.Util
         {
             IList<object> array = new List<object>();
             long arrayLength = ReadUInt32(input);
+
+            if (arrayLength == 0)
+            {
+                read = 4;
+                return null;
+            }
+
             long left = arrayLength;
             while (left > 0)
             {
@@ -441,7 +455,7 @@ namespace RabbitMQ.Util
                     break;
                 case D:
                     value = ReadDecimal(input, out read);
-                    read = 4;
+                    read = 5;
                     break;
                 case T:
                     value = ReadTimestamp(input);

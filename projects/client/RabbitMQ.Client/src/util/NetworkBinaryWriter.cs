@@ -62,16 +62,14 @@ namespace RabbitMQ.Util
     /// </remarks>
     public class NetworkBinaryWriter //: BinaryWriter
     {
-        private Stream stream;
+        private ArraySegmentStream stream;
         /// <summary>
         /// Construct a NetworkBinaryWriter over the given input stream.
         /// </summary>
-        public NetworkBinaryWriter(Stream output) //: base(output)
+        public NetworkBinaryWriter(ArraySegmentStream output) //: base(output)
         {
             this.stream = output;
         }
-
-        public Stream BaseStream { get { return stream; } }
 
         public void WriteBits(bool[] bits)
         {
@@ -235,13 +233,12 @@ namespace RabbitMQ.Util
         public void WriteShortstr(string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
-            int len = bytes.Length;
-            if (len > 255)
+            if (bytes.Length > 255)
             {
                 throw new WireFormattingException("Short string too long; " +
-                                                  "UTF-8 encoded length=" + len + ", max=255");
+                                                  "UTF-8 encoded length=" + bytes.Length + ", max=255");
             }
-            Write((byte)len);
+            Write((byte)bytes.Length);
             Write(bytes);
         }
         public void Write(float f)
@@ -347,39 +344,37 @@ namespace RabbitMQ.Util
         /// x and V types and the AMQP 0-9-1 A type.
         ///</para>
         ///</remarks>
-        public void WriteTable(IDictionary<string, object> val, out int written)
+        public void WriteTable(IDictionary<string, object> val)
         {
             if (val == null)
             {
                 Write((uint)0);
-                written = 4;
-                return;
             }
-
-            var content = GetTableContent(val, out int written1);
-            Write((uint)written1);
-            foreach (var item in content)
+            else
             {
-                Write(item);
+                var content = GetTableContent(val, out int written1);
+                Write((uint)written1);
+                foreach (var item in content)
+                {
+                    Write(item);
+                }
             }
-            written = written1 + 4;
         }
-        public void WriteTable(IDictionary<string, bool> val, out int written)
+        public void WriteTable(IDictionary<string, bool> val)
         {
             if (val == null)
             {
                 Write((uint)0);
-                written = 4;
-                return;
             }
-
-            var content = GetTableContent(val, out int written1);
-            Write((uint)written1);
-            foreach (var item in content)
+            else
             {
-                Write(item);
+                var content = GetTableContent(val, out int written1);
+                Write((uint)written1);
+                foreach (var item in content)
+                {
+                    Write(item);
+                }
             }
-            written = written1 + 4;
         }
 
         public void DecimalToAmqp(decimal value, out byte scale, out int mantissa)
@@ -417,22 +412,21 @@ namespace RabbitMQ.Util
             return stream1.Data;
         }
 
-        private void WriteArray(IList val, out int written)
+        private void WriteArray(IList val)
         {
             if (val == null)
             {
                 Write((uint)0); // length of table - will be backpatched
-                written = 4;
-                return;
             }
-
-            var content = GetArrayContent(val, out int written1);
-            Write((uint)written1); // length of table - will be backpatched
-            foreach (var item in content)
+            else
             {
-                Write(item);
+                var content = GetArrayContent(val, out int written1);
+                Write((uint)written1); // length of table - will be backpatched
+                foreach (var item in content)
+                {
+                    Write(item);
+                }
             }
-            written = written1 + 4;
         }
 
         private void WriteDecimal(decimal value)
@@ -444,115 +438,126 @@ namespace RabbitMQ.Util
             Write((uint)mantissa);
         }
 
+        private const byte S = 83;
+        private const byte T = 84;
+        private const byte I = 73;
+        private const byte D = 68;
+        private const byte F = 70;
+        private const byte A = 65;
+        private const byte V = 86;
+        private const byte b = 98;
+        private const byte d = 100;
+        private const byte f = 102;
+        private const byte l = 108;
+        private const byte s = 115;
+        private const byte t = 116;
+        private const byte x = 120;
+
         private void WriteFieldValue(object value)
         {
             if (value == null)
             {
-                Write((byte)'V');
+                Write(V);
             }
             else if (value is string)
             {
-                Write((byte)'S');
-                var bytes = Encoding.UTF8.GetBytes((string)value);
-                WriteLongstr(bytes);
+                Write(S);
+                WriteLongstr(Encoding.UTF8.GetBytes((string)value));
             }
             else if (value is byte[])
             {
-                byte[] val = (byte[])value;
-                Write((byte)'S');
-                WriteLongstr(val);
+                Write(S);
+                WriteLongstr((byte[])value);
             }
             else if (value is int)
             {
-                Write((byte)'I');
+                Write(I);
                 Write((int)value);
             }
             else if (value is decimal)
             {
-                Write((byte)'D');
+                Write(D);
                 WriteDecimal((decimal)value);
             }
             else if (value is AmqpTimestamp)
             {
-                Write((byte)'T');
+                Write(T);
                 WriteTimestamp((AmqpTimestamp)value);
             }
             else if (value is IDictionary<string, bool>)
             {
-                Write((byte)'F');
-                WriteTable((IDictionary<string, bool>)value, out int written1);
+                Write(F);
+                WriteTable((IDictionary<string, bool>)value);
             }
             else if (value is IDictionary)
             {
-                Write((byte)'F');
-                WriteTable((IDictionary<string, dynamic>)value, out int written1);
+                Write(F);
+                WriteTable((IDictionary<string, object>)value);
             }
             else if (value is IList)
             {
-                Write((byte)'A');
-                WriteArray((IList)value, out int written1);
+                Write(A);
+                WriteArray((IList)value);
             }
             else if (value is sbyte)
             {
-                Write((byte)'b');
+                Write(b);
                 Write((sbyte)value);
             }
             else if (value is double)
             {
-                Write((byte)'d');
+                Write(d);
                 Write((double)value);
             }
             else if (value is float)
             {
-                Write((byte)'f');
+                Write(f);
                 Write((float)value);
             }
             else if (value is long)
             {
-                Write((byte)'l');
+                Write(l);
                 Write((long)value);
             }
             else if (value is ulong)
             {
-                Write((byte)'l');
+                Write(l);
                 Write((ulong)value);
             }
             else if (value is uint)
             {
-                Write((byte)'I');
+                Write(I);
                 Write((uint)value);
             }
             else if (value is short)
             {
-                Write((byte)'s');
+                Write(s);
                 Write((short)value);
             }
             else if (value is ushort)
             {
-                Write((byte)'s');
+                Write(s);
                 Write((ushort)value);
             }
             else if (value is bool)
             {
-                Write((byte)'t');
+                Write(t);
                 Write((byte)(((bool)value) ? 1 : 0));
             }
             else if (value is BinaryTableValue)
             {
-                var val = ((BinaryTableValue)value).Bytes;
-                Write((byte)'x');
-                Write(val);
+                Write(x);
+                Write(((BinaryTableValue)value).Bytes);
             }
             else
             {
-                throw new WireFormattingException("Value cannot appear as table value",
-                    value);
+                throw new WireFormattingException("Value cannot appear as table value", value);
             }
         }
 
         public void Write(ArraySegment<byte> segment)
         {
-            stream.Write(segment.Array, segment.Offset, segment.Count);
+            stream.Write(segment);
         }
     }
 }

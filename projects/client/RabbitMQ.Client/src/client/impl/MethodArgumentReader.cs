@@ -72,7 +72,7 @@ namespace RabbitMQ.Client.Impl
     {
         private int m_bit;
         private int m_bits;
-        private readonly ArraySegmentSequence BaseReader;
+        private ArraySegmentSequence BaseReader;
 
         public MethodArgumentReader2(ArraySegmentSequence reader) : base()
         {
