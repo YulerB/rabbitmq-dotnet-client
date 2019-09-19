@@ -42,6 +42,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.Impl;
 using System;
+using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -74,7 +75,6 @@ namespace RabbitMQ.Util
         public void WriteBits(bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
-            System.Diagnostics.Debug.WriteLine(totalBits);
             BitArray arr = new BitArray(totalBits);
             int kick = totalBits - 1;
             for (int i = 0; i < bits.Length; i++)
@@ -97,7 +97,6 @@ namespace RabbitMQ.Util
         public void WriteBits1(bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
-            System.Diagnostics.Debug.WriteLine(totalBits);
             BitArray arr = new BitArray(totalBits);
             int kick = 0;
             for (int i = 0; i < bits.Length; i++)
@@ -161,6 +160,10 @@ namespace RabbitMQ.Util
         }
         public void Write(ushort i)
         {
+            //var data = new byte[2];
+            //BinaryPrimitives.TryWriteUInt16BigEndian(data, i);
+            //stream.Write(data, 0, 2);
+
             var bytes = BitConverter.GetBytes(i);
             stream.Write(
                 new byte[2]{
