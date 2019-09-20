@@ -30,7 +30,6 @@ namespace RabbitMQ.Client
             sEvent = new SocketAsyncEventArgs { AcceptSocket = sock };
             sEvent.Completed += SEvent_Completed;
         }
-        private object _syncLock = new object();
         public virtual void BufferUsed(int size)
         {
             ringBuffer.Release(size);

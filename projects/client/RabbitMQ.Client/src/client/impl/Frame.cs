@@ -71,14 +71,14 @@ namespace RabbitMQ.Client.Impl
             ArraySegmentStream stream = new ArraySegmentStream();
             var nw = new NetworkBinaryWriter(stream);
             {
-                nw.Write(header.ProtocolClassId);
+                nw.WriteUInt16(header.ProtocolClassId);
                 header.WriteTo(nw, (ulong)bodyLength);
             }
 
-            writer.Write((uint)stream.Length);
+            writer.WriteUInt32((uint)stream.Length);
             foreach (var item in stream.Data)
             {
-                writer.Write(item);
+                writer.WriteSegment(item);
             }
         }
     }
@@ -97,7 +97,7 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(NetworkBinaryWriter writer)
         {
-            writer.Write((uint)count);
+            writer.WriteUInt32((uint)count);
             writer.Write(body, offset, count);
         }
     }
@@ -116,15 +116,15 @@ namespace RabbitMQ.Client.Impl
             ArraySegmentStream stream = new ArraySegmentStream();
             var nw = new NetworkBinaryWriter(stream);
             {
-                nw.Write(method.ProtocolClassId);
-                nw.Write(method.ProtocolMethodId);
+                nw.WriteUInt16(method.ProtocolClassId);
+                nw.WriteUInt16(method.ProtocolMethodId);
                 method.WriteArgumentsTo(nw);
             }
 
-            writer.Write((uint)stream.Length);
+            writer.WriteUInt32((uint)stream.Length);
             foreach (var item in stream.Data)
             {
-                writer.Write(item);
+                writer.WriteSegment(item);
             }
 
         }
@@ -138,7 +138,7 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(NetworkBinaryWriter writer)
         {
-            writer.Write((uint)0);
+            writer.WriteUInt32(0U);
         }
     }
 
@@ -150,10 +150,10 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteTo(NetworkBinaryWriter writer)
         {
-            writer.Write((byte)Type);
-            writer.Write(Channel);
+            writer.WriteByte((byte)Type);
+            writer.WriteUInt16(Channel);
             WritePayload(writer);
-            writer.Write((byte)Constants.FrameEnd);
+            writer.WriteByte((byte)Constants.FrameEnd);
         }
 
         public abstract void WritePayload(NetworkBinaryWriter writer);

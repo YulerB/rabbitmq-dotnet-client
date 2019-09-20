@@ -72,13 +72,14 @@ namespace RabbitMQ.Client.Unit
 
                     var data = new byte[1024];
 
+                    AsyncEventingBasicConsumer ec = new AsyncEventingBasicConsumer(Model);
+
                     using (ManualResetEvent reset = new ManualResetEvent(false))
                     {
-                        AsyncEventingBasicConsumer ec = new AsyncEventingBasicConsumer(Model);
-
                         ec.Received += async (e, args) =>
                         {
-                            if (Interlocked.Increment(ref received) == messages) reset.Set();
+                            if (Interlocked.Increment(ref received) == messages)
+                                reset.Set();
                         };
 
                         Model.BasicConsume(q, true, ec);
@@ -91,8 +92,9 @@ namespace RabbitMQ.Client.Unit
                         reset.WaitOne(TimeSpan.FromMinutes(2));
 
                         Model.BasicCancel(ec.ConsumerTag);
-                        Assert.AreEqual(messages, received);
                     }
+
+                    Assert.AreEqual(messages, received);
                 }
             }
         }

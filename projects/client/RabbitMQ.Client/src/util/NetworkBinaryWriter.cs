@@ -128,17 +128,6 @@ namespace RabbitMQ.Util
             return (byte)a;
         }
 
-        public void Write(short i)
-        {
-            var bytes = BitConverter.GetBytes(i);
-            stream.Write(
-                new byte[2]{
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                2);
-        }
         public void Write(byte[] buffer)
         {
             stream.Write(
@@ -154,12 +143,8 @@ namespace RabbitMQ.Util
                 offset,
                 count);
         }
-        public void Write(ushort i)
+        public void WriteInt16(short i)
         {
-            //var data = new byte[2];
-            //BinaryPrimitives.TryWriteUInt16BigEndian(data, i);
-            //stream.Write(data, 0, 2);
-
             var bytes = BitConverter.GetBytes(i);
             stream.Write(
                 new byte[2]{
@@ -184,21 +169,7 @@ namespace RabbitMQ.Util
                 0,
                 2);
         }
-
-        public void Write(int i)
-        {
-            var bytes = BitConverter.GetBytes(i);
-            stream.Write(
-                new byte[4]{
-                    bytes[3],
-                    bytes[2],
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                4);
-        }
-        public void Write(uint i)
+        public void WriteInt32(int i)
         {
             var bytes = BitConverter.GetBytes(i);
             stream.Write(
@@ -224,24 +195,7 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-        public void Write(long i)
-        {
-            var bytes = BitConverter.GetBytes(i);
-            stream.Write(
-                new byte[8]{
-                    bytes[7],
-                    bytes[6],
-                    bytes[5],
-                    bytes[4],
-                    bytes[3],
-                    bytes[2],
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                8);
-        }
-        public void Write(ulong i)
+        public void WriteInt64(long i)
         {
             var bytes = BitConverter.GetBytes(i);
             stream.Write(
@@ -283,10 +237,10 @@ namespace RabbitMQ.Util
                 throw new WireFormattingException("Short string too long; " +
                                                   "UTF-8 encoded length=" + bytes.Length + ", max=255");
             }
-            Write((byte)bytes.Length);
+            WriteByte((byte)bytes.Length);
             Write(bytes);
         }
-        public void Write(float f)
+        public void WriteFloat(float f)
         {
             var bytes = BitConverter.GetBytes(f);
             stream.Write(
@@ -299,7 +253,7 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-        public void Write(double d)
+        public void WriteDouble(double d)
         {
             var bytes = BitConverter.GetBytes(d);
             stream.Write(
@@ -318,18 +272,14 @@ namespace RabbitMQ.Util
         }
         public void WriteLongstr(byte[] val)
         {
-            Write((uint)val.Length);
+            WriteUInt32((uint)val.Length);
             Write(val);
         }
         public void WriteLongString(string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
-            Write((uint)bytes.Length);
+            WriteUInt32((uint)bytes.Length);
             Write(bytes);
-        }
-        public void Write(byte val)
-        {
-            stream.WriteByte(val);
         }
         public void WriteByte(byte val)
         {
@@ -382,7 +332,7 @@ namespace RabbitMQ.Util
         {
             // 0-9 is afaict silent on the signedness of the timestamp.
             // See also MethodArgumentReader.ReadTimestamp and AmqpTimestamp itself
-            Write((ulong)val.UnixTime);
+            WriteUInt64((ulong)val.UnixTime);
         }
 
         ///<summary>Writes an AMQP "table" to the writer.</summary>
@@ -403,15 +353,15 @@ namespace RabbitMQ.Util
         {
             if (val == null)
             {
-                Write((uint)0);
+                WriteUInt32(0U);
             }
             else
             {
                 var content = GetTableContent(val, out int written1);
-                Write((uint)written1);
+                WriteUInt32((uint)written1);
                 foreach (var item in content)
                 {
-                    Write(item);
+                    WriteSegment(item);
                 }
             }
         }
@@ -419,15 +369,15 @@ namespace RabbitMQ.Util
         {
             if (val == null)
             {
-                Write((uint)0);
+                WriteUInt32(0U);
             }
             else
             {
                 var content = GetTableContent(val, out int written1);
-                Write((uint)written1);
+                WriteUInt32((uint)written1);
                 foreach (var item in content)
                 {
-                    Write(item);
+                    WriteSegment(item);
                 }
             }
         }
@@ -471,15 +421,15 @@ namespace RabbitMQ.Util
         {
             if (val == null)
             {
-                Write((uint)0); // length of table - will be backpatched
+                WriteUInt32(0U); // length of table - will be backpatched
             }
             else
             {
                 var content = GetArrayContent(val, out int written1);
-                Write((uint)written1); // length of table - will be backpatched
+                WriteUInt32((uint)written1); // length of table - will be backpatched
                 foreach (var item in content)
                 {
-                    Write(item);
+                    WriteSegment(item);
                 }
             }
         }
@@ -489,8 +439,8 @@ namespace RabbitMQ.Util
             byte scale;
             int mantissa;
             DecimalToAmqp(value, out scale, out mantissa);
-            Write(scale);
-            Write((uint)mantissa);
+            WriteByte(scale);
+            WriteUInt32((uint)mantissa);
         }
 
         private const byte S = 83;
@@ -512,96 +462,96 @@ namespace RabbitMQ.Util
         {
             if (value == null)
             {
-                Write(V);
+                WriteByte(V);
             }
             else if (value is string)
             {
-                Write(S);
+                WriteByte(S);
                 WriteLongstr(Encoding.UTF8.GetBytes((string)value));
             }
             else if (value is byte[])
             {
-                Write(S);
+                WriteByte(S);
                 WriteLongstr((byte[])value);
             }
             else if (value is int)
             {
-                Write(I);
-                Write((int)value);
+                WriteByte(I);
+                WriteInt32((int)value);
             }
             else if (value is decimal)
             {
-                Write(D);
+                WriteByte(D);
                 WriteDecimal((decimal)value);
             }
             else if (value is AmqpTimestamp)
             {
-                Write(T);
+                WriteByte(T);
                 WriteTimestamp((AmqpTimestamp)value);
             }
             else if (value is IDictionary<string, bool>)
             {
-                Write(F);
+                WriteByte(F);
                 WriteTable((IDictionary<string, bool>)value);
             }
             else if (value is IDictionary)
             {
-                Write(F);
+                WriteByte(F);
                 WriteTable((IDictionary<string, object>)value);
             }
             else if (value is IList)
             {
-                Write(A);
+                WriteByte(A);
                 WriteArray((IList)value);
             }
             else if (value is sbyte)
             {
-                Write(b);
+                WriteByte(b);
                 Write((sbyte)value);
             }
             else if (value is double)
             {
-                Write(d);
-                Write((double)value);
+                WriteByte(d);
+                WriteDouble((double)value);
             }
             else if (value is float)
             {
-                Write(f);
-                Write((float)value);
+                WriteByte(f);
+                WriteFloat((float)value);
             }
             else if (value is long)
             {
-                Write(l);
-                Write((long)value);
+                WriteByte(l);
+                WriteInt64((long)value);
             }
             else if (value is ulong)
             {
-                Write(l);
-                Write((ulong)value);
+                WriteByte(l);
+                WriteUInt64((ulong)value);
             }
             else if (value is uint)
             {
-                Write(I);
-                Write((uint)value);
+                WriteByte(I);
+                WriteUInt32((uint)value);
             }
             else if (value is short)
             {
-                Write(s);
-                Write((short)value);
+                WriteByte(s);
+                WriteInt16((short)value);
             }
             else if (value is ushort)
             {
-                Write(s);
-                Write((ushort)value);
+                WriteByte(s);
+                WriteUInt16((ushort)value);
             }
             else if (value is bool)
             {
-                Write(t);
-                Write((byte)(((bool)value) ? 1 : 0));
+                WriteByte(t);
+                WriteByte((byte)(((bool)value) ? 1 : 0));
             }
             else if (value is BinaryTableValue)
             {
-                Write(x);
+                WriteByte(x);
                 Write(((BinaryTableValue)value).Bytes);
             }
             else
@@ -610,7 +560,7 @@ namespace RabbitMQ.Util
             }
         }
 
-        public void Write(ArraySegment<byte> segment)
+        public void WriteSegment(ArraySegment<byte> segment)
         {
             stream.Write(segment);
         }

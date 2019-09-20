@@ -36,6 +36,11 @@ namespace RabbitMQ.Client
             return mem;
         }
 
+        public Tuple<ReadOnlyMemory<byte>, ArraySegment<byte>> TakeAndPeek(int usedSize)
+        {
+            return Tuple.Create<ReadOnlyMemory<byte>, ArraySegment<byte>> (Take(usedSize), Peek());
+        }
+
         public void Release(int releaseSize)
         {
             Interlocked.Add(ref available , releaseSize);

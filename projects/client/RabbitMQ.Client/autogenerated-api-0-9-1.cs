@@ -783,8 +783,8 @@ namespace RabbitMQ.Client.Framing
             if (m_contentType_present) { writer.WriteShortstr(m_contentType); }
             if (m_contentEncoding_present) { writer.WriteShortstr(m_contentEncoding); }
             if (m_headers_present) { writer.WriteTable(m_headers); }
-            if (m_deliveryMode_present) { writer.Write(m_deliveryMode); }
-            if (m_priority_present) { writer.Write(m_priority); }
+            if (m_deliveryMode_present) { writer.WriteByte(m_deliveryMode); }
+            if (m_priority_present) { writer.WriteByte(m_priority); }
             if (m_correlationId_present) { writer.WriteShortstr(m_correlationId); }
             if (m_replyTo_present) { writer.WriteShortstr(m_replyTo); }
             if (m_expiration_present) { writer.WriteShortstr(m_expiration); }
@@ -882,8 +882,8 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.Write(m_versionMajor);
-            writer.Write(m_versionMinor);
+            writer.WriteByte(m_versionMajor);
+            writer.WriteByte(m_versionMinor);
             writer.WriteTable(m_serverProperties);
             writer.WriteLongString(m_mechanisms);
             writer.WriteLongString(m_locales);
