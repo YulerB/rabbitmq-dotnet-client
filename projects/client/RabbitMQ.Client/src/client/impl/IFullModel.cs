@@ -163,15 +163,15 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Handle incoming Connection.Secure
         ///methods.</summary>
-        void HandleConnectionSecure(byte[] challenge);
+        void HandleConnectionSecure(string challenge);
 
         ///<summary>Handle an incoming Connection.Start. Used during
         ///connection initialisation.</summary>
         void HandleConnectionStart(byte versionMajor,
             byte versionMinor,
             IDictionary<string, object> serverProperties,
-            byte[] mechanisms,
-            byte[] locales);
+            string mechanisms,
+            string locales);
 
         ///<summary>Handle incoming Connection.Tune
         ///methods.</summary>
@@ -288,7 +288,7 @@ namespace RabbitMQ.Client.Impl
         ///special, like Basic.Get.</summary>
         [AmqpForceOneWay]
         [AmqpMethodMapping(null, "connection", "secure-ok")]
-        void _Private_ConnectionSecureOk(byte[] response);
+        void _Private_ConnectionSecureOk(string response);
 
         ///<summary>Used to send a Connection.StartOk. This is
         ///special, like Basic.Get.</summary>
@@ -296,7 +296,7 @@ namespace RabbitMQ.Client.Impl
         [AmqpMethodMapping(null, "connection", "start-ok")]
         void _Private_ConnectionStartOk(IDictionary<string, object> clientProperties,
             string mechanism,
-            byte[] response,
+            string response,
             string locale);
 
         ///<summary>Used to send a Exchange.Bind method. Called by the
@@ -402,7 +402,7 @@ namespace RabbitMQ.Client.Impl
 
     public class ConnectionSecureOrTune
     {
-        public ConnectionSecureOrTune(byte[] m_challenge)
+        public ConnectionSecureOrTune(string m_challenge)
         {
             this.m_challenge = m_challenge;
         }
@@ -410,7 +410,7 @@ namespace RabbitMQ.Client.Impl
         {
             this.m_tuneDetails = m_tuneDetails;
         }
-        public byte[] m_challenge { get; private set; }
+        public string m_challenge { get; private set; }
         public ConnectionTuneDetails m_tuneDetails { get; private set; }
     }
 }

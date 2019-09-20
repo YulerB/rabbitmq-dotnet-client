@@ -506,7 +506,7 @@ namespace RabbitMQ.Client.Impl
             m_delegate.HandleConnectionOpenOk(knownHosts);
         }
 
-        public void HandleConnectionSecure(byte[] challenge)
+        public void HandleConnectionSecure(string challenge)
         {
             m_delegate.HandleConnectionSecure(challenge);
         }
@@ -514,8 +514,8 @@ namespace RabbitMQ.Client.Impl
         public void HandleConnectionStart(byte versionMajor,
             byte versionMinor,
             IDictionary<string, object> serverProperties,
-            byte[] mechanisms,
-            byte[] locales)
+           string  mechanisms,
+           string locales)
         {
             m_delegate.HandleConnectionStart(versionMajor, versionMinor, serverProperties,
                 mechanisms, locales);
@@ -634,13 +634,13 @@ namespace RabbitMQ.Client.Impl
             m_delegate._Private_ConnectionOpen(virtualHost, capabilities, insist);
         }
 
-        public void _Private_ConnectionSecureOk(byte[] response)
+        public void _Private_ConnectionSecureOk(string response)
         {
             m_delegate._Private_ConnectionSecureOk(response);
         }
 
         public void _Private_ConnectionStartOk(IDictionary<string, object> clientProperties,
-            string mechanism, byte[] response, string locale)
+            string mechanism, string response, string locale)
         {
             m_delegate._Private_ConnectionStartOk(clientProperties, mechanism,
                 response, locale);

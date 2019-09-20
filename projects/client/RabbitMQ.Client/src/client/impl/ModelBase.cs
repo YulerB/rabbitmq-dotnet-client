@@ -377,7 +377,7 @@ namespace RabbitMQ.Client.Impl
             return k.m_knownHosts;
         }
 
-        public ConnectionSecureOrTune ConnectionSecureOk(byte[] response)
+        public ConnectionSecureOrTune ConnectionSecureOk(string response)
         {
             var k = new ConnectionStartRpcContinuation();
             lock(_rpcLock)
@@ -400,7 +400,7 @@ namespace RabbitMQ.Client.Impl
 
         public ConnectionSecureOrTune ConnectionStartOk(IDictionary<string, object> clientProperties,
             string mechanism,
-            byte[] response,
+            string response,
             string locale)
         {
             var k = new ConnectionStartRpcContinuation();
@@ -987,7 +987,7 @@ namespace RabbitMQ.Client.Impl
             k.HandleCommand(null); // release the continuation.
         }
 
-        public void HandleConnectionSecure(byte[] challenge)
+        public void HandleConnectionSecure(string challenge)
         {
             var k = (ConnectionStartRpcContinuation)m_continuationQueue.Next();
             k.m_result = new ConnectionSecureOrTune(challenge);
@@ -997,8 +997,8 @@ namespace RabbitMQ.Client.Impl
         public void HandleConnectionStart(byte versionMajor,
             byte versionMinor,
             IDictionary<string, object> serverProperties,
-            byte[] mechanisms,
-            byte[] locales)
+            string mechanisms,
+            string locales)
         {
             if (m_connectionStartCell == null)
             {
@@ -1086,11 +1086,11 @@ namespace RabbitMQ.Client.Impl
             string capabilities,
             bool insist);
 
-        public abstract void _Private_ConnectionSecureOk(byte[] response);
+        public abstract void _Private_ConnectionSecureOk(string response);
 
         public abstract void _Private_ConnectionStartOk(IDictionary<string, object> clientProperties,
             string mechanism,
-            byte[] response,
+            string response,
             string locale);
 
         public abstract void _Private_ExchangeBind(string destination,

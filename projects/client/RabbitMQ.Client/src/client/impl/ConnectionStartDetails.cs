@@ -49,8 +49,8 @@ namespace RabbitMQ.Client.Impl
             byte versionMajor,
             byte versionMinor,
             IDictionary<string, object> serverProperties,
-            byte[] mechanisms,
-            byte[] locales
+            string mechanisms,
+            string locales
             )
         {
             m_versionMajor = versionMajor;
@@ -61,8 +61,8 @@ namespace RabbitMQ.Client.Impl
         }
 
 
-        public byte[] m_locales { get; private set; }
-        public byte[] m_mechanisms { get; private set; }
+        public string m_locales { get; private set; }
+        public string m_mechanisms { get; private set; }
         public IDictionary<string, object> m_serverProperties { get; private set; }
         public byte m_versionMajor { get; private set; }
         public byte m_versionMinor { get; private set; }

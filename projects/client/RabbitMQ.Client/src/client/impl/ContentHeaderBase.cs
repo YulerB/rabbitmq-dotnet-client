@@ -70,12 +70,12 @@ namespace RabbitMQ.Client.Impl
         {
             stream.ReadUInt16(); // weight - not currently used
             ulong bodySize = stream.ReadUInt64();
-            ReadPropertiesFrom(new ContentHeaderPropertyReader2(stream));
+            ReadPropertiesFrom(stream);
             return bodySize;
         }
 
-        public abstract void ReadPropertiesFrom(ContentHeaderPropertyReader2 reader);
-        public abstract void WritePropertiesTo(ContentHeaderPropertyWriter2 writer);
+        public abstract void ReadPropertiesFrom(ArraySegmentSequence stream);
+        public abstract void WritePropertiesTo(NetworkBinaryWriter writer);
 
         private const ushort ZERO = 0;
 
@@ -83,7 +83,7 @@ namespace RabbitMQ.Client.Impl
         {
             writer.Write(ZERO); // weight - not currently used
             writer.Write(bodySize);
-            WritePropertiesTo(new ContentHeaderPropertyWriter2(writer));
+            WritePropertiesTo(writer);
         }
     }
 }

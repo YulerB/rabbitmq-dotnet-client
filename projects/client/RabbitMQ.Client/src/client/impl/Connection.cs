@@ -1323,7 +1323,7 @@ namespace RabbitMQ.Client.Framing.Impl
             bool tuned = false;
             try
             {
-                string mechanismsString = Encoding.UTF8.GetString(connectionStart.m_mechanisms, 0, connectionStart.m_mechanisms.Length);
+                string mechanismsString = connectionStart.m_mechanisms;
                 string[] mechanisms = mechanismsString.Split(' ');
                 AuthMechanismFactory mechanismFactory = m_factory.AuthMechanismFactory(mechanisms);
                 if (mechanismFactory == null)
@@ -1331,10 +1331,10 @@ namespace RabbitMQ.Client.Framing.Impl
                     throw new IOException("No compatible authentication mechanism found - server offered [" + mechanismsString + "]");
                 }
                 AuthMechanism mechanism = mechanismFactory.GetInstance();
-                byte[] challenge = null;
+                string challenge = null;
                 do
                 {
-                    byte[] response = mechanism.handleChallenge(challenge, m_factory);
+                    string response = mechanism.handleChallenge(challenge, m_factory);
                     ConnectionSecureOrTune res;
                     if (challenge == null)
                     {

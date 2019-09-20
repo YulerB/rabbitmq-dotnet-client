@@ -347,12 +347,25 @@ namespace RabbitMQ.Util
             return System.Text.Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReadLongString(this ArraySegmentSequence input)
+        {
+            int size = Convert.ToInt32(ReadUInt32(input));
+            return System.Text.Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadShortString(this ArraySegmentSequence input,out long read)
         {
             int size = (int)ReadByte(input);
             read = size + 1;
             return Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReadShortString(this ArraySegmentSequence input)
+        {
+            int size = (int)ReadByte(input);
+            return Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal ReadDecimal(this ArraySegmentSequence input, out long read)
         {
@@ -402,6 +415,11 @@ namespace RabbitMQ.Util
             }
             read = tableLength + 4;
             return table;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IDictionary<string, object> ReadTable(this ArraySegmentSequence input)
+        {
+            return ReadTable(input, out long read);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IList<object> ReadArray(this ArraySegmentSequence input, out long read)

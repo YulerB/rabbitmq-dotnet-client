@@ -68,7 +68,10 @@ namespace RabbitMQ.Client.Impl
         {
             BaseWriter.Write(val);
         }
-
+        public void WriteLongString(string val)
+        {
+            BaseWriter.WriteLongString(val);
+        }
         public void WriteLongstr(byte[] val)
         {
             BaseWriter.WriteLongstr(val);

@@ -44,9 +44,9 @@ namespace RabbitMQ.Client
 {
     public class PlainMechanism : AuthMechanism
     {
-        public byte[] handleChallenge(byte[] challenge, IConnectionFactory factory)
+        public string handleChallenge(string challenge, IConnectionFactory factory)
         {
-            return Encoding.UTF8.GetBytes("\0" + factory.UserName + "\0" + factory.Password);
+            return "\0" + factory.UserName + "\0" + factory.Password;
         }
     }
 }

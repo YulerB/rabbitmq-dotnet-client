@@ -72,7 +72,7 @@ namespace RabbitMQ.Util
             this.stream = output;
         }
 
-        public void WriteBits(bool[] bits)
+        public void WriteBits1(bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
             BitArray arr = new BitArray(totalBits);
@@ -94,7 +94,7 @@ namespace RabbitMQ.Util
 
             Write(bytes);
         }
-        public void WriteBits1(bool[] bits)
+        public void WriteBits(bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
             BitArray arr = new BitArray(totalBits);
@@ -119,7 +119,6 @@ namespace RabbitMQ.Util
 
             Write(bytes);
         }
-
         private byte Reverse(byte b)
         {
             int a = 0;
@@ -129,9 +128,6 @@ namespace RabbitMQ.Util
             return (byte)a;
         }
 
-        /// <summary>
-        /// Override BinaryWriter's method for network-order.
-        /// </summary>
         public void Write(short i)
         {
             var bytes = BitConverter.GetBytes(i);
@@ -278,6 +274,12 @@ namespace RabbitMQ.Util
         {
             Write((uint)val.Length);
             Write(val);
+        }
+        public void WriteLongString(string val)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(val);
+            Write((uint)bytes.Length);
+            Write(bytes);
         }
         public void Write(byte val)
         {

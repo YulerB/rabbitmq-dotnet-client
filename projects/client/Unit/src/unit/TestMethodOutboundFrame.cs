@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Unit
             {
                 var writter = new RabbitMQ.Util.NetworkBinaryWriter(ms);
                 ushort channel = 1;
-                MethodOutboundFrame mFrame = new MethodOutboundFrame(channel, new ConnectionSecureOk(new byte[1] { 1 }));
+                MethodOutboundFrame mFrame = new MethodOutboundFrame(channel, new ConnectionSecureOk(" "));
                 Assert.AreEqual(channel, mFrame.Channel);
                 Assert.IsNull(mFrame.Payload);
                 mFrame.WritePayload(writter);
