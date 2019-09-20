@@ -880,10 +880,10 @@ namespace RabbitMQ.Client.Framing.Impl
             m_locales = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteOctet(m_versionMajor);
-            writer.WriteOctet(m_versionMinor);
+            writer.Write(m_versionMajor);
+            writer.Write(m_versionMinor);
             writer.WriteTable(m_serverProperties);
             writer.WriteLongString(m_mechanisms);
             writer.WriteLongString(m_locales);
@@ -942,7 +942,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_locale = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteTable(m_clientProperties);
             writer.WriteShortstr(m_mechanism);
@@ -987,7 +987,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_challenge = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteLongString(m_challenge);
         }
@@ -1026,7 +1026,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_response = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteLongString(m_response);
         }
@@ -1075,11 +1075,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_heartbeat = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_channelMax);
-            writer.WriteLong(m_frameMax);
-            writer.WriteShort(m_heartbeat);
+            writer.WriteUInt16(m_channelMax);
+            writer.WriteUInt32(m_frameMax);
+            writer.WriteUInt16(m_heartbeat);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -1128,11 +1128,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_heartbeat = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_channelMax);
-            writer.WriteLong(m_frameMax);
-            writer.WriteShort(m_heartbeat);
+            writer.WriteUInt16(m_channelMax);
+            writer.WriteUInt32(m_frameMax);
+            writer.WriteUInt16(m_heartbeat);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -1181,11 +1181,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved2 = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_virtualHost);
             writer.WriteShortstr(m_reserved1);
-            writer.WriteOctet(System.Convert.ToByte(m_reserved2));
+            writer.WriteByte(System.Convert.ToByte(m_reserved2));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -1224,7 +1224,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_reserved1);
         }
@@ -1278,12 +1278,12 @@ namespace RabbitMQ.Client.Framing.Impl
             m_methodId = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_replyCode);
+            writer.WriteUInt16(m_replyCode);
             writer.WriteShortstr(m_replyText);
-            writer.WriteShort(m_classId);
-            writer.WriteShort(m_methodId);
+            writer.WriteUInt16(m_classId);
+            writer.WriteUInt16(m_methodId);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -1318,7 +1318,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -1355,7 +1355,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reason = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_reason);
         }
@@ -1389,7 +1389,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -1426,7 +1426,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_reserved1);
         }
@@ -1465,7 +1465,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteLongString(m_reserved1);
         }
@@ -1504,9 +1504,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_active = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteOctet(System.Convert.ToByte(m_active));
+            writer.WriteByte(System.Convert.ToByte(m_active));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -1543,9 +1543,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_active = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteOctet(System.Convert.ToByte(m_active));
+            writer.WriteByte(System.Convert.ToByte(m_active));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -1597,12 +1597,12 @@ namespace RabbitMQ.Client.Framing.Impl
             m_methodId = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_replyCode);
+            writer.WriteUInt16(m_replyCode);
             writer.WriteShortstr(m_replyText);
-            writer.WriteShort(m_classId);
-            writer.WriteShort(m_methodId);
+            writer.WriteUInt16(m_classId);
+            writer.WriteUInt16(m_methodId);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -1637,7 +1637,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -1717,9 +1717,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = (flag & ExchangeDeclareFlags.NoWait) == ExchangeDeclareFlags.NoWait;// reader.ReadBit();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_exchange);
             writer.WriteShortstr(m_type);
 
@@ -1730,7 +1730,7 @@ namespace RabbitMQ.Client.Framing.Impl
             if (m_internal) flags |= ExchangeDeclareFlags.Internal;
             if (m_nowait) flags |= ExchangeDeclareFlags.NoWait;
 
-            writer.WriteOctet((byte)flags);
+            writer.WriteByte((byte)flags);
             writer.WriteTable(m_arguments);
         }
 
@@ -1773,7 +1773,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -1828,16 +1828,16 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = (flags & ExchangeDeleteFlags.NoWait) == ExchangeDeleteFlags.NoWait;
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_exchange);
 
             ExchangeDeleteFlags flags = ExchangeDeleteFlags.None;
             if (m_ifUnused) flags |= ExchangeDeleteFlags.IfUnused;
             if (m_nowait) flags |= ExchangeDeleteFlags.NoWait;
 
-            writer.WriteOctet((byte)flags);
+            writer.WriteByte((byte)flags);
 
             //writer.WriteBit(m_ifUnused);
             //writer.WriteBit(m_nowait);
@@ -1875,7 +1875,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -1937,13 +1937,13 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_destination);
             writer.WriteShortstr(m_source);
             writer.WriteShortstr(m_routingKey);
-            writer.WriteOctet(Convert.ToByte(m_nowait));
+            writer.WriteByte(Convert.ToByte(m_nowait));
             writer.WriteTable(m_arguments);
         }
 
@@ -1981,7 +1981,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -2043,13 +2043,13 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_destination);
             writer.WriteShortstr(m_source);
             writer.WriteShortstr(m_routingKey);
-            writer.WriteOctet(Convert.ToByte(m_nowait));
+            writer.WriteByte(Convert.ToByte(m_nowait));
             writer.WriteTable(m_arguments);
         }
 
@@ -2087,7 +2087,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -2163,9 +2163,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
 
             QueueDeclareFlags flags = QueueDeclareFlags.None;
@@ -2175,7 +2175,7 @@ namespace RabbitMQ.Client.Framing.Impl
             if (m_autoDelete) flags |= QueueDeclareFlags.AutoDelete;
             if (m_nowait) flags |= QueueDeclareFlags.NoWait;
 
-            writer.WriteOctet((byte)flags);
+            writer.WriteByte((byte)flags);
             writer.WriteTable(m_arguments);
         }
 
@@ -2230,11 +2230,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_consumerCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_queue);
-            writer.WriteLong(m_messageCount);
-            writer.WriteLong(m_consumerCount);
+            writer.WriteUInt32(m_messageCount);
+            writer.WriteUInt32(m_consumerCount);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -2298,13 +2298,13 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
             writer.WriteShortstr(m_exchange);
             writer.WriteShortstr(m_routingKey);
-            writer.WriteOctet(Convert.ToByte(m_nowait));
+            writer.WriteByte(Convert.ToByte(m_nowait));
             writer.WriteTable(m_arguments);
         }
 
@@ -2342,7 +2342,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -2399,9 +2399,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
             writer.WriteShortstr(m_exchange);
             writer.WriteShortstr(m_routingKey);
@@ -2441,7 +2441,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -2488,11 +2488,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
-            writer.WriteOctet(Convert.ToByte(m_nowait));
+            writer.WriteByte(Convert.ToByte(m_nowait));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -2531,9 +2531,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_messageCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteLong(m_messageCount);
+            writer.WriteUInt32(m_messageCount);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -2593,9 +2593,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = (flags & QueueDeleteFlags.NoWait) == QueueDeleteFlags.NoWait;//reader.ReadBit();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
 
             QueueDeleteFlags flags = QueueDeleteFlags.None;
@@ -2603,7 +2603,7 @@ namespace RabbitMQ.Client.Framing.Impl
             if (m_ifEmpty) flags |= QueueDeleteFlags.IfEmpty;
             if (m_nowait) flags |= QueueDeleteFlags.NoWait;
 
-            writer.WriteOctet((byte)flags);
+            writer.WriteByte((byte)flags);
 
             //writer.WriteBit(m_ifUnused);
             //writer.WriteBit(m_ifEmpty);
@@ -2648,9 +2648,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_messageCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteLong(m_messageCount);
+            writer.WriteUInt32(m_messageCount);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -2697,11 +2697,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_global = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteLong(m_prefetchSize);
-            writer.WriteShort(m_prefetchCount);
-            writer.WriteOctet(Convert.ToByte(m_global));
+            writer.WriteUInt32(m_prefetchSize);
+            writer.WriteUInt16(m_prefetchCount);
+            writer.WriteByte(Convert.ToByte(m_global));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -2735,7 +2735,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -2810,9 +2810,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
             writer.WriteShortstr(m_consumerTag);
 
@@ -2822,7 +2822,7 @@ namespace RabbitMQ.Client.Framing.Impl
             if (m_exclusive) flags |= BasicConsumeFlags.Exclusive;
             if (m_nowait) flags |= BasicConsumeFlags.NoWait;
 
-            writer.WriteOctet((byte)flags);
+            writer.WriteByte((byte)flags);
 
             //writer.WriteBit(m_noLocal);
             //writer.WriteBit(m_noAck);
@@ -2872,7 +2872,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_consumerTag = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_consumerTag);
         }
@@ -2916,10 +2916,10 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_consumerTag);
-            writer.WriteOctet(Convert.ToByte(m_nowait));
+            writer.WriteByte(Convert.ToByte(m_nowait));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -2957,7 +2957,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_consumerTag = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_consumerTag);
         }
@@ -3019,9 +3019,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_immediate = (flags & BasicPublishFlags.Immediate) == BasicPublishFlags.Immediate;
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_exchange);
             writer.WriteShortstr(m_routingKey);
 
@@ -3029,7 +3029,7 @@ namespace RabbitMQ.Client.Framing.Impl
             if (m_mandatory) flags |= BasicPublishFlags.Mandatory;
             if (m_immediate) flags |= BasicPublishFlags.Immediate;
 
-            writer.WriteOctet((byte)flags);
+            writer.WriteByte((byte)flags);
             //m_mandatory);
             //writer.WriteBit(m_immediate);
         }
@@ -3087,9 +3087,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_routingKey = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_replyCode);
+            writer.WriteUInt16(m_replyCode);
             writer.WriteShortstr(m_replyText);
             writer.WriteShortstr(m_exchange);
             writer.WriteShortstr(m_routingKey);
@@ -3152,11 +3152,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_routingKey = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_consumerTag);
-            writer.WriteLonglong(m_deliveryTag);
-            writer.WriteOctet(Convert.ToByte(m_redelivered));
+            writer.WriteUInt64(m_deliveryTag);
+            writer.WriteByte(Convert.ToByte(m_redelivered));
             writer.WriteShortstr(m_exchange);
             writer.WriteShortstr(m_routingKey);
         }
@@ -3209,11 +3209,11 @@ namespace RabbitMQ.Client.Framing.Impl
             m_noAck = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteShort(m_reserved1);
+            writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
-            writer.WriteOctet(Convert.ToByte(m_noAck));
+            writer.WriteByte(Convert.ToByte(m_noAck));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -3272,13 +3272,13 @@ namespace RabbitMQ.Client.Framing.Impl
             m_messageCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteLonglong(m_deliveryTag);
-            writer.WriteOctet(Convert.ToByte(m_redelivered));
+            writer.WriteUInt64(m_deliveryTag);
+            writer.WriteByte(Convert.ToByte(m_redelivered));
             writer.WriteShortstr(m_exchange);
             writer.WriteShortstr(m_routingKey);
-            writer.WriteLong(m_messageCount);
+            writer.WriteUInt32(m_messageCount);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -3319,7 +3319,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
             writer.WriteShortstr(m_reserved1);
         }
@@ -3363,10 +3363,10 @@ namespace RabbitMQ.Client.Framing.Impl
             m_multiple = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteLonglong(m_deliveryTag);
-            writer.WriteOctet(Convert.ToByte(m_multiple));
+            writer.WriteUInt64(m_deliveryTag);
+            writer.WriteByte(Convert.ToByte(m_multiple));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -3409,10 +3409,10 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteLonglong(m_deliveryTag);
-            writer.WriteOctet(Convert.ToByte(m_requeue));
+            writer.WriteUInt64(m_deliveryTag);
+            writer.WriteByte(Convert.ToByte(m_requeue));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -3450,9 +3450,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteOctet(Convert.ToByte(m_requeue));
+            writer.WriteByte(Convert.ToByte(m_requeue));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -3489,9 +3489,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteOctet(Convert.ToByte(m_requeue));
+            writer.WriteByte(Convert.ToByte(m_requeue));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -3523,7 +3523,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -3573,15 +3573,15 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = (flags & BasicNackFlags.Requeue) == BasicNackFlags.Requeue;
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteLonglong(m_deliveryTag);
+            writer.WriteUInt64(m_deliveryTag);
 
             BasicNackFlags flags = BasicNackFlags.None;
             if (m_multiple) flags |= BasicNackFlags.Multiple;
             if (m_requeue) flags |= BasicNackFlags.Requeue;
 
-            writer.WriteOctet((byte)flags);
+            writer.WriteByte((byte)flags);
             //writer.WriteBit(m_multiple);
             //writer.WriteBit(m_requeue);
         }
@@ -3617,7 +3617,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -3649,7 +3649,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -3681,7 +3681,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -3713,7 +3713,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -3745,7 +3745,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -3777,7 +3777,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 
@@ -3814,9 +3814,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
-            writer.WriteOctet(Convert.ToByte(m_nowait));
+            writer.WriteByte(Convert.ToByte(m_nowait));
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -3848,7 +3848,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(RabbitMQ.Client.Impl.MethodArgumentWriter writer)
+        public override void WriteArgumentsTo(NetworkBinaryWriter writer)
         {
         }
 

@@ -169,6 +169,22 @@ namespace RabbitMQ.Util
                 0,
                 2);
         }
+        public void WriteUInt16(ushort i)
+        {
+            //var data = new byte[2];
+            //BinaryPrimitives.TryWriteUInt16BigEndian(data, i);
+            //stream.Write(data, 0, 2);
+
+            var bytes = BitConverter.GetBytes(i);
+            stream.Write(
+                new byte[2]{
+                    bytes[1],
+                    bytes[0]
+                },
+                0,
+                2);
+        }
+
         public void Write(int i)
         {
             var bytes = BitConverter.GetBytes(i);
@@ -183,6 +199,19 @@ namespace RabbitMQ.Util
                 4);
         }
         public void Write(uint i)
+        {
+            var bytes = BitConverter.GetBytes(i);
+            stream.Write(
+                new byte[4]{
+                    bytes[3],
+                    bytes[2],
+                    bytes[1],
+                    bytes[0]
+                },
+                0,
+                4);
+        }
+        public void WriteUInt32(uint i)
         {
             var bytes = BitConverter.GetBytes(i);
             stream.Write(
@@ -213,6 +242,23 @@ namespace RabbitMQ.Util
                 8);
         }
         public void Write(ulong i)
+        {
+            var bytes = BitConverter.GetBytes(i);
+            stream.Write(
+                new byte[8]{
+                    bytes[7],
+                    bytes[6],
+                    bytes[5],
+                    bytes[4],
+                    bytes[3],
+                    bytes[2],
+                    bytes[1],
+                    bytes[0]
+                },
+                0,
+                8);
+        }
+        public void WriteUInt64(ulong i)
         {
             var bytes = BitConverter.GetBytes(i);
             stream.Write(
@@ -282,6 +328,10 @@ namespace RabbitMQ.Util
             Write(bytes);
         }
         public void Write(byte val)
+        {
+            stream.WriteByte(val);
+        }
+        public void WriteByte(byte val)
         {
             stream.WriteByte(val);
         }

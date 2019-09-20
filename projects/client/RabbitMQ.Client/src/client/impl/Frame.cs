@@ -118,8 +118,7 @@ namespace RabbitMQ.Client.Impl
             {
                 nw.Write(method.ProtocolClassId);
                 nw.Write(method.ProtocolMethodId);
-                var argWriter = new MethodArgumentWriter(nw);
-                method.WriteArgumentsTo(argWriter);
+                method.WriteArgumentsTo(nw);
             }
 
             writer.Write((uint)stream.Length);

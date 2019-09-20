@@ -38,6 +38,7 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using RabbitMQ.Util;
 using System.Text;
 
 namespace RabbitMQ.Client.Impl
@@ -63,6 +64,6 @@ namespace RabbitMQ.Client.Impl
 
         public abstract void AppendArgumentDebugStringTo(StringBuilder stringBuilder);
         public abstract void ReadArgumentsFrom(ArraySegmentSequence reader);
-        public abstract void WriteArgumentsTo(MethodArgumentWriter writer);
+        public abstract void WriteArgumentsTo(NetworkBinaryWriter writer);
     }
 }
