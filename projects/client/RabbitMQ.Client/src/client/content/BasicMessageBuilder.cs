@@ -55,7 +55,6 @@ namespace RabbitMQ.Client.Content
         public const int DefaultAccumulatorSize = 1024;
 
         protected MemoryStream m_accumulator;
-        protected NetworkBinaryWriter m_writer;
 
         /// <summary>
         /// Construct an instance ready for writing.
@@ -86,15 +85,6 @@ namespace RabbitMQ.Client.Content
         /// Retrieve the <see cref="IBasicProperties"/> associated with this instance.
         /// </summary>
         public IBasicProperties Properties { get; protected set; }
-        
-
-        /// <summary>
-        /// Retrieve the <see cref="Stream"/> being used to construct the message body.
-        /// </summary>
-        public Stream BodyStream
-        {
-            get { return m_accumulator; }
-        }
 
         /// <summary>
         /// Retrieves the dictionary that will be used to construct the message header table.
@@ -143,7 +133,7 @@ namespace RabbitMQ.Client.Content
         /// </summary>
         public IMessageBuilder RawWrite(byte value)
         {
-            BodyStream.WriteByte(value);
+            m_accumulator.WriteByte(value);
             return this;
         }
 
@@ -160,7 +150,7 @@ namespace RabbitMQ.Client.Content
         /// </summary>
         public IMessageBuilder RawWrite(byte[] bytes, int offset, int length)
         {
-            BodyStream.Write(bytes, offset, length);
+            m_accumulator.Write(bytes, offset, length);
             return this;
         }
     }

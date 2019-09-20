@@ -53,10 +53,6 @@ namespace RabbitMQ.Client.Content
     /// </remarks>
     public interface IMessageBuilder
     {
-        /// <summary>
-        /// Retrieve the <see cref="Stream"/> being used to construct the message body.
-        /// </summary>
-        Stream BodyStream { get; }
 
         /// <summary>
         /// Retrieves the dictionary that will be used to construct the message header table.
