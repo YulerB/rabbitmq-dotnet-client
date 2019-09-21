@@ -65,7 +65,7 @@ namespace RabbitMQ.Util
     public static class NetworkBinaryWriter 
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBits1(this ArraySegmentStream output, bool[] bits)
+        public static void WriteBits1(this FrameBuilder output, bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
             BitArray arr = new BitArray(totalBits);
@@ -88,7 +88,7 @@ namespace RabbitMQ.Util
             output.Write(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBits(this ArraySegmentStream output, bool[] bits)
+        public static void WriteBits(this FrameBuilder output, bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
             BitArray arr = new BitArray(totalBits);
@@ -123,7 +123,7 @@ namespace RabbitMQ.Util
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Write(this ArraySegmentStream output, byte[] buffer)
+        public static void Write(this FrameBuilder output, byte[] buffer)
         {
             output.Write(
                 buffer,
@@ -132,7 +132,7 @@ namespace RabbitMQ.Util
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Write(this ArraySegmentStream output, byte[] buffer, int offset, int count)
+        public static void Write(this FrameBuilder output, byte[] buffer, int offset, int count)
         {
             output.Write(
                 buffer,
@@ -140,7 +140,7 @@ namespace RabbitMQ.Util
                 count);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteInt16(this ArraySegmentStream output, short i)
+        public static void WriteInt16(this FrameBuilder output, short i)
         {
             var bytes = BitConverter.GetBytes(i);
             output.Write(
@@ -152,7 +152,7 @@ namespace RabbitMQ.Util
                 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteUInt16(this ArraySegmentStream output, ushort i)
+        public static void WriteUInt16(this FrameBuilder output, ushort i)
         {
             //var data = new byte[2];
             //BinaryPrimitives.TryWriteUInt16BigEndian(data, i);
@@ -168,7 +168,7 @@ namespace RabbitMQ.Util
                 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteInt32(this ArraySegmentStream output, int i)
+        public static void WriteInt32(this FrameBuilder output, int i)
         {
             var bytes = BitConverter.GetBytes(i);
             output.Write(
@@ -182,7 +182,7 @@ namespace RabbitMQ.Util
                 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteUInt32(this ArraySegmentStream output, uint i)
+        public static void WriteUInt32(this FrameBuilder output, uint i)
         {
             var bytes = BitConverter.GetBytes(i);
             output.Write(
@@ -196,7 +196,7 @@ namespace RabbitMQ.Util
                 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteInt64(this ArraySegmentStream output, long i)
+        public static void WriteInt64(this FrameBuilder output, long i)
         {
             var bytes = BitConverter.GetBytes(i);
             output.Write(
@@ -214,7 +214,7 @@ namespace RabbitMQ.Util
                 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteUInt64(this ArraySegmentStream output, ulong i)
+        public static void WriteUInt64(this FrameBuilder output, ulong i)
         {
             var bytes = BitConverter.GetBytes(i);
             output.Write(
@@ -232,7 +232,7 @@ namespace RabbitMQ.Util
                 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteShortstr(this ArraySegmentStream output, string val)
+        public static void WriteShortstr(this FrameBuilder output, string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             if (bytes.Length > 255)
@@ -244,7 +244,7 @@ namespace RabbitMQ.Util
             output.Write(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteFloat(this ArraySegmentStream output, float f)
+        public static void WriteFloat(this FrameBuilder output, float f)
         {
             var bytes = BitConverter.GetBytes(f);
             output.Write(
@@ -258,7 +258,7 @@ namespace RabbitMQ.Util
                 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteDouble(this ArraySegmentStream output, double d)
+        public static void WriteDouble(this FrameBuilder output, double d)
         {
             var bytes = BitConverter.GetBytes(d);
             output.Write(
@@ -276,25 +276,25 @@ namespace RabbitMQ.Util
                 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteLongstr(this ArraySegmentStream output, byte[] val)
+        public static void WriteLongstr(this FrameBuilder output, byte[] val)
         {
             output.WriteUInt32((uint)val.Length);
             output.Write(val);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteLongString(this ArraySegmentStream output, string val)
+        public static void WriteLongString(this FrameBuilder output, string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             output.WriteUInt32((uint)bytes.Length);
             output.Write(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteByte(this ArraySegmentStream output, byte val)
+        public static void WriteByte(this FrameBuilder output, byte val)
         {
             output.WriteByte(val);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Write(this ArraySegmentStream output, sbyte val)
+        public static void Write(this FrameBuilder output, sbyte val)
         {
             output.WriteByte((byte)val);
         }
@@ -314,29 +314,29 @@ namespace RabbitMQ.Util
         ///</remarks>
         private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, object> val, out uint written)
         {
-            var stream1 = new ArraySegmentStream();
+            var stream1 = new FrameBuilder();
             foreach (var entry in val)
             {
                 stream1.WriteShortstr(entry.Key);
                 stream1.WriteFieldValue(entry.Value);
             }
             written = Convert.ToUInt32(stream1.Length);
-            return stream1.Data;
+            return stream1.ToData();
         }
         private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, bool> val, out uint written)
         {
-            var stream1 = new ArraySegmentStream();
+            var stream1 = new FrameBuilder();
             foreach (var entry in val)
             {
                 stream1.WriteShortstr(entry.Key);
                 stream1.WriteFieldValue(entry.Value);
             }
             written = Convert.ToUInt32(stream1.Length);
-            return stream1.Data;
+            return stream1.ToData();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTimestamp(this ArraySegmentStream output, AmqpTimestamp val)
+        public static void WriteTimestamp(this FrameBuilder output, AmqpTimestamp val)
         {
             // 0-9 is afaict silent on the signedness of the timestamp.
             // See also MethodArgumentReader.ReadTimestamp and AmqpTimestamp itself
@@ -358,7 +358,7 @@ namespace RabbitMQ.Util
         ///</para>
         ///</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTable(this ArraySegmentStream output, IDictionary<string, object> val)
+        public static void WriteTable(this FrameBuilder output, IDictionary<string, object> val)
         {
             if (val == null)
             {
@@ -375,7 +375,7 @@ namespace RabbitMQ.Util
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTable(this ArraySegmentStream output, IDictionary<string, bool> val)
+        public static void WriteTable(this FrameBuilder output, IDictionary<string, bool> val)
         {
             if (val == null)
             {
@@ -417,16 +417,16 @@ namespace RabbitMQ.Util
 
         private static IList<ArraySegment<byte>> GetArrayContent(IList val, out uint written)
         {
-            var stream1 = new ArraySegmentStream();
+            var stream1 = new FrameBuilder();
             foreach (object entry in val)
             {
                 stream1.WriteFieldValue(entry);
             }
             written = Convert.ToUInt32(stream1.Length);
-            return stream1.Data;
+            return stream1.ToData();
         }
 
-        private static void WriteArray(this ArraySegmentStream output, IList val)
+        private static void WriteArray(this FrameBuilder output, IList val)
         {
             if (val == null)
             {
@@ -443,7 +443,7 @@ namespace RabbitMQ.Util
             }
         }
 
-        private static void WriteDecimal(this ArraySegmentStream output, decimal value)
+        private static void WriteDecimal(this FrameBuilder output, decimal value)
         {
             DecimalToAmqp(value, out byte scale, out int mantissa);
             output.WriteByte(scale);
@@ -465,7 +465,7 @@ namespace RabbitMQ.Util
         private const byte t = 116;
         private const byte x = 120;
 
-        private static void WriteFieldValue(this ArraySegmentStream output, object value)
+        private static void WriteFieldValue(this FrameBuilder output, object value)
         {
             if (value == null)
             {
@@ -568,7 +568,7 @@ namespace RabbitMQ.Util
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteSegment(this ArraySegmentStream output, ArraySegment<byte> segment)
+        public static void WriteSegment(this FrameBuilder output, ArraySegment<byte> segment)
         {
             output.Write(segment);
         }

@@ -773,7 +773,7 @@ namespace RabbitMQ.Client.Framing
             if (m_clusterId_present) { m_clusterId = stream.ReadShortString(); }
         }
 
-        public override void WritePropertiesTo(ArraySegmentStream writer)
+        public override void WritePropertiesTo(FrameBuilder writer)
         {
             writer.WriteBits(new bool[] {m_contentType_present,m_contentEncoding_present,m_headers_present,
                 m_deliveryMode_present,m_priority_present,m_correlationId_present,m_replyTo_present,
@@ -880,7 +880,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_locales = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteByte(m_versionMajor);
             writer.WriteByte(m_versionMinor);
@@ -942,7 +942,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_locale = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteTable(m_clientProperties);
             writer.WriteShortstr(m_mechanism);
@@ -987,7 +987,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_challenge = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteLongString(m_challenge);
         }
@@ -1026,7 +1026,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_response = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteLongString(m_response);
         }
@@ -1075,7 +1075,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_heartbeat = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_channelMax);
             writer.WriteUInt32(m_frameMax);
@@ -1128,7 +1128,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_heartbeat = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_channelMax);
             writer.WriteUInt32(m_frameMax);
@@ -1181,7 +1181,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved2 = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_virtualHost);
             writer.WriteShortstr(m_reserved1);
@@ -1224,7 +1224,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_reserved1);
         }
@@ -1278,7 +1278,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_methodId = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_replyCode);
             writer.WriteShortstr(m_replyText);
@@ -1318,7 +1318,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -1355,7 +1355,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reason = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_reason);
         }
@@ -1389,7 +1389,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -1426,7 +1426,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_reserved1);
         }
@@ -1465,7 +1465,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadLongString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteLongString(m_reserved1);
         }
@@ -1504,7 +1504,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_active = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteByte(System.Convert.ToByte(m_active));
         }
@@ -1543,7 +1543,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_active = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteByte(System.Convert.ToByte(m_active));
         }
@@ -1597,7 +1597,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_methodId = reader.ReadUInt16();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_replyCode);
             writer.WriteShortstr(m_replyText);
@@ -1637,7 +1637,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -1717,7 +1717,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = (flag & ExchangeDeclareFlags.NoWait) == ExchangeDeclareFlags.NoWait;// reader.ReadBit();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_exchange);
@@ -1773,7 +1773,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -1828,7 +1828,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = (flags & ExchangeDeleteFlags.NoWait) == ExchangeDeleteFlags.NoWait;
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_exchange);
@@ -1875,7 +1875,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -1937,7 +1937,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_destination);
@@ -1981,7 +1981,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -2043,7 +2043,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_destination);
@@ -2087,7 +2087,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -2163,7 +2163,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
@@ -2230,7 +2230,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_consumerCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_queue);
             writer.WriteUInt32(m_messageCount);
@@ -2298,7 +2298,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
@@ -2342,7 +2342,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -2399,7 +2399,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
@@ -2441,7 +2441,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -2488,7 +2488,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
@@ -2531,7 +2531,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_messageCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt32(m_messageCount);
         }
@@ -2593,7 +2593,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = (flags & QueueDeleteFlags.NoWait) == QueueDeleteFlags.NoWait;//reader.ReadBit();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
@@ -2648,7 +2648,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_messageCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt32(m_messageCount);
         }
@@ -2697,7 +2697,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_global = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt32(m_prefetchSize);
             writer.WriteUInt16(m_prefetchCount);
@@ -2735,7 +2735,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -2810,7 +2810,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_arguments = reader.ReadTable();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
@@ -2872,7 +2872,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_consumerTag = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_consumerTag);
         }
@@ -2916,7 +2916,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_consumerTag);
             writer.WriteByte(Convert.ToByte(m_nowait));
@@ -2957,7 +2957,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_consumerTag = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_consumerTag);
         }
@@ -3019,7 +3019,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_immediate = (flags & BasicPublishFlags.Immediate) == BasicPublishFlags.Immediate;
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_exchange);
@@ -3087,7 +3087,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_routingKey = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_replyCode);
             writer.WriteShortstr(m_replyText);
@@ -3152,7 +3152,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_routingKey = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_consumerTag);
             writer.WriteUInt64(m_deliveryTag);
@@ -3209,7 +3209,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_noAck = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortstr(m_queue);
@@ -3272,7 +3272,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_messageCount = reader.ReadUInt32();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt64(m_deliveryTag);
             writer.WriteByte(Convert.ToByte(m_redelivered));
@@ -3319,7 +3319,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadShortString();
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteShortstr(m_reserved1);
         }
@@ -3363,7 +3363,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_multiple = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt64(m_deliveryTag);
             writer.WriteByte(Convert.ToByte(m_multiple));
@@ -3409,7 +3409,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt64(m_deliveryTag);
             writer.WriteByte(Convert.ToByte(m_requeue));
@@ -3450,7 +3450,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteByte(Convert.ToByte(m_requeue));
         }
@@ -3489,7 +3489,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteByte(Convert.ToByte(m_requeue));
         }
@@ -3523,7 +3523,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -3573,7 +3573,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_requeue = (flags & BasicNackFlags.Requeue) == BasicNackFlags.Requeue;
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt64(m_deliveryTag);
 
@@ -3617,7 +3617,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -3649,7 +3649,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -3681,7 +3681,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -3713,7 +3713,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -3745,7 +3745,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -3777,7 +3777,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 
@@ -3814,7 +3814,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteByte(Convert.ToByte(m_nowait));
         }
@@ -3848,7 +3848,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public override void WriteArgumentsTo(ArraySegmentStream writer)
+        public override void WriteArgumentsTo(FrameBuilder writer)
         {
         }
 

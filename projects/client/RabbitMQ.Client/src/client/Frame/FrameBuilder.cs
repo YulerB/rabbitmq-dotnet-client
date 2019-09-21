@@ -1,4 +1,4 @@
-// This source code is dual-licensed under the Apache License, version
+﻿// This source code is dual-licensed under the Apache License, version
 // 2.0, and the Mozilla Public License, version 1.1.
 //
 // The APL v2.0:
@@ -38,44 +38,34 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+#if !NETFX_CORE
 using System;
+using System.IO;
 using System.Collections.Generic;
+using System.Threading;
+using System.Collections.Concurrent;
 
 namespace RabbitMQ.Client.Impl
 {
-    public abstract class StreamProperties : ContentHeaderBase, IStreamProperties
+    public class FrameBuilder  
     {
-        public abstract string ContentEncoding { get; set; }
-        public abstract string ContentType { get; set; }
-        public abstract IDictionary<string, object> Headers { get; set; }
-        public abstract byte Priority { get; set; }
-        public abstract AmqpTimestamp Timestamp { get; set; }
+        private long len = 0;
+        private List<ArraySegment<byte>> data = new List<ArraySegment<byte>>();
 
-        public override object Clone()
+        public  long Length => len;
+
+        public IList<ArraySegment<byte>> ToData (){ return data; }
+
+        public void Write(byte[] buffer, int offset, int count)
         {
-            var clone = MemberwiseClone() as StreamProperties;
-            if (IsHeadersPresent())
-            {
-                clone.Headers = new Dictionary<string, object>();
-                foreach (KeyValuePair<string, object> entry in Headers)
-                {
-                    clone.Headers[entry.Key] = entry.Value;
-                }
-            }
-
-            return clone;
+            data.Add(new ArraySegment<byte>(buffer, offset, count));
+            len += count;
         }
-
-        public abstract void ClearContentEncoding();
-        public abstract void ClearContentType();
-        public abstract void ClearHeaders();
-        public abstract void ClearPriority();
-        public abstract void ClearTimestamp();
-
-        public abstract bool IsContentEncodingPresent();
-        public abstract bool IsContentTypePresent();
-        public abstract bool IsHeadersPresent();
-        public abstract bool IsPriorityPresent();
-        public abstract bool IsTimestampPresent();
+        public void Write(ArraySegment<byte> segment)
+        {
+            data.Add(segment);
+            len += segment.Count;
+        }
     }
 }
+#endif

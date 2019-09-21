@@ -52,8 +52,7 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateMethodOutboundFrame()
         {
-            using (var ms = new ArraySegmentStream())
-            {
+            var ms = new FrameBuilder();
                 ushort channel = 1;
                 MethodOutboundFrame mFrame = new MethodOutboundFrame(channel, new ConnectionSecureOk(" "));
                 Assert.AreEqual(channel, mFrame.Channel);
@@ -61,7 +60,6 @@ namespace RabbitMQ.Client.Unit
                 mFrame.WritePayload(ms);
                 mFrame.WriteTo(ms);
                 Assert.AreEqual(30, ms.Length);
-            }
         }
     }
 }

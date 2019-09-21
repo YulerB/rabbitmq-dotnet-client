@@ -175,16 +175,16 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteFrame(OutboundFrame frame)
         {
-            ArraySegmentStream stream = new ArraySegmentStream();
+            FrameBuilder stream = new FrameBuilder();
             frame.WriteTo(stream);
-            m_socket.Write(stream.Data);
+            m_socket.Write(stream.ToData());
         }
 
         public void WriteFrameSet(IList<OutboundFrame> frames)
         {
-            ArraySegmentStream stream = new ArraySegmentStream();
+            FrameBuilder stream = new FrameBuilder();
             foreach (var f in frames) f.WriteTo(stream);
-            m_socket.Write(stream.Data);
+            m_socket.Write(stream.ToData());
         }
 
         private IHyperTcpClient ConnectUsingAddressFamily(HyperTcpClientSettings settings)

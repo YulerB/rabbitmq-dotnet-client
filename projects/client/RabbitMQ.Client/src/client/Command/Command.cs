@@ -84,7 +84,7 @@ namespace RabbitMQ.Client.Impl
         {
             long actualLength = 0;
             {
-                ArraySegmentStream stream = new ArraySegmentStream();
+                FrameBuilder stream = new FrameBuilder();
                 new EmptyOutboundFrame().WriteTo(stream);
                 actualLength = stream.Length;
             }

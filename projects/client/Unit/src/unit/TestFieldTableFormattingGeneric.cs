@@ -55,8 +55,8 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestStandardTypesE()
         {
-            using (ArraySegmentStream writerStream = new ArraySegmentStream())
-            {
+            FrameBuilder writerStream = new FrameBuilder();
+            
                 IDictionary<string, object> t = new Dictionary<string, object>();
                 t["string"] = "Hello";
                 t["int"] = 1234;
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Unit
                 t["fieldarray"] = array;
                 writerStream.WriteTable(t);
 
-                using (ArraySegmentSequence readerSequence = new ArraySegmentSequence(writerStream.Data))
+                using (ArraySegmentSequence readerSequence = new ArraySegmentSequence(writerStream.ToData()))
                 {
                     IDictionary<string, object> nt = readerSequence.ReadTable(out long read);
 
@@ -85,7 +85,7 @@ namespace RabbitMQ.Client.Unit
                     Assert.AreEqual(Encoding.UTF8.GetBytes("longstring"), narray[0]);
                     Assert.AreEqual(1234, narray[1]);
                 }
-            }
+            
         }
         
     }

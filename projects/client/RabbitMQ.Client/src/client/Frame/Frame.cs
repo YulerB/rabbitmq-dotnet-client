@@ -65,13 +65,13 @@ namespace RabbitMQ.Client.Impl
             this.bodyLength = bodyLength;
         }
 
-        public override void WritePayload(ArraySegmentStream writer)
+        public override void WritePayload(FrameBuilder writer)
         {
-            ArraySegmentStream nw = new ArraySegmentStream();
+            FrameBuilder nw = new FrameBuilder();
             nw.WriteUInt16(header.ProtocolClassId);
             header.WriteTo(nw, (ulong)bodyLength);
             writer.WriteUInt32((uint)nw.Length);
-            foreach (var item in nw.Data)
+            foreach (var item in nw.ToData())
             {
                 writer.WriteSegment(item);
             }
@@ -90,7 +90,7 @@ namespace RabbitMQ.Client.Impl
             this.count = count;
         }
 
-        public override void WritePayload(ArraySegmentStream writer)
+        public override void WritePayload(FrameBuilder writer)
         {
             writer.WriteUInt32((uint)count);
             writer.Write(body, offset, count);
@@ -106,14 +106,14 @@ namespace RabbitMQ.Client.Impl
             this.method = method;
         }
 
-        public override void WritePayload(ArraySegmentStream writer)
+        public override void WritePayload(FrameBuilder writer)
         {
-            ArraySegmentStream nw = new ArraySegmentStream();
+            FrameBuilder nw = new FrameBuilder();
             nw.WriteUInt16(method.ProtocolClassId);
             nw.WriteUInt16(method.ProtocolMethodId);
             method.WriteArgumentsTo(nw);
             writer.WriteUInt32((uint)nw.Length);
-            foreach (var item in nw.Data)
+            foreach (var item in nw.ToData())
             {
                 writer.WriteSegment(item);
             }
@@ -126,7 +126,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public override void WritePayload(ArraySegmentStream writer)
+        public override void WritePayload(FrameBuilder writer)
         {
             writer.WriteUInt32(0U);
         }
@@ -138,7 +138,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public void WriteTo(ArraySegmentStream writer)
+        public void WriteTo(FrameBuilder writer)
         {
             writer.WriteByte((byte)Type);
             writer.WriteUInt16(Channel);
@@ -146,7 +146,7 @@ namespace RabbitMQ.Client.Impl
             writer.WriteByte((byte)Constants.FrameEnd);
         }
 
-        public abstract void WritePayload(ArraySegmentStream writer);
+        public abstract void WritePayload(FrameBuilder writer);
     }
 
     public class InboundFrame : Frame
