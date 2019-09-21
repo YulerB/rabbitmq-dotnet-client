@@ -65,18 +65,13 @@ namespace RabbitMQ.Client.Impl
             this.bodyLength = bodyLength;
         }
 
-        public override void WritePayload(NetworkBinaryWriter writer)
+        public override void WritePayload(ArraySegmentStream writer)
         {
-
-            ArraySegmentStream stream = new ArraySegmentStream();
-            var nw = new NetworkBinaryWriter(stream);
-            {
-                nw.WriteUInt16(header.ProtocolClassId);
-                header.WriteTo(nw, (ulong)bodyLength);
-            }
-
-            writer.WriteUInt32((uint)stream.Length);
-            foreach (var item in stream.Data)
+            ArraySegmentStream nw = new ArraySegmentStream();
+            nw.WriteUInt16(header.ProtocolClassId);
+            header.WriteTo(nw, (ulong)bodyLength);
+            writer.WriteUInt32((uint)nw.Length);
+            foreach (var item in nw.Data)
             {
                 writer.WriteSegment(item);
             }
@@ -95,7 +90,7 @@ namespace RabbitMQ.Client.Impl
             this.count = count;
         }
 
-        public override void WritePayload(NetworkBinaryWriter writer)
+        public override void WritePayload(ArraySegmentStream writer)
         {
             writer.WriteUInt32((uint)count);
             writer.Write(body, offset, count);
@@ -111,22 +106,17 @@ namespace RabbitMQ.Client.Impl
             this.method = method;
         }
 
-        public override void WritePayload(NetworkBinaryWriter writer)
+        public override void WritePayload(ArraySegmentStream writer)
         {
-            ArraySegmentStream stream = new ArraySegmentStream();
-            var nw = new NetworkBinaryWriter(stream);
-            {
-                nw.WriteUInt16(method.ProtocolClassId);
-                nw.WriteUInt16(method.ProtocolMethodId);
-                method.WriteArgumentsTo(nw);
-            }
-
-            writer.WriteUInt32((uint)stream.Length);
-            foreach (var item in stream.Data)
+            ArraySegmentStream nw = new ArraySegmentStream();
+            nw.WriteUInt16(method.ProtocolClassId);
+            nw.WriteUInt16(method.ProtocolMethodId);
+            method.WriteArgumentsTo(nw);
+            writer.WriteUInt32((uint)nw.Length);
+            foreach (var item in nw.Data)
             {
                 writer.WriteSegment(item);
             }
-
         }
     }
 
@@ -136,7 +126,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public override void WritePayload(NetworkBinaryWriter writer)
+        public override void WritePayload(ArraySegmentStream writer)
         {
             writer.WriteUInt32(0U);
         }
@@ -148,7 +138,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public void WriteTo(NetworkBinaryWriter writer)
+        public void WriteTo(ArraySegmentStream writer)
         {
             writer.WriteByte((byte)Type);
             writer.WriteUInt16(Channel);
@@ -156,7 +146,7 @@ namespace RabbitMQ.Client.Impl
             writer.WriteByte((byte)Constants.FrameEnd);
         }
 
-        public abstract void WritePayload(NetworkBinaryWriter writer);
+        public abstract void WritePayload(ArraySegmentStream writer);
     }
 
     public class InboundFrame : Frame
@@ -296,7 +286,6 @@ namespace RabbitMQ.Client.Impl
 
             return new InboundFrame((FrameType)type, channel, payload, m_method, m_content, totalBodyBytes);
         }
-
     }
     public class Frame
     {
@@ -353,9 +342,7 @@ namespace RabbitMQ.Client.Impl
         FrameMethod = 1,
         FrameHeader = 2,
         FrameBody = 3,
-        FrameHeartbeat = 8,
-        FrameEnd = 206,
-        FrameMinSize = 4096
+        FrameHeartbeat = 8
     }
 
 }

@@ -64,6 +64,6 @@ namespace RabbitMQ.Client.Impl
 
         public abstract void AppendArgumentDebugStringTo(StringBuilder stringBuilder);
         public abstract void ReadArgumentsFrom(ArraySegmentSequence reader);
-        public abstract void WriteArgumentsTo(NetworkBinaryWriter writer);
+        public abstract void WriteArgumentsTo(ArraySegmentStream writer);
     }
 }

@@ -54,13 +54,12 @@ namespace RabbitMQ.Client.Unit
         {
             using (var ms = new ArraySegmentStream())
             {
-                var writter = new RabbitMQ.Util.NetworkBinaryWriter(ms);
                 ushort channel = 1;
                 HeaderOutboundFrame mFrame = new HeaderOutboundFrame(channel, new RabbitMQ.Client.Framing.BasicProperties(), 1);
                 Assert.AreEqual(channel, mFrame.Channel);
                 Assert.IsNull(mFrame.Payload);
-                mFrame.WritePayload(writter);
-                mFrame.WriteTo(writter);
+                mFrame.WritePayload(ms);
+                mFrame.WriteTo(ms);
                 Assert.AreEqual(40, ms.Length);
             }
         }

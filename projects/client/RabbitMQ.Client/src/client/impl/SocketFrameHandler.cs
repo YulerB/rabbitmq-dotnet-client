@@ -176,16 +176,14 @@ namespace RabbitMQ.Client.Impl
         public void WriteFrame(OutboundFrame frame)
         {
             ArraySegmentStream stream = new ArraySegmentStream();
-            var nbw = new NetworkBinaryWriter(stream);
-            frame.WriteTo(nbw);
+            frame.WriteTo(stream);
             m_socket.Write(stream.Data);
         }
 
         public void WriteFrameSet(IList<OutboundFrame> frames)
         {
             ArraySegmentStream stream = new ArraySegmentStream();
-            var nbw = new NetworkBinaryWriter(stream);
-            foreach (var f in frames) f.WriteTo(nbw);
+            foreach (var f in frames) f.WriteTo(stream);
             m_socket.Write(stream.Data);
         }
 

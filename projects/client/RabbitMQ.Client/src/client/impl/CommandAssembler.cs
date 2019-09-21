@@ -91,12 +91,11 @@ namespace RabbitMQ.Client.Impl
                             throw new UnexpectedFrameException(f);
                         }
                         m_header = f.Header;
-                        ulong totalBodyBytes = f.TotalBodyBytes;
-                        if (totalBodyBytes > MaxArrayOfBytesSize)
+                        if (f.TotalBodyBytes > MaxArrayOfBytesSize)
                         {
                             throw new UnexpectedFrameException(f);
                         }
-                        m_remainingBodyBytes = totalBodyBytes;
+                        m_remainingBodyBytes = f.TotalBodyBytes;
                         UpdateContentBodyState();
                         return CompletedCommand();
                     }

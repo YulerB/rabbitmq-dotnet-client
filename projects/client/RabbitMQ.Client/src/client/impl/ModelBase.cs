@@ -472,6 +472,16 @@ namespace RabbitMQ.Client.Impl
                 return k.GetReply(this.ContinuationTimeout).Method;
             }
         }
+        public MethodBase ModelRpcX<T>(T method, ContentHeaderBase header, byte[] body) where T: MethodBase
+        {
+            var k = new SimpleBlockingRpcContinuation();
+            lock (_rpcLock)
+            {
+                TransmitAndEnqueue(new Command(method, header, body), k);
+                return k.GetReply(this.ContinuationTimeout).Method;
+            }
+        }
+
 
         public void ModelSend(MethodBase method, ContentHeaderBase header, byte[] body)
         {
@@ -757,8 +767,7 @@ namespace RabbitMQ.Client.Impl
         public void HandleBasicAck(ulong deliveryTag,
             bool multiple)
         {
-            var e = new BasicAckEventArgs(deliveryTag, multiple);
-            OnBasicAck(e);
+            OnBasicAck(new BasicAckEventArgs(deliveryTag, multiple));
         }
 
         public void HandleBasicCancel(string consumerTag, bool nowait)
@@ -789,10 +798,10 @@ namespace RabbitMQ.Client.Impl
             */
             lock (m_consumers)
             {
-                k.m_consumer = m_consumers[consumerTag];
+                k.Consumer = m_consumers[consumerTag];
                 m_consumers.Remove(consumerTag);
             }
-            ConsumerDispatcher.HandleBasicCancelOk(k.m_consumer, consumerTag);
+            ConsumerDispatcher.HandleBasicCancelOk(k.Consumer, consumerTag);
             k.HandleCommand(null); // release the continuation.
         }
 
@@ -800,12 +809,12 @@ namespace RabbitMQ.Client.Impl
         {
             var k =
                 (BasicConsumerRpcContinuation)m_continuationQueue.Next();
-            k.m_consumerTag = consumerTag;
+            k.ConsumerTag = consumerTag;
             lock (m_consumers)
             {
-                m_consumers[consumerTag] = k.m_consumer;
+                m_consumers[consumerTag] = k.Consumer;
             }
-            ConsumerDispatcher.HandleBasicConsumeOk(k.m_consumer, consumerTag);
+            ConsumerDispatcher.HandleBasicConsumeOk(k.Consumer, consumerTag);
             k.HandleCommand(null); // release the continuation.
         }
 
@@ -1167,7 +1176,7 @@ namespace RabbitMQ.Client.Impl
                 m_consumers.Remove(consumerTag);
             }
 
-            ModelShutdown -= k.m_consumer.HandleModelShutdown;
+            ModelShutdown -= k.Consumer.HandleModelShutdown;
         }
 
         public string BasicConsume(string queue,
@@ -1199,7 +1208,7 @@ namespace RabbitMQ.Client.Impl
                     /*nowait:*/ false, arguments);
                 k.GetReply(this.ContinuationTimeout);
             }
-            string actualConsumerTag = k.m_consumerTag;
+            string actualConsumerTag = k.ConsumerTag;
 
             return actualConsumerTag;
         }
@@ -1591,14 +1600,14 @@ namespace RabbitMQ.Client.Impl
         {
             public BasicConsumerRpcContinuation(string consumerTag)
             {
-                this.m_consumerTag = consumerTag;
+                this.ConsumerTag = consumerTag;
             }
             public BasicConsumerRpcContinuation(IBasicConsumer consumer)
             {
-                this.m_consumer = consumer;
+                this.Consumer = consumer;
             }
-            public IBasicConsumer m_consumer { get; set; }
-            public string m_consumerTag { get; set; }
+            public IBasicConsumer Consumer { get; set; }
+            public string ConsumerTag { get; set; }
         }
 
         public class BasicGetRpcContinuation : SimpleBlockingRpcContinuation

@@ -120,9 +120,9 @@ namespace RabbitMQ.Client.Impl
 #if NETFX_CORE
                         Task.Factory.StartNew(AutoCloseConnection, TaskCreationOptions.LongRunning);
 #else
-                        new Thread(AutoCloseConnection).Start();
+                        new Thread(AutoCloseConnection) { Name= "AutoCloseConnection_"+ m_connection.LocalPort.ToString(), IsBackground=true}.Start();
 #endif
-                    }
+                        }
                 }
             }
         }

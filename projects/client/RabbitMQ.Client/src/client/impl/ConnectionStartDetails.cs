@@ -53,18 +53,18 @@ namespace RabbitMQ.Client.Impl
             string locales
             )
         {
-            m_versionMajor = versionMajor;
-            m_versionMinor = versionMinor;
-            m_serverProperties = serverProperties;
-            m_mechanisms = mechanisms;
-            m_locales = locales;
+            VersionMajor = versionMajor;
+            VersionMinor = versionMinor;
+            ServerProperties = serverProperties;
+            Mechanisms = mechanisms;
+            Locales = locales;
         }
 
 
-        public string m_locales { get; private set; }
-        public string m_mechanisms { get; private set; }
-        public IDictionary<string, object> m_serverProperties { get; private set; }
-        public byte m_versionMajor { get; private set; }
-        public byte m_versionMinor { get; private set; }
+        public string Locales { get; private set; }
+        public string Mechanisms { get; private set; }
+        public IDictionary<string, object> ServerProperties { get; private set; }
+        public byte VersionMajor { get; private set; }
+        public byte VersionMinor { get; private set; }
     }
 }

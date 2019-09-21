@@ -57,7 +57,6 @@ namespace RabbitMQ.Client.Unit
         {
             using (ArraySegmentStream writerStream = new ArraySegmentStream())
             {
-                NetworkBinaryWriter w = new NetworkBinaryWriter(writerStream);
                 IDictionary<string, object> t = new Dictionary<string, object>();
                 t["string"] = "Hello";
                 t["int"] = 1234;
@@ -70,7 +69,7 @@ namespace RabbitMQ.Client.Unit
                 array.Add("longstring");
                 array.Add(1234);
                 t["fieldarray"] = array;
-                w.WriteTable(t);
+                writerStream.WriteTable(t);
 
                 using (ArraySegmentSequence readerSequence = new ArraySegmentSequence(writerStream.Data))
                 {

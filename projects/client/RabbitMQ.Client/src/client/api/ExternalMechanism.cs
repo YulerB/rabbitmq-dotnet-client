@@ -40,12 +40,12 @@
 
 namespace RabbitMQ.Client
 {
-    public class ExternalMechanism : AuthMechanism
+    public class ExternalMechanism : IAuthMechanism
     {
         /// <summary>
         /// Handle one round of challenge-response.
         /// </summary>
-        public string handleChallenge(string challenge, IConnectionFactory factory)
+        public string HandleChallenge(string challenge, IConnectionFactory factory)
         {
             return string.Empty;
         }

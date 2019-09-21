@@ -85,8 +85,7 @@ namespace RabbitMQ.Client.Impl
             long actualLength = 0;
             {
                 ArraySegmentStream stream = new ArraySegmentStream();
-                var writer = new NetworkBinaryWriter(stream);
-                new EmptyOutboundFrame().WriteTo(writer);
+                new EmptyOutboundFrame().WriteTo(stream);
                 actualLength = stream.Length;
             }
 
@@ -119,8 +118,10 @@ namespace RabbitMQ.Client.Impl
 
         public void TransmitAsFrameSet(ushort channelNumber, Connection connection)
         {
-            var frames = new List<OutboundFrame>();
-            frames.Add(new MethodOutboundFrame(channelNumber, Method));
+            var frames = new List<OutboundFrame>
+            {
+                new MethodOutboundFrame(channelNumber, Method)
+            };
             if (Method.HasContent)
             {
                 var body = Body;

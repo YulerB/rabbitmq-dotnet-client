@@ -75,11 +75,11 @@ namespace RabbitMQ.Client.Impl
         }
 
         public abstract void ReadPropertiesFrom(ArraySegmentSequence stream);
-        public abstract void WritePropertiesTo(NetworkBinaryWriter writer);
+        public abstract void WritePropertiesTo(ArraySegmentStream  writer);
 
         private const ushort ZERO = 0;
 
-        public void WriteTo(NetworkBinaryWriter writer, ulong bodySize)
+        public void WriteTo(ArraySegmentStream writer, ulong bodySize)
         {
             writer.WriteUInt16(ZERO); // weight - not currently used
             writer.WriteUInt64(bodySize);

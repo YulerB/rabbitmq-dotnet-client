@@ -1298,10 +1298,10 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void OnConnectionStarted(object sender, ConnectionStartDetails connectionStart)
         {
-            ServerProperties = connectionStart.m_serverProperties;
+            ServerProperties = connectionStart.ServerProperties;
 
-            var serverVersion = new AmqpVersion(connectionStart.m_versionMajor,
-                connectionStart.m_versionMinor);
+            var serverVersion = new AmqpVersion(connectionStart.VersionMajor,
+                connectionStart.VersionMinor);
             if (!serverVersion.Equals(Protocol.Version))
             {
                 TerminateMainloop();
@@ -1323,18 +1323,18 @@ namespace RabbitMQ.Client.Framing.Impl
             bool tuned = false;
             try
             {
-                string mechanismsString = connectionStart.m_mechanisms;
+                string mechanismsString = connectionStart.Mechanisms;
                 string[] mechanisms = mechanismsString.Split(' ');
                 AuthMechanismFactory mechanismFactory = m_factory.AuthMechanismFactory(mechanisms);
                 if (mechanismFactory == null)
                 {
                     throw new IOException("No compatible authentication mechanism found - server offered [" + mechanismsString + "]");
                 }
-                AuthMechanism mechanism = mechanismFactory.GetInstance();
+                IAuthMechanism mechanism = mechanismFactory.GetInstance();
                 string challenge = null;
                 do
                 {
-                    string response = mechanism.handleChallenge(challenge, m_factory);
+                    string response = mechanism.HandleChallenge(challenge, m_factory);
                     ConnectionSecureOrTune res;
                     if (challenge == null)
                     {
@@ -1348,14 +1348,14 @@ namespace RabbitMQ.Client.Framing.Impl
                         res = m_model0.ConnectionSecureOk(response);
                     }
 
-                    if (res.m_challenge == null)
+                    if (res.Challenge == null)
                     {
-                        connectionTune = res.m_tuneDetails;
+                        connectionTune = res.TuneDetails;
                         tuned = true;
                     }
                     else
                     {
-                        challenge = res.m_challenge;
+                        challenge = res.Challenge;
                     }
                 }
                 while (!tuned);
@@ -1371,15 +1371,15 @@ namespace RabbitMQ.Client.Framing.Impl
             }
 
             var channelMax = NegotiatedMaxValue(m_factory.RequestedChannelMax,
-                connectionTune.m_channelMax);
+                connectionTune.ChannelMax);
             m_sessionManager = new SessionManager(this, channelMax);
 
             uint frameMax = NegotiatedMaxValue(m_factory.RequestedFrameMax,
-                connectionTune.m_frameMax);
+                connectionTune.FrameMax);
             FrameMax = frameMax;
 
             var heartbeat = NegotiatedMaxValue(m_factory.RequestedHeartbeat,
-                connectionTune.m_heartbeat);
+                connectionTune.Heartbeat);
             Heartbeat = heartbeat;
 
             m_model0.ConnectionTuneOk(channelMax,

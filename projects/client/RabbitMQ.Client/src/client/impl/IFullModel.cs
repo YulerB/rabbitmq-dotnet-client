@@ -385,18 +385,18 @@ namespace RabbitMQ.Client.Impl
     {
         public ConnectionTuneDetails(ushort m_channelMax, uint m_frameMax, ushort m_heartbeat)
         {
-            this.m_channelMax = m_channelMax;
-            this.m_frameMax = m_frameMax;
-            this.m_heartbeat = m_heartbeat;
+            this.ChannelMax = m_channelMax;
+            this.FrameMax = m_frameMax;
+            this.Heartbeat = m_heartbeat;
         }
         ///<summary>The peer's suggested channel-max parameter.</summary>
-        public ushort m_channelMax { get; private set; }
+        public ushort ChannelMax { get; private set; }
 
         ///<summary>The peer's suggested frame-max parameter.</summary>
-        public uint m_frameMax { get; private set; }
+        public uint FrameMax { get; private set; }
 
         ///<summary>The peer's suggested heartbeat parameter.</summary>
-        public ushort m_heartbeat { get; private set; }
+        public ushort Heartbeat { get; private set; }
     }
 
 
@@ -404,14 +404,14 @@ namespace RabbitMQ.Client.Impl
     {
         public ConnectionSecureOrTune(string m_challenge)
         {
-            this.m_challenge = m_challenge;
+            this.Challenge = m_challenge;
         }
         public ConnectionSecureOrTune(ConnectionTuneDetails m_tuneDetails)
         {
-            this.m_tuneDetails = m_tuneDetails;
+            this.TuneDetails = m_tuneDetails;
         }
-        public string m_challenge { get; private set; }
-        public ConnectionTuneDetails m_tuneDetails { get; private set; }
+        public string Challenge { get; private set; }
+        public ConnectionTuneDetails TuneDetails { get; private set; }
     }
 }
 

@@ -80,6 +80,8 @@ namespace RabbitMQ.Client.Unit
                         {
                             if (Interlocked.Increment(ref received) == messages)
                                 reset.Set();
+
+                            await Task.FromResult(false);
                         };
 
                         Model.BasicConsume(q, true, ec);

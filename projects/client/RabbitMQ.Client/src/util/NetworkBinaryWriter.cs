@@ -46,6 +46,7 @@ using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace RabbitMQ.Util
@@ -61,18 +62,10 @@ namespace RabbitMQ.Util
     /// See also NetworkBinaryReader.
     /// </p>
     /// </remarks>
-    public class NetworkBinaryWriter //: BinaryWriter
+    public static class NetworkBinaryWriter 
     {
-        private ArraySegmentStream stream;
-        /// <summary>
-        /// Construct a NetworkBinaryWriter over the given input stream.
-        /// </summary>
-        public NetworkBinaryWriter(ArraySegmentStream output) //: base(output)
-        {
-            this.stream = output;
-        }
-
-        public void WriteBits1(bool[] bits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteBits1(this ArraySegmentStream output, bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
             BitArray arr = new BitArray(totalBits);
@@ -92,9 +85,10 @@ namespace RabbitMQ.Util
 
             Array.Reverse(bytes);
 
-            Write(bytes);
+            output.Write(bytes);
         }
-        public void WriteBits(bool[] bits)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteBits(this ArraySegmentStream output, bool[] bits)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
             BitArray arr = new BitArray(totalBits);
@@ -117,9 +111,9 @@ namespace RabbitMQ.Util
                 bytes[i] = Reverse(bytes[i]);
             }
 
-            Write(bytes);
+            output.Write(bytes);
         }
-        private byte Reverse(byte b)
+        private static byte Reverse(byte b)
         {
             int a = 0;
             for (int i = 0; i < 8; i++)
@@ -128,25 +122,28 @@ namespace RabbitMQ.Util
             return (byte)a;
         }
 
-        public void Write(byte[] buffer)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write(this ArraySegmentStream output, byte[] buffer)
         {
-            stream.Write(
+            output.Write(
                 buffer,
                 0,
                 buffer.Length);
         }
 
-        public void Write(byte[] buffer, int offset, int count)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write(this ArraySegmentStream output, byte[] buffer, int offset, int count)
         {
-            stream.Write(
+            output.Write(
                 buffer,
                 offset,
                 count);
         }
-        public void WriteInt16(short i)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteInt16(this ArraySegmentStream output, short i)
         {
             var bytes = BitConverter.GetBytes(i);
-            stream.Write(
+            output.Write(
                 new byte[2]{
                     bytes[1],
                     bytes[0]
@@ -154,14 +151,15 @@ namespace RabbitMQ.Util
                 0,
                 2);
         }
-        public void WriteUInt16(ushort i)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteUInt16(this ArraySegmentStream output, ushort i)
         {
             //var data = new byte[2];
             //BinaryPrimitives.TryWriteUInt16BigEndian(data, i);
             //stream.Write(data, 0, 2);
 
             var bytes = BitConverter.GetBytes(i);
-            stream.Write(
+            output.Write(
                 new byte[2]{
                     bytes[1],
                     bytes[0]
@@ -169,10 +167,11 @@ namespace RabbitMQ.Util
                 0,
                 2);
         }
-        public void WriteInt32(int i)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteInt32(this ArraySegmentStream output, int i)
         {
             var bytes = BitConverter.GetBytes(i);
-            stream.Write(
+            output.Write(
                 new byte[4]{
                     bytes[3],
                     bytes[2],
@@ -182,10 +181,11 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-        public void WriteUInt32(uint i)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteUInt32(this ArraySegmentStream output, uint i)
         {
             var bytes = BitConverter.GetBytes(i);
-            stream.Write(
+            output.Write(
                 new byte[4]{
                     bytes[3],
                     bytes[2],
@@ -195,10 +195,11 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-        public void WriteInt64(long i)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteInt64(this ArraySegmentStream output, long i)
         {
             var bytes = BitConverter.GetBytes(i);
-            stream.Write(
+            output.Write(
                 new byte[8]{
                     bytes[7],
                     bytes[6],
@@ -212,10 +213,11 @@ namespace RabbitMQ.Util
                 0,
                 8);
         }
-        public void WriteUInt64(ulong i)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteUInt64(this ArraySegmentStream output, ulong i)
         {
             var bytes = BitConverter.GetBytes(i);
-            stream.Write(
+            output.Write(
                 new byte[8]{
                     bytes[7],
                     bytes[6],
@@ -229,7 +231,8 @@ namespace RabbitMQ.Util
                 0,
                 8);
         }
-        public void WriteShortstr(string val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteShortstr(this ArraySegmentStream output, string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             if (bytes.Length > 255)
@@ -237,13 +240,14 @@ namespace RabbitMQ.Util
                 throw new WireFormattingException("Short string too long; " +
                                                   "UTF-8 encoded length=" + bytes.Length + ", max=255");
             }
-            WriteByte((byte)bytes.Length);
-            Write(bytes);
+            output.WriteByte((byte)bytes.Length);
+            output.Write(bytes);
         }
-        public void WriteFloat(float f)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteFloat(this ArraySegmentStream output, float f)
         {
             var bytes = BitConverter.GetBytes(f);
-            stream.Write(
+            output.Write(
                 new byte[4]{
                     bytes[3],
                     bytes[2],
@@ -253,10 +257,11 @@ namespace RabbitMQ.Util
                 0,
                 4);
         }
-        public void WriteDouble(double d)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteDouble(this ArraySegmentStream output, double d)
         {
             var bytes = BitConverter.GetBytes(d);
-            stream.Write(
+            output.Write(
                 new byte[8]{
                     bytes[7],
                     bytes[6],
@@ -270,24 +275,28 @@ namespace RabbitMQ.Util
                 0,
                 8);
         }
-        public void WriteLongstr(byte[] val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteLongstr(this ArraySegmentStream output, byte[] val)
         {
-            WriteUInt32((uint)val.Length);
-            Write(val);
+            output.WriteUInt32((uint)val.Length);
+            output.Write(val);
         }
-        public void WriteLongString(string val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteLongString(this ArraySegmentStream output, string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
-            WriteUInt32((uint)bytes.Length);
-            Write(bytes);
+            output.WriteUInt32((uint)bytes.Length);
+            output.Write(bytes);
         }
-        public void WriteByte(byte val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteByte(this ArraySegmentStream output, byte val)
         {
-            stream.WriteByte(val);
+            output.WriteByte(val);
         }
-        public void Write(sbyte val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write(this ArraySegmentStream output, sbyte val)
         {
-            stream.WriteByte((byte)val);
+            output.WriteByte((byte)val);
         }
         ///<summary>Writes an AMQP "table" to the writer.</summary>
         ///<remarks>
@@ -303,36 +312,35 @@ namespace RabbitMQ.Util
         /// x and V types and the AMQP 0-9-1 A type.
         ///</para>
         ///</remarks>
-        public IList<ArraySegment<byte>> GetTableContent(IDictionary<string, object> val, out int written)
+        private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, object> val, out uint written)
         {
             var stream1 = new ArraySegmentStream();
-            NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
             foreach (var entry in val)
             {
-                bw.WriteShortstr(entry.Key);
-                bw.WriteFieldValue(entry.Value);
+                stream1.WriteShortstr(entry.Key);
+                stream1.WriteFieldValue(entry.Value);
             }
-            written = Convert.ToInt32(stream1.Length);
+            written = Convert.ToUInt32(stream1.Length);
             return stream1.Data;
         }
-        public IList<ArraySegment<byte>> GetTableContent(IDictionary<string, bool> val, out int written)
+        private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, bool> val, out uint written)
         {
             var stream1 = new ArraySegmentStream();
-            NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
             foreach (var entry in val)
             {
-                bw.WriteShortstr(entry.Key);
-                bw.WriteFieldValue(entry.Value);
+                stream1.WriteShortstr(entry.Key);
+                stream1.WriteFieldValue(entry.Value);
             }
-            written = Convert.ToInt32(stream1.Length);
+            written = Convert.ToUInt32(stream1.Length);
             return stream1.Data;
         }
 
-        public void WriteTimestamp(AmqpTimestamp val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteTimestamp(this ArraySegmentStream output, AmqpTimestamp val)
         {
             // 0-9 is afaict silent on the signedness of the timestamp.
             // See also MethodArgumentReader.ReadTimestamp and AmqpTimestamp itself
-            WriteUInt64((ulong)val.UnixTime);
+            output.WriteUInt64((ulong)val.UnixTime);
         }
 
         ///<summary>Writes an AMQP "table" to the writer.</summary>
@@ -349,40 +357,42 @@ namespace RabbitMQ.Util
         /// x and V types and the AMQP 0-9-1 A type.
         ///</para>
         ///</remarks>
-        public void WriteTable(IDictionary<string, object> val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteTable(this ArraySegmentStream output, IDictionary<string, object> val)
         {
             if (val == null)
             {
-                WriteUInt32(0U);
+                output.WriteUInt32(0U);
             }
             else
             {
-                var content = GetTableContent(val, out int written1);
-                WriteUInt32((uint)written1);
+                var content = GetTableContent(val, out uint written1);
+                output.WriteUInt32(written1);
                 foreach (var item in content)
                 {
-                    WriteSegment(item);
+                    output.WriteSegment(item);
                 }
             }
         }
-        public void WriteTable(IDictionary<string, bool> val)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteTable(this ArraySegmentStream output, IDictionary<string, bool> val)
         {
             if (val == null)
             {
-                WriteUInt32(0U);
+                output.WriteUInt32(0U);
             }
             else
             {
-                var content = GetTableContent(val, out int written1);
-                WriteUInt32((uint)written1);
+                var content = GetTableContent(val, out uint written1);
+                output.WriteUInt32(written1);
                 foreach (var item in content)
                 {
-                    WriteSegment(item);
+                    output.WriteSegment(item);
                 }
             }
         }
 
-        public void DecimalToAmqp(decimal value, out byte scale, out int mantissa)
+        private static void DecimalToAmqp(decimal value, out byte scale, out int mantissa)
         {
             // According to the documentation :-
             //  - word 0: low-order "mantissa"
@@ -405,42 +415,39 @@ namespace RabbitMQ.Util
                              (((uint)bitRepresentation[0]) & 0x7FFFFFFF));
         }
 
-        private IList<ArraySegment<byte>> GetArrayContent(IList val, out int written)
+        private static IList<ArraySegment<byte>> GetArrayContent(IList val, out uint written)
         {
             var stream1 = new ArraySegmentStream();
-            NetworkBinaryWriter bw = new NetworkBinaryWriter(stream1);
             foreach (object entry in val)
             {
-                bw.WriteFieldValue(entry);
+                stream1.WriteFieldValue(entry);
             }
-            written = Convert.ToInt32(stream1.Length);
+            written = Convert.ToUInt32(stream1.Length);
             return stream1.Data;
         }
 
-        private void WriteArray(IList val)
+        private static void WriteArray(this ArraySegmentStream output, IList val)
         {
             if (val == null)
             {
-                WriteUInt32(0U); // length of table - will be backpatched
+                output.WriteUInt32(0U); // length of table - will be backpatched
             }
             else
             {
-                var content = GetArrayContent(val, out int written1);
-                WriteUInt32((uint)written1); // length of table - will be backpatched
+                var content = GetArrayContent(val, out uint written1);
+                output.WriteUInt32(written1); // length of table - will be backpatched
                 foreach (var item in content)
                 {
-                    WriteSegment(item);
+                    output.WriteSegment(item);
                 }
             }
         }
 
-        private void WriteDecimal(decimal value)
+        private static void WriteDecimal(this ArraySegmentStream output, decimal value)
         {
-            byte scale;
-            int mantissa;
-            DecimalToAmqp(value, out scale, out mantissa);
-            WriteByte(scale);
-            WriteUInt32((uint)mantissa);
+            DecimalToAmqp(value, out byte scale, out int mantissa);
+            output.WriteByte(scale);
+            output.WriteUInt32((uint)mantissa);
         }
 
         private const byte S = 83;
@@ -458,101 +465,101 @@ namespace RabbitMQ.Util
         private const byte t = 116;
         private const byte x = 120;
 
-        private void WriteFieldValue(object value)
+        private static void WriteFieldValue(this ArraySegmentStream output, object value)
         {
             if (value == null)
             {
-                WriteByte(V);
+                output.WriteByte(V);
             }
             else if (value is string)
             {
-                WriteByte(S);
-                WriteLongstr(Encoding.UTF8.GetBytes((string)value));
+                output.WriteByte(S);
+                output.WriteLongstr(Encoding.UTF8.GetBytes(value as string));
             }
             else if (value is byte[])
             {
-                WriteByte(S);
-                WriteLongstr((byte[])value);
+                output.WriteByte(S);
+                output.WriteLongstr(value as byte[]);
             }
             else if (value is int)
             {
-                WriteByte(I);
-                WriteInt32((int)value);
+                output.WriteByte(I);
+                output.WriteInt32((int)value);
             }
             else if (value is decimal)
             {
-                WriteByte(D);
-                WriteDecimal((decimal)value);
+                output.WriteByte(D);
+                output.WriteDecimal((decimal)value);
             }
             else if (value is AmqpTimestamp)
             {
-                WriteByte(T);
-                WriteTimestamp((AmqpTimestamp)value);
+                output.WriteByte(T);
+                output.WriteTimestamp((AmqpTimestamp) value);
             }
             else if (value is IDictionary<string, bool>)
             {
-                WriteByte(F);
-                WriteTable((IDictionary<string, bool>)value);
+                output.WriteByte(F);
+                output.WriteTable(value as IDictionary<string, bool>);
             }
             else if (value is IDictionary)
             {
-                WriteByte(F);
-                WriteTable((IDictionary<string, object>)value);
+                output.WriteByte(F);
+                output.WriteTable(value as IDictionary<string, object>);
             }
             else if (value is IList)
             {
-                WriteByte(A);
-                WriteArray((IList)value);
+                output.WriteByte(A);
+                output.WriteArray(value as IList);
             }
             else if (value is sbyte)
             {
-                WriteByte(b);
-                Write((sbyte)value);
+                output.WriteByte(b);
+                output.Write((sbyte)value);
             }
             else if (value is double)
             {
-                WriteByte(d);
-                WriteDouble((double)value);
+                output.WriteByte(d);
+                output.WriteDouble((double)value);
             }
             else if (value is float)
             {
-                WriteByte(f);
-                WriteFloat((float)value);
+                output.WriteByte(f);
+                output.WriteFloat((float)value);
             }
             else if (value is long)
             {
-                WriteByte(l);
-                WriteInt64((long)value);
+                output.WriteByte(l);
+                output.WriteInt64((long)value);
             }
             else if (value is ulong)
             {
-                WriteByte(l);
-                WriteUInt64((ulong)value);
+                output.WriteByte(l);
+                output.WriteUInt64((ulong)value);
             }
             else if (value is uint)
             {
-                WriteByte(I);
-                WriteUInt32((uint)value);
+                output.WriteByte(I);
+                output.WriteUInt32((uint)value);
             }
             else if (value is short)
             {
-                WriteByte(s);
-                WriteInt16((short)value);
+                output.WriteByte(s);
+                output.WriteInt16((short)value);
             }
             else if (value is ushort)
             {
-                WriteByte(s);
-                WriteUInt16((ushort)value);
+                output.WriteByte(s);
+                output.WriteUInt16((ushort)value);
             }
             else if (value is bool)
             {
-                WriteByte(t);
-                WriteByte((byte)(((bool)value) ? 1 : 0));
+                output.WriteByte(t);
+                output.WriteByte((byte)(((bool)value) ? 1 : 0));
             }
             else if (value is BinaryTableValue)
             {
-                WriteByte(x);
-                Write(((BinaryTableValue)value).Bytes);
+                output.WriteByte(x);
+                output.Write((value as BinaryTableValue).Bytes);
             }
             else
             {
@@ -560,9 +567,10 @@ namespace RabbitMQ.Util
             }
         }
 
-        public void WriteSegment(ArraySegment<byte> segment)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteSegment(this ArraySegmentStream output, ArraySegment<byte> segment)
         {
-            stream.Write(segment);
+            output.Write(segment);
         }
     }
 }

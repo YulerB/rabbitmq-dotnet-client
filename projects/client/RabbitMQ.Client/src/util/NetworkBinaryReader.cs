@@ -108,6 +108,28 @@ namespace RabbitMQ.Util
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte[] ReadBytesMaybeZeroCopy(this ArraySegmentSequence input, int payloadSize)
+        {
+            var data = input.Read(payloadSize);
+            if (data.Count == 1)
+            {
+                return data[0].ToArray();
+            }
+            else
+            {
+                //Think of ways to remove memory copying
+                byte[] bytes = new byte[payloadSize];
+                int offset = 0;
+                foreach (var segment in data)
+                {
+                    var arr = segment.ToArray();
+                    Buffer.BlockCopy(arr, 0, bytes, offset, segment.Length);
+                    offset += segment.Length;
+                }
+                return bytes;
+            }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort ReadUInt16(this ArraySegmentSequence input)
         {
             var data = input.Read(2);
@@ -365,18 +387,17 @@ namespace RabbitMQ.Util
             int size = (int)ReadByte(input);
             return Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal ReadDecimal(this ArraySegmentSequence input, out long read)
         {
             byte scale = ReadByte(input);
-            uint unsignedMantissa = ReadUInt32(input);
-            read = 5;
             if (scale > 28)
             {
-                throw new SyntaxError("Unrepresentable AMQP decimal table field: " +
-                                      "scale=" + scale);
+                throw new SyntaxError("Unrepresentable AMQP decimal table field: scale=" + scale);
             }
+            uint unsignedMantissa = ReadUInt32(input);
+            read = 5;
+
             return new decimal((int)(unsignedMantissa & 0x7FFFFFFF),
                 0,
                 0,
@@ -391,8 +412,7 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IDictionary<string, object> ReadTable(this ArraySegmentSequence input, out long read)
         {
-            IDictionary<string, object> table = new Dictionary<string, object>();
-            UInt32 tableLength = ReadUInt32(input);
+            uint tableLength = ReadUInt32(input);
 
             if(tableLength == 0)
             {
@@ -400,20 +420,20 @@ namespace RabbitMQ.Util
                 return null;
             }
 
+            IDictionary<string, object> table = new Dictionary<string, object>();
             long left = tableLength;
             while (left> 0)
             {
                 string key = ReadShortString(input,out long read1);
-                left -= read1;
                 object value = ReadFieldValue(input, out long read2);
-                left -= read2;
+                left -= read1+read2;
 
                 if (!table.ContainsKey(key))
                 {
                     table[key] = value;
                 }
             }
-            read = tableLength + 4;
+            read = tableLength + 4U;
             return table;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -424,15 +444,14 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IList<object> ReadArray(this ArraySegmentSequence input, out long read)
         {
-            IList<object> array = new List<object>();
             long arrayLength = ReadUInt32(input);
-
             if (arrayLength == 0)
             {
                 read = 4;
                 return null;
             }
 
+            IList<object> array = new List<object>();
             long left = arrayLength;
             while (left > 0)
             {
@@ -510,7 +529,7 @@ namespace RabbitMQ.Util
                     read = 1;
                     break;
                 case x:
-                    int size = Convert.ToInt32(ReadUInt32(input)) ;
+                    int size = Convert.ToInt32(ReadUInt32(input));
                     value = new BinaryTableValue(ReadMemory(input, size).ToArray());
                     read = 4 + size;
                     break;
