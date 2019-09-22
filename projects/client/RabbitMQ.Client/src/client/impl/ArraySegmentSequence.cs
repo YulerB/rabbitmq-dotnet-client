@@ -49,39 +49,27 @@ namespace RabbitMQ.Client.Impl
 {
     public class ArraySegmentSequence : IDisposable
     {
-        private BlockingCollection<ReadOnlyMemory<byte>> data = new BlockingCollection<ReadOnlyMemory<byte>>();
+        private bool addingComplete=false;
+        private ConcurrentQueue<ReadOnlyMemory<byte>> data = new ConcurrentQueue<ReadOnlyMemory<byte>>();
         public event EventHandler<BufferUsedEventArgs> BufferUsed;
         private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private int originalSize = 0;
-
-        public ArraySegmentSequence(byte[] buffer) {
-            data.Add(new ArraySegment<byte>(buffer, 0, buffer.Length));
+        #region Constructor
+        public ArraySegmentSequence(byte[] buffer)
+        {
+            data.Enqueue(new ArraySegment<byte>(buffer, 0, buffer.Length));
         }
         public ArraySegmentSequence(ArraySegment<byte> buffer)
         {
-            data.Add(buffer);
+            data.Enqueue(buffer);
         }
         public ArraySegmentSequence(IEnumerable<ArraySegment<byte>> buffers)
         {
-            foreach(var buffer in buffers)
-                data.Add(buffer);
+            foreach (var buffer in buffers) data.Enqueue(buffer);
         }
         public ArraySegmentSequence() { }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                data.Dispose();
-            }
-            BufferUsed = null;
-            data = null;
-        }
+        #endregion
 
         public List<ReadOnlyMemory<byte>> Read(int count)
         {
@@ -91,10 +79,11 @@ namespace RabbitMQ.Client.Impl
             {
                 if (top.Length == 0)
                 {
-                    top = data.Take();
+                    if(data.Count == 0 && addingComplete == false)
+                        SpinWait.SpinUntil(() => addingComplete || data.Count > 0);
 
-                    if (data.IsCompleted && top.IsEmpty)
-                        throw new EndOfStreamException();
+                    if (!data.TryDequeue(out top))
+                        if (addingComplete) throw new EndOfStreamException();
 
                     originalSize = top.Length;
                 }
@@ -111,7 +100,7 @@ namespace RabbitMQ.Client.Impl
                     var read = top.Slice(0, top.Length);
                     count -= top.Length;
                     top = empty;
-                    BufferUsed?.Invoke(this, new BufferUsedEventArgs ( originalSize ));
+                    BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
                     result.Add(read);
                 }
             }
@@ -119,12 +108,25 @@ namespace RabbitMQ.Client.Impl
         }
         public void Write(ReadOnlyMemory<byte> buffer)
         {
-            data.Add(buffer);
+            data.Enqueue(buffer);
         }
         internal void NotifyClosed()
         {
-            data.CompleteAdding();
+            addingComplete = true;
         }
+
+        #region IDisposable
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            top = null;
+            data = null;
+            BufferUsed = null;
+        }
+        #endregion
     }
 }
 #endif

@@ -184,6 +184,9 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteUInt32(this FrameBuilder output, uint i)
         {
+            //var bts = new byte[4];
+            //BinaryPrimitives.TryWriteUInt32BigEndian(bts, i);
+            //output.Write(bts, 0, 4);
             var bytes = BitConverter.GetBytes(i);
             output.Write(
                 new byte[4]{
@@ -288,11 +291,6 @@ namespace RabbitMQ.Util
             output.WriteUInt32((uint)bytes.Length);
             output.Write(bytes);
         }
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public static void WriteByte(this FrameBuilder output, byte val)
-        //{
-        //    output.WriteByte(val);
-        //}
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteSByte(this FrameBuilder output, sbyte val)
         {
