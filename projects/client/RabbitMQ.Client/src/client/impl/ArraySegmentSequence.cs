@@ -120,8 +120,10 @@ namespace RabbitMQ.Client.Impl
         {
             Dispose(true);
         }
+        private bool disposed = false;
         protected virtual void Dispose(bool disposing)
         {
+            if (disposing) NotifyClosed();
             top = null;
             data = null;
             BufferUsed = null;
