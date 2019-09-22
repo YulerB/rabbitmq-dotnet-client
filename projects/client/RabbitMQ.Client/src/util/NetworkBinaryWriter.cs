@@ -288,13 +288,13 @@ namespace RabbitMQ.Util
             output.WriteUInt32((uint)bytes.Length);
             output.Write(bytes);
         }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public static void WriteByte(this FrameBuilder output, byte val)
+        //{
+        //    output.WriteByte(val);
+        //}
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteByte(this FrameBuilder output, byte val)
-        {
-            output.WriteByte(val);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Write(this FrameBuilder output, sbyte val)
+        public static void WriteSByte(this FrameBuilder output, sbyte val)
         {
             output.WriteByte((byte)val);
         }
@@ -514,7 +514,7 @@ namespace RabbitMQ.Util
             else if (value is sbyte)
             {
                 output.WriteByte(b);
-                output.Write((sbyte)value);
+                output.WriteSByte((sbyte)value);
             }
             else if (value is double)
             {

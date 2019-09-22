@@ -61,6 +61,11 @@ namespace RabbitMQ.Client.Impl
             data.Add(new ArraySegment<byte>(buffer, offset, count));
             len += count;
         }
+        public void WriteByte(byte buffer)
+        {
+            data.Add(new ArraySegment<byte>(new byte[] { buffer }, 0, 1));
+            len += 1;
+        }
         public void Write(ArraySegment<byte> segment)
         {
             data.Add(segment);
