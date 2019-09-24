@@ -216,7 +216,7 @@ namespace RabbitMQ.Client.Impl
 
             try
             {
-                type = reader.ReadByte();
+                type = reader.ReadFirstByte();
             }
             catch (IOException ioe)
             {

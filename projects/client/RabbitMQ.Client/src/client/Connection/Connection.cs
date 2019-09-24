@@ -1246,6 +1246,8 @@ namespace RabbitMQ.Client.Framing.Impl
                     m_frameHandler?.Dispose();
                     m_appContinuation?.Dispose();
                     m_heartbeatRead?.Dispose();
+                    if (ConsumerWorkService!=null && ConsumerWorkService is AsyncConsumerWorkService)
+                        ((AsyncConsumerWorkService)ConsumerWorkService).Dispose();
                 }
                 catch (OperationInterruptedException)
                 {

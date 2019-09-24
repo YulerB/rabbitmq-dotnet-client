@@ -58,6 +58,11 @@ namespace RabbitMQ.Util
             var data = input.Read(1);
             return data[0].Span[0];
         }
+        public static byte ReadFirstByte(this ArraySegmentSequence input)
+        {
+            var data = input.ReadNotExpecting(1);
+            return data[0].Span[0];
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ReadBytes(this ArraySegmentSequence input,int payloadSize)
         {
@@ -138,28 +143,13 @@ namespace RabbitMQ.Util
             {
                 return BinaryPrimitives.ReadUInt16BigEndian(data[0].Span);
             }
+            
+            byte[] bytes = new byte[2]{
+                data[0].Span[0],
+                data[1].Span[0]
+            };
 
-
-            var arrayIndex = 0;
-            var offset = 0;
-            byte[] bytes = new byte[2];
-
-
-            var count = data[arrayIndex].Length;
-            for (int i = 1; i > -1; i--)
-            {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
-
-                if (count == 0)
-                {
-                    arrayIndex++;
-                    offset = 0;
-                }
-            }
-            return BitConverter.ToUInt16(bytes, 0);
+            return BinaryPrimitives.ReadUInt16BigEndian(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ReadUInt32(this ArraySegmentSequence input)
@@ -171,23 +161,16 @@ namespace RabbitMQ.Util
             }
 
             byte[] bytes = new byte[4];
-            var arrayIndex = 0;
-            var offset = 0;
-            var count = data[arrayIndex].Length;
-            for (int i = 3; i > -1; i--)
+            int index = 0;
+            foreach(var item in data)
             {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
-
-                if (count == 0)
+                for (int i = 0; i < item.Length; i++)
                 {
-                    arrayIndex++;
-                    offset = 0;
+                    bytes[index++] = item.Span[i];
                 }
             }
-            return BitConverter.ToUInt32(bytes, 0);
+
+            return BinaryPrimitives.ReadUInt32BigEndian(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong ReadUInt64(this ArraySegmentSequence input)
@@ -199,23 +182,15 @@ namespace RabbitMQ.Util
             }
 
             byte[] bytes = new byte[8];
-            var arrayIndex = 0;
-            var offset = 0;
-            var count = data[arrayIndex].Length;
-            for (int i = 7; i > -1; i--)
+            int index = 0;
+            foreach (var item in data)
             {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
-
-                if (count == 0)
+                for (int i = 0; i < item.Length; i++)
                 {
-                    arrayIndex++;
-                    offset = 0;
+                    bytes[index++] = item.Span[i];
                 }
             }
-            return BitConverter.ToUInt64(bytes, 0);
+            return BinaryPrimitives.ReadUInt64BigEndian(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static short ReadInt16(this ArraySegmentSequence input)
@@ -227,27 +202,11 @@ namespace RabbitMQ.Util
                 return BinaryPrimitives.ReadInt16BigEndian(data[0].Span);
             }
 
-
-            var arrayIndex = 0;
-            var offset = 0;
-            byte[] bytes = new byte[2];
-
-
-            var count = data[arrayIndex].Length;
-            for (int i = 1; i > -1; i--)
-            {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
-
-                if (count == 0)
-                {
-                    arrayIndex++;
-                    offset = 0;
-                }
-            }
-            return BitConverter.ToInt16(bytes, 0);
+            byte[] bytes = new byte[2]{
+                data[0].Span[0],
+                data[1].Span[0]
+            };
+            return BinaryPrimitives.ReadInt16BigEndian(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ReadInt32(this ArraySegmentSequence input)
@@ -258,24 +217,17 @@ namespace RabbitMQ.Util
                 return BinaryPrimitives.ReadInt32BigEndian(data[0].Span);
             }
 
-            byte[] bytes = new byte[4];
-            var arrayIndex = 0;
-            var offset = 0;
-            var count = data[arrayIndex].Length;
-            for (int i = 3; i > -1; i--)
-            {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
 
-                if (count == 0)
+            byte[] bytes = new byte[4];
+            int index = 0;
+            foreach (var item in data)
+            {
+                for (int i = 0; i < item.Length; i++)
                 {
-                    arrayIndex++;
-                    offset = 0;
+                    bytes[index++] = item.Span[i];
                 }
             }
-            return BitConverter.ToInt32(bytes, 0);
+            return BinaryPrimitives.ReadInt32BigEndian(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long ReadInt64(this ArraySegmentSequence input)
@@ -287,23 +239,15 @@ namespace RabbitMQ.Util
             }
 
             byte[] bytes = new byte[8];
-            var arrayIndex = 0;
-            var offset = 0;
-            var count = data[arrayIndex].Length;
-            for (int i = 7; i > -1; i--)
+            int index = 0;
+            foreach (var item in data)
             {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
-
-                if (count == 0)
+                for (int i = 0; i < item.Length; i++)
                 {
-                    arrayIndex++;
-                    offset = 0;
+                    bytes[index++] = item.Span[i];
                 }
             }
-            return BitConverter.ToInt64(bytes, 0);
+            return BinaryPrimitives.ReadInt64BigEndian(bytes);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float ReadSingle(this ArraySegmentSequence input)
@@ -315,22 +259,15 @@ namespace RabbitMQ.Util
             }
 
             byte[] bytes = new byte[4];
-            var arrayIndex = 0;
-            var offset = 0;
-            var count = data[arrayIndex].Length;
-            for (int i = 3; i > -1; i--)
+            int index = 0;
+            foreach (var item in data)
             {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
-
-                if (count == 0)
+                for (int i = 0; i < item.Length; i++)
                 {
-                    arrayIndex++;
-                    offset = 0;
+                    bytes[index++] = item.Span[i];
                 }
             }
+            Array.Reverse(bytes);
             return BitConverter.ToSingle(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -343,22 +280,15 @@ namespace RabbitMQ.Util
             }
 
             byte[] bytes = new byte[8];
-            var arrayIndex = 0;
-            var offset = 0;
-            var count = data[arrayIndex].Length;
-            for (int i = 7; i > -1; i--)
+            int index = 0;
+            foreach (var item in data)
             {
-                var segment = data[arrayIndex].ToArray();
-                bytes[i] = segment[offset];
-                offset++;
-                count--;
-
-                if (count == 0)
+                for (int i = 0; i < item.Length; i++)
                 {
-                    arrayIndex++;
-                    offset = 0;
+                    bytes[index++] = item.Span[i];
                 }
             }
+            Array.Reverse(bytes);
             return BitConverter.ToDouble(bytes, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

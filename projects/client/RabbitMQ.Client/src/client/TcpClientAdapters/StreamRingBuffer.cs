@@ -6,7 +6,7 @@ namespace RabbitMQ.Client
 {
     public class StreamRingBuffer
     {
-        private readonly ReadOnlyMemory<byte> Memory = null;
+        private readonly ArraySegment<byte> Memory;
         private readonly byte[] bigBuffer = null;
         private int position = 0;
         private int available = 0;
@@ -15,7 +15,7 @@ namespace RabbitMQ.Client
         {
             this.capacity = capacity;
             bigBuffer = new byte[capacity];
-            Memory = new ReadOnlyMemory<byte>(bigBuffer);
+            Memory = new ArraySegment<byte>(bigBuffer);
             available = capacity;
         }
 
@@ -25,20 +25,20 @@ namespace RabbitMQ.Client
             return new ArraySegment<byte>(bigBuffer, pos, Math.Min(available, capacity - pos));
         }
 
-        public ReadOnlyMemory<byte> Take(int usedSize)
+        public ArraySegment<byte> Take(int usedSize)
         {
             Interlocked.Add(ref available, -usedSize);
             var pos = position;
-            ReadOnlyMemory<byte> mem = Memory.Slice(pos, usedSize);
+            ArraySegment<byte> mem = new ArraySegment<byte>(bigBuffer, pos, usedSize);
             pos += usedSize;
             if (pos == capacity) pos = 0;
             position = pos;
             return mem;
         }
 
-        public Tuple<ReadOnlyMemory<byte>, ArraySegment<byte>> TakeAndPeek(int usedSize)
+        public Tuple<ArraySegment<byte>, ArraySegment<byte>> TakeAndPeek(int usedSize)
         {
-            return Tuple.Create<ReadOnlyMemory<byte>, ArraySegment<byte>> (Take(usedSize), Peek());
+            return Tuple.Create<ArraySegment<byte>, ArraySegment<byte>> (Take(usedSize), Peek());
         }
 
         public void Release(int releaseSize)

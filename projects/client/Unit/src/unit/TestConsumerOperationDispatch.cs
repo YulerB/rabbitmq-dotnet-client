@@ -115,7 +115,7 @@ namespace RabbitMQ.Client.Unit
         public void TestDeliveryOrderingWithSingleChannel()
         {
             var Ch = Conn.CreateModel();
-            Ch.ExchangeDeclare(x, "fanout", durable: false);
+            Ch.ExchangeDeclare(x, ExchangeType.Fanout, durable: false);
 
             for (int i = 0; i < y; i++)
             {
@@ -175,7 +175,7 @@ namespace RabbitMQ.Client.Unit
             {
                 using (var ch2 = Conn.CreateModel())
                 {
-                    Model.ExchangeDeclare(x, "fanout", durable: false);
+                    Model.ExchangeDeclare(x, ExchangeType.Fanout, durable: false);
 
                     var q1 = ch1.QueueDeclare().QueueName;
                     var q2 = ch2.QueueDeclare().QueueName;

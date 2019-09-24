@@ -55,6 +55,7 @@ namespace RabbitMQ.Client.Impl
         private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private int originalSize = 0;
+
         #region Constructor
         public ArraySegmentSequence(byte[] buffer)
         {
@@ -71,6 +72,43 @@ namespace RabbitMQ.Client.Impl
         public ArraySegmentSequence() { }
         #endregion
 
+        public List<ReadOnlyMemory<byte>> ReadNotExpecting(int count)
+        {
+            List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
+
+            while (count > 0)
+            {
+                if (top.Length == 0)
+                {
+                    lock (data)
+                    {
+                        while (!addingComplete && !data.TryDequeue(out top))// If we have items remaining in the queue, skip over this. 
+                        {
+                            Monitor.Wait(data);// Release the lock and block on this line until someone adds something to the queue, resuming once they release the lock again.
+                        }
+                    }
+
+                    if (top.Length == 0 && addingComplete) throw new EndOfStreamException();
+
+                    originalSize = top.Length;
+                }
+
+                if (top.Length > count)
+                {
+                    result.Add(top.Slice(0, count));
+                    top = top.Slice(count, top.Length - count);
+                    return result;
+                }
+                else
+                {
+                    result.Add(top.Slice(0, top.Length));
+                    count -= top.Length;
+                    top = empty;
+                    BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
+                }
+            }
+            return result;
+        }
         public List<ReadOnlyMemory<byte>> Read(int count)
         {
             List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
@@ -79,40 +117,56 @@ namespace RabbitMQ.Client.Impl
             {
                 if (top.Length == 0)
                 {
-                    if(data.Count == 0 && addingComplete == false)
+                    if (data.Count == 0 && addingComplete == false)
                         SpinWait.SpinUntil(() => addingComplete || data.Count > 0);
 
-                    if (!data.TryDequeue(out top))
-                        if (addingComplete) throw new EndOfStreamException();
+                    if (!data.TryDequeue(out top) && addingComplete) throw new EndOfStreamException();
 
                     originalSize = top.Length;
                 }
 
                 if (top.Length > count)
                 {
-                    var read = top.Slice(0, count);
+                    result.Add(top.Slice(0, count));
                     top = top.Slice(count, top.Length - count);
-                    result.Add(read);
                     return result;
                 }
                 else
                 {
-                    var read = top.Slice(0, top.Length);
+                    result.Add(top.Slice(0, top.Length));
                     count -= top.Length;
                     top = empty;
                     BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
-                    result.Add(read);
                 }
             }
             return result;
         }
         public void Write(ReadOnlyMemory<byte> buffer)
         {
-            data.Enqueue(buffer);
+            if (buffer.Length > 0)
+            {
+                lock (data)
+                {
+                    data.Enqueue(buffer);
+                    // If the consumer thread is waiting for an item
+                    // to be added to the queue, this will move it
+                    // to a waiting list, to resume execution
+                    // once we release our lock.
+                    Monitor.Pulse(data);
+                }
+            }
         }
         internal void NotifyClosed()
         {
-            addingComplete = true;
+            lock (data)
+            {
+                addingComplete = true;
+                // If the consumer thread is waiting for an item
+                // to be added to the queue, this will move it
+                // to a waiting list, to resume execution
+                // once we release our lock.
+                Monitor.Pulse(data);
+            }
         }
 
         #region IDisposable
@@ -120,7 +174,6 @@ namespace RabbitMQ.Client.Impl
         {
             Dispose(true);
         }
-        private bool disposed = false;
         protected virtual void Dispose(bool disposing)
         {
             if (disposing) NotifyClosed();
@@ -130,5 +183,87 @@ namespace RabbitMQ.Client.Impl
         }
         #endregion
     }
+    //public class ArraySegmentSequence1 : IDisposable
+    //{
+    //    private bool addingComplete = false;
+    //    private ConcurrentQueue<ReadOnlyMemory<byte>> data = new ConcurrentQueue<ReadOnlyMemory<byte>>();
+    //    public event EventHandler<BufferUsedEventArgs> BufferUsed;
+    //    private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
+    //    private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
+    //    private int originalSize = 0;
+    //    #region Constructor
+    //    public ArraySegmentSequence1(byte[] buffer)
+    //    {
+    //        data.Enqueue(new ArraySegment<byte>(buffer, 0, buffer.Length));
+    //    }
+    //    public ArraySegmentSequence1(ArraySegment<byte> buffer)
+    //    {
+    //        data.Enqueue(buffer);
+    //    }
+    //    public ArraySegmentSequence1(IEnumerable<ArraySegment<byte>> buffers)
+    //    {
+    //        foreach (var buffer in buffers) data.Enqueue(buffer);
+    //    }
+    //    public ArraySegmentSequence1() { }
+    //    #endregion
+
+    //    public List<ReadOnlyMemory<byte>> Read(int count)
+    //    {
+    //        Queue<ReadOnlyMemory<byte>> result = new Queue<ReadOnlyMemory<byte>>();
+
+    //        while (count > 0)
+    //        {
+    //            if (top.Length == 0)
+    //            {
+    //                if (data.Count == 0 && addingComplete == false)
+    //                    SpinWait.SpinUntil(() => addingComplete || data.Count > 0);
+
+    //                if (!data.TryDequeue(out top))
+    //                    if (addingComplete) throw new EndOfStreamException();
+
+    //                originalSize = top.Length;
+    //            }
+
+    //            if (top.Length > count)
+    //            {
+    //                var read = top.Slice(0, count);
+    //                top = top.Slice(count, top.Length - count);
+    //                result.Add(read);
+    //                return result;
+    //            }
+    //            else
+    //            {
+    //                var read = top.Slice(0, top.Length);
+    //                count -= top.Length;
+    //                top = empty;
+    //                BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
+    //                result.Add(read);
+    //            }
+    //        }
+    //        return result;
+    //    }
+    //    public void Write(ReadOnlyMemory<byte> buffer)
+    //    {
+    //        data.Enqueue(buffer);
+    //    }
+    //    internal void NotifyClosed()
+    //    {
+    //        addingComplete = true;
+    //    }
+
+    //    #region IDisposable
+    //    public void Dispose()
+    //    {
+    //        Dispose(true);
+    //    }
+    //    protected virtual void Dispose(bool disposing)
+    //    {
+    //        if (disposing) NotifyClosed();
+    //        top = null;
+    //        data = null;
+    //        BufferUsed = null;
+    //    }
+    //    #endregion
+    //}
 }
 #endif

@@ -6,9 +6,9 @@ using RabbitMQ.Client.Impl;
 
 namespace RabbitMQ.Client
 {
-    internal class AsyncConsumerWorkService : ConsumerWorkService
+    internal class AsyncConsumerWorkService : ConsumerWorkService , IDisposable
     {
-        readonly ConcurrentDictionary<IModel, WorkPool> workPools = new ConcurrentDictionary<IModel, WorkPool>();
+        private ConcurrentDictionary<IModel, WorkPool> workPools = new ConcurrentDictionary<IModel, WorkPool>();
 
         public void Schedule<TWork>(ModelBase model, TWork work)
             where TWork : Work
@@ -46,8 +46,116 @@ namespace RabbitMQ.Client
             }
         }
 
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    foreach (var item in workPools.Values)
+                    {
+                        item.Dispose();
+                    }
+                }
+
+                workPools = null;
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~AsyncConsumerWorkService() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
+
     }
-    public class WorkPool
+    public class WorkPool : IDisposable
+    {
+        private BlockingCollection<Work> workQueue = new BlockingCollection<Work>();
+        private CancellationTokenSource tokenSource;
+        private ModelBase model;
+        private Task task;
+
+        public WorkPool(ModelBase model)
+        {
+            this.model = model;
+        }
+
+        public void Start()
+        {
+            tokenSource = new CancellationTokenSource();
+            task = Task.Run(Loop, tokenSource.Token);
+        }
+
+        public void Enqueue(Work work)
+        {
+            workQueue.Add(work);
+        }
+
+        async Task Loop()
+        {
+            foreach (var work in workQueue.GetConsumingEnumerable(tokenSource.Token))
+            {
+                await work.Execute(model).ConfigureAwait(false);
+            }
+        }
+
+        public Task Stop()
+        {
+            tokenSource.Cancel();
+            return task;
+        }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    workQueue?.Dispose();
+                    tokenSource?.Dispose();
+                }
+                workQueue=null;
+                task = null;
+                model = null;
+                disposedValue = true;
+            }
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~WorkPool() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
+    }
+    public class OldWorkPool
     {
         readonly ConcurrentQueue<Work> workQueue;
         readonly TimeSpan waitTime;
@@ -56,7 +164,7 @@ namespace RabbitMQ.Client
         TaskCompletionSource<bool> messageArrived;
         private Task task;
 
-        public WorkPool(ModelBase model)
+        public OldWorkPool(ModelBase model)
         {
             this.model = model;
             workQueue = new ConcurrentQueue<Work>();

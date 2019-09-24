@@ -18,7 +18,7 @@ namespace RabbitMQ.Client
         public event EventHandler Closed;
         private Socket sock;
         private NetworkStream baseStream;
-        public event EventHandler<ReadOnlyMemory<byte>> Receive;
+        public event EventHandler<ArraySegment<byte>> Receive;
         private readonly object _syncLock = new object();
         private AsyncCallback asyncCallback;
         private readonly HyperTcpClientSettings settings;
@@ -30,7 +30,7 @@ namespace RabbitMQ.Client
             sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
-            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 10);
+            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 20);
         }
 
         public virtual void BufferUsed(int size)

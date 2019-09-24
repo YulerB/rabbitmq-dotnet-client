@@ -240,13 +240,13 @@ namespace RabbitMQ.Client.Unit
 
         protected string DeclareNonDurableExchange(IModel m, string x)
         {
-            m.ExchangeDeclare(x, "fanout", false);
+            m.ExchangeDeclare(x, ExchangeType.Fanout, false);
             return x;
         }
 
         protected string DeclareNonDurableExchangeNoWait(IModel m, string x)
         {
-            m.ExchangeDeclareNoWait(x, "fanout", false, false, null);
+            m.ExchangeDeclareNoWait(x, ExchangeType.Fanout, false, false, null);
             return x;
         }
 

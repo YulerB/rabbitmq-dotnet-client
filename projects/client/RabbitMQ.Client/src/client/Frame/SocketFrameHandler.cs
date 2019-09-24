@@ -98,7 +98,7 @@ namespace RabbitMQ.Client.Impl
             m_stream.NotifyClosed();
         }
 
-        private void M_socket_Receive(object sender, ReadOnlyMemory<byte> e)
+        private void M_socket_Receive(object sender, ArraySegment<byte> e)
         {
             m_stream.Write(e);
         }

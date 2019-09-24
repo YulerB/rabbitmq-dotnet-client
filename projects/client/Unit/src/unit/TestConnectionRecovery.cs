@@ -434,9 +434,9 @@ namespace RabbitMQ.Client.Unit
             for (int i = 0; i < 3; i++)
             {
                 string x1 = "source-" + Guid.NewGuid();
-                Model.ExchangeDeclare(x1, "fanout", false, true, null);
+                Model.ExchangeDeclare(x1, ExchangeType.Fanout, false, true, null);
                 string x2 = "destination-" + Guid.NewGuid();
-                Model.ExchangeDeclare(x2, "fanout", false, false, null);
+                Model.ExchangeDeclare(x2, ExchangeType.Fanout, false, false, null);
                 Model.ExchangeBind(x2, x1, "");
                 Model.ExchangeDelete(x2);
             }
@@ -450,9 +450,9 @@ namespace RabbitMQ.Client.Unit
             for (int i = 0; i < 1000; i++)
             {
                 string x1 = "source-" + Guid.NewGuid();
-                Model.ExchangeDeclare(x1, "fanout", false, true, null);
+                Model.ExchangeDeclare(x1, ExchangeType.Fanout, false, true, null);
                 string x2 = "destination-" + Guid.NewGuid();
-                Model.ExchangeDeclare(x2, "fanout", false, false, null);
+                Model.ExchangeDeclare(x2, ExchangeType.Fanout, false, false, null);
                 Model.ExchangeBind(x2, x1, "");
                 Model.ExchangeUnbind(x2, x1, "");
                 Model.ExchangeDelete(x2);
@@ -467,7 +467,7 @@ namespace RabbitMQ.Client.Unit
             for (int i = 0; i < 1000; i++)
             {
                 string x = Guid.NewGuid().ToString();
-                Model.ExchangeDeclare(x, "fanout", false, true, null);
+                Model.ExchangeDeclare(x, ExchangeType.Fanout, false, true, null);
                 QueueDeclareOk q = Model.QueueDeclare();
                 Model.QueueBind(q, x, "");
                 Model.QueueDelete(q);
@@ -482,7 +482,7 @@ namespace RabbitMQ.Client.Unit
             for (int i = 0; i < 1000; i++)
             {
                 string x = Guid.NewGuid().ToString();
-                Model.ExchangeDeclare(x, "fanout", false, true, null);
+                Model.ExchangeDeclare(x, ExchangeType.Fanout, false, true, null);
                 QueueDeclareOk q = Model.QueueDeclare();
                 Model.QueueBind(q, x, "");
                 Model.QueueUnbind(q, x, "", null);
@@ -532,7 +532,7 @@ namespace RabbitMQ.Client.Unit
             string x1 = "amq.fanout";
             string x2 = GenerateExchangeName();
 
-            Model.ExchangeDeclare(x2, "fanout");
+            Model.ExchangeDeclare(x2, ExchangeType.Fanout);
             Model.ExchangeBind(x1, x2, "");
             Model.QueueBind(q, x1, "");
 
@@ -581,14 +581,14 @@ namespace RabbitMQ.Client.Unit
             {
                 ch.QueueDelete(q);
                 ch.ExchangeDelete(x);
-                ch.ExchangeDeclare(exchange: x, type: "fanout");
+                ch.ExchangeDeclare(exchange: x, type: ExchangeType.Fanout);
                 ch.QueueDeclare(queue: q, durable: false, exclusive: false, autoDelete: true, arguments: null);
                 ch.QueueBind(queue: q, exchange: x, routingKey: "");
                 RestartServerAndWaitForRecovery();
                 Assert.IsTrue(ch.IsOpen);
                 ch.ConfirmSelect();
                 ch.QueuePurge(q);
-                ch.ExchangeDeclare(exchange: x, type: "fanout");
+                ch.ExchangeDeclare(exchange: x, type: ExchangeType.Fanout);
                 ch.BasicPublish(exchange: x, routingKey: "", basicProperties: null, body: encoding.GetBytes("msg"));
                 WaitForConfirms(ch);
                 var ok = ch.QueueDeclare(queue: q, durable: false, exclusive: false, autoDelete: true, arguments: null);
@@ -606,7 +606,7 @@ namespace RabbitMQ.Client.Unit
             using (var ch = Conn.CreateModel())
             {
                 ch.ExchangeDelete(x);
-                ch.ExchangeDeclare(exchange: x, type: "fanout");
+                ch.ExchangeDeclare(exchange: x, type: ExchangeType.Fanout);
                 var q = ch.QueueDeclare(queue: "", durable: false, exclusive: false, autoDelete: true, arguments: null).QueueName;
                 string nameBefore = q;
                 string nameAfter = null;
@@ -624,7 +624,7 @@ namespace RabbitMQ.Client.Unit
                     Assert.IsTrue(ch.IsOpen);
                     Assert.AreNotEqual(nameBefore, nameAfter);
                     ch.ConfirmSelect();
-                    ch.ExchangeDeclare(exchange: x, type: "fanout");
+                    ch.ExchangeDeclare(exchange: x, type: ExchangeType.Fanout);
                     ch.BasicPublish(exchange: x, routingKey: "", basicProperties: null, body: encoding.GetBytes("msg"));
                     WaitForConfirms(ch);
                     var ok = ch.QueueDeclarePassive(nameAfter);
@@ -817,7 +817,7 @@ namespace RabbitMQ.Client.Unit
             string x1 = "amq.fanout";
             string x2 = GenerateExchangeName();
 
-            Model.ExchangeDeclare(x2, "fanout");
+            Model.ExchangeDeclare(x2, ExchangeType.Fanout);
             Model.ExchangeBind(x1, x2, "");
             Model.QueueBind(q, x1, "");
             Model.ExchangeUnbind(x1, x2, "", null);
@@ -843,7 +843,7 @@ namespace RabbitMQ.Client.Unit
         public void TestThatDeletedExchangesDontReappearOnRecovery()
         {
             string x = GenerateExchangeName();
-            Model.ExchangeDeclare(x, "fanout");
+            Model.ExchangeDeclare(x, ExchangeType.Fanout);
             Model.ExchangeDelete(x);
 
             try
@@ -867,7 +867,7 @@ namespace RabbitMQ.Client.Unit
             string x1 = "amq.fanout";
             string x2 = GenerateExchangeName();
 
-            Model.ExchangeDeclare(x2, "fanout");
+            Model.ExchangeDeclare(x2, ExchangeType.Fanout);
             Model.ExchangeBind(x1, x2, "");
             Model.QueueBind(q, x1, "");
             Model.QueueUnbind(q, x1, "", null);

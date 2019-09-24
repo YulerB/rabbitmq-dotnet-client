@@ -111,7 +111,7 @@ namespace RabbitMQ.Client.Unit
                 var q = m.QueueDeclare();
                 var bp = m.CreateBasicProperties();
                 var body = System.Text.Encoding.UTF8.GetBytes("async-hi");
-                m.BasicPublish("", q.QueueName, bp, body);
+                m.BasicPublish(string.Empty, q.QueueName, bp, body);
                 var consumer = new AsyncEventingBasicConsumer(m);
                 var are = new AutoResetEvent(false);
                 consumer.Received += async (o, a) =>
@@ -125,7 +125,7 @@ namespace RabbitMQ.Client.Unit
                 Assert.IsTrue(waitRes);
                 // unsubscribe and ensure no further deliveries
                 m.BasicCancel(tag);
-                m.BasicPublish("", q.QueueName, bp, body);
+                m.BasicPublish(string.Empty, q.QueueName, bp, body);
                 var waitResFalse = are.WaitOne(500);
                 Assert.IsFalse(waitResFalse);
             }
@@ -141,7 +141,7 @@ namespace RabbitMQ.Client.Unit
                 var q = m.QueueDeclare();
                 var bp = m.CreateBasicProperties();
                 var body = System.Text.Encoding.UTF8.GetBytes("async-hi");
-                m.BasicPublish("", q.QueueName, bp, body);
+                m.BasicPublish(string.Empty, q.QueueName, bp, body);
                 var consumer = new EventingBasicConsumer(m);
                 Assert.Throws<InvalidOperationException>(() => m.BasicConsume(q.QueueName, false, consumer));
             }

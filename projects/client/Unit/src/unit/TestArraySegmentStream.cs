@@ -26,13 +26,13 @@ namespace RabbitMQ.Client.Unit
             segments = stream.Read(2);
             Assert.AreEqual(2, segments[0].Length, "Test 3");
             Assert.AreEqual(buffer[1], segments[0].Span[0], "Test 4");
-            Assert.AreEqual(buffer[2], segments[0].Span[1], "Test 5");
+            Assert.AreEqual(buffer[2], segments[1].Span[1], "Test 5");
 
             segments = stream.Read(4);
             Assert.AreEqual(2, segments[0].Length, "Test 6");
-            Assert.AreEqual(2, segments[1].Length, "Test 7");
             Assert.AreEqual(buffer[3], segments[0].Span[0], "Test 8");
             Assert.AreEqual(buffer[4], segments[0].Span[1], "Test 9");
+            Assert.AreEqual(2, segments[1].Length, "Test 7");
             Assert.AreEqual(buffer[0], segments[1].Span[0], "Test 10");
             Assert.AreEqual(buffer[1], segments[1].Span[1], "Test 11");
         }

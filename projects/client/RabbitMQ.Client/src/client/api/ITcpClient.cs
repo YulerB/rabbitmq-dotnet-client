@@ -36,7 +36,7 @@ namespace RabbitMQ.Client
         Task ConnectAsync();
         void Write(ArraySegment<byte> data);
         void Write(IList<ArraySegment<byte>> data);
-        event EventHandler<ReadOnlyMemory<byte>> Receive;
+        event EventHandler<ArraySegment<byte>> Receive;
         event EventHandler Closed;
 
         void Close();

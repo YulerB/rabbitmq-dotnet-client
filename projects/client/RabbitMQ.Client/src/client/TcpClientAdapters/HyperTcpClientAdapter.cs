@@ -16,7 +16,7 @@ namespace RabbitMQ.Client
     {
         public event EventHandler Closed;
         private Socket sock;
-        public event EventHandler<ReadOnlyMemory<byte>> Receive;
+        public event EventHandler<ArraySegment<byte>> Receive;
         private readonly HyperTcpClientSettings settings;
         private StreamRingBuffer ringBuffer;
         private SocketAsyncEventArgs sEvent;
@@ -26,7 +26,7 @@ namespace RabbitMQ.Client
             sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
-            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 20);
+            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 30);
             sEvent = new SocketAsyncEventArgs { AcceptSocket = sock };
             sEvent.Completed += SEvent_Completed;
         }
@@ -75,14 +75,13 @@ namespace RabbitMQ.Client
 #endif
 
             var peek = ringBuffer.Peek();
+            sEvent.SetBuffer(peek.Array,peek.Offset,peek.Count);
 
-            sEvent.SetBuffer(
-                peek.Array,
-                peek.Offset,
-                peek.Count
-            );
-
-            ProcessReceive(sEvent);
+            await Task.Run(async () =>
+            {
+                ProcessReceive(sEvent);
+                await Task.FromResult(0);
+            }).ConfigureAwait(false);
         }
 
         private void SEvent_Completed(object sender, SocketAsyncEventArgs e)
