@@ -739,23 +739,22 @@ namespace RabbitMQ.Client.Framing
 
         public override void ReadPropertiesFrom(ArraySegmentSequence stream)
         {
-
             BasicPropertiesPresense flags = (BasicPropertiesPresense)stream.ReadUInt16();
 
             m_contentType_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_contentEncoding_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_headers_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_deliveryMode_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_priority_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_correlationId_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_replyTo_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_expiration_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_messageId_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_timestamp_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_type_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_userId_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_appId_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
-            m_clusterId_present = (flags & BasicPropertiesPresense.HasContentType) == BasicPropertiesPresense.HasContentType;
+            m_contentEncoding_present = (flags & BasicPropertiesPresense.HascontentEncoding) == BasicPropertiesPresense.HascontentEncoding;
+            m_headers_present = (flags & BasicPropertiesPresense.Hasheaders) == BasicPropertiesPresense.Hasheaders;
+            m_deliveryMode_present = (flags & BasicPropertiesPresense.HasdeliveryMode) == BasicPropertiesPresense.HasdeliveryMode;
+            m_priority_present = (flags & BasicPropertiesPresense.Haspriority) == BasicPropertiesPresense.Haspriority;
+            m_correlationId_present = (flags & BasicPropertiesPresense.HascorrelationId) == BasicPropertiesPresense.HascorrelationId;
+            m_replyTo_present = (flags & BasicPropertiesPresense.HasreplyTo) == BasicPropertiesPresense.HasreplyTo;
+            m_expiration_present = (flags & BasicPropertiesPresense.Hasexpiration) == BasicPropertiesPresense.Hasexpiration;
+            m_messageId_present = (flags & BasicPropertiesPresense.HasmessageId) == BasicPropertiesPresense.HasmessageId;
+            m_timestamp_present = (flags & BasicPropertiesPresense.Hastimestamp) == BasicPropertiesPresense.Hastimestamp;
+            m_type_present = (flags & BasicPropertiesPresense.Hastype) == BasicPropertiesPresense.Hastype;
+            m_userId_present = (flags & BasicPropertiesPresense.HasuserId) == BasicPropertiesPresense.HasuserId;
+            m_appId_present = (flags & BasicPropertiesPresense.HasappId) == BasicPropertiesPresense.HasappId;
+            m_clusterId_present = (flags & BasicPropertiesPresense.HasclusterId) == BasicPropertiesPresense.HasclusterId;
 
             if (m_contentType_present) { m_contentType = stream.ReadShortString(); }
             if (m_contentEncoding_present) { m_contentEncoding = stream.ReadShortString(); }
