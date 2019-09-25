@@ -41,6 +41,7 @@
 using NUnit.Framework;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
+using RabbitMQ.Client.Framing.Impl;
 using RabbitMQ.Client.MessagePatterns;
 using System;
 using System.Collections.Generic;
@@ -189,7 +190,7 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestConcurrentIterationAndNack()
         {
-            TestConcurrentIterationWithDrainer(s => s.Nack(false, false));
+            TestConcurrentIterationWithDrainer(s => s.Nack());
         }
 
         [Test]
@@ -201,7 +202,7 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestSubscriptionNack()
         {
-            TestSubscriptionAction(s => s.Nack(false, false));
+            TestSubscriptionAction(s => s.Nack());
         }
     }
 }

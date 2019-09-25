@@ -448,10 +448,9 @@ namespace RabbitMQ.Client.Impl
         }
 
         public void HandleBasicNack(ulong deliveryTag,
-            bool multiple,
-            bool requeue)
+            BasicNackFlags settings)
         {
-            m_delegate.HandleBasicNack(deliveryTag, multiple, requeue);
+            m_delegate.HandleBasicNack(deliveryTag, settings);
         }
 
         public void HandleBasicRecoverOk()
@@ -783,10 +782,9 @@ namespace RabbitMQ.Client.Impl
         }
 
         public void BasicNack(ulong deliveryTag,
-            bool multiple,
-            bool requeue)
+            BasicNackFlags settings)
         {
-            m_delegate.BasicNack(deliveryTag, multiple, requeue);
+            m_delegate.BasicNack(deliveryTag, settings);
         }
 
         public void BasicPublish(string exchange,

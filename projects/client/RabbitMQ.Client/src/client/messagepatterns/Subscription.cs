@@ -47,6 +47,7 @@ using System.Threading;
 
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
+using RabbitMQ.Client.Framing.Impl;
 
 namespace RabbitMQ.Client.MessagePatterns
 {
@@ -267,15 +268,20 @@ namespace RabbitMQ.Client.MessagePatterns
         ///null.</summary>
         public void Nack(bool requeue)
         {
-            Nack(LatestEvent, false, requeue);
+            Nack(LatestEvent, requeue ? BasicNackFlags.Requeue : BasicNackFlags.None);
         }
 
         ///<summary>If LatestEvent is non-null, passes it to
         ///Nack(BasicDeliverEventArgs, multiple, requeue). Causes LatestEvent to become
         ///null.</summary>
-        public void Nack(bool multiple, bool requeue)
+        public void Nack(BasicNackFlags settings)
         {
-            Nack(LatestEvent, multiple, requeue);
+            Nack(LatestEvent, settings);
+        }
+
+        public void Nack()
+        {
+            Nack(LatestEvent, BasicNackFlags.None);
         }
 
         ///<summary>If we are not in "autoAck" mode, calls
@@ -287,7 +293,7 @@ namespace RabbitMQ.Client.MessagePatterns
         ///Passing an event that did not originate with this Subscription's
         /// channel, will lead to unpredictable behaviour
         ///</remarks>
-        public void Nack(BasicDeliverEventArgs evt, bool multiple, bool requeue)
+        public void Nack(BasicDeliverEventArgs evt, BasicNackFlags settings)
         {
             if (evt == null)
             {
@@ -296,7 +302,7 @@ namespace RabbitMQ.Client.MessagePatterns
 
             if (!AutoAck && Model.IsOpen)
             {
-                Model.BasicNack(evt.DeliveryTag, multiple, requeue);
+                Model.BasicNack(evt.DeliveryTag, settings);
             }
 
             if (evt == LatestEvent)

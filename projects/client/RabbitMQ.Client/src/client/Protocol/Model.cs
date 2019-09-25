@@ -298,10 +298,9 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         public override void BasicNack(
           ulong @deliveryTag,
-          bool @multiple,
-          bool @requeue)
+          BasicNackFlags settings)
         {
-            ModelSend(new BasicNack(deliveryTag, multiple, requeue), null, null);
+            ModelSend(new BasicNack(deliveryTag, settings), null, null);
         }
         public override void BasicQos(
           uint @prefetchSize,
@@ -432,8 +431,7 @@ namespace RabbitMQ.Client.Framing.Impl
                         BasicNack __impl = (BasicNack)__method;
                         HandleBasicNack(
                           __impl.m_deliveryTag,
-                          __impl.m_multiple,
-                          __impl.m_requeue);
+                          __impl.m_settings);
                         return true;
                     }
                 case 3932271:

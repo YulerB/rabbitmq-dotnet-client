@@ -1121,7 +1121,7 @@ namespace RabbitMQ.Client.Unit
 
             public override void PostHandleDelivery(ulong deliveryTag)
             {
-                Model.BasicNack(deliveryTag, false, false);
+                Model.BasicNack(deliveryTag, BasicNackFlags.None);
             }
         }
 

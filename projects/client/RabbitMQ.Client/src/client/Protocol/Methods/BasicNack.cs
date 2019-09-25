@@ -53,22 +53,22 @@ namespace RabbitMQ.Client.Framing.Impl
         public const ushort MethodId = 120;
 
         public ulong m_deliveryTag;
-        public bool m_multiple;
-        public bool m_requeue;
+        public BasicNackFlags m_settings;
+        //public bool m_multiple;
+        //public bool m_requeue;
 
         ulong IBasicNack.DeliveryTag { get { return m_deliveryTag; } }
-        bool IBasicNack.Multiple { get { return m_multiple; } }
-        bool IBasicNack.Requeue { get { return m_requeue; } }
+        //bool IBasicNack.Multiple { get { return m_multiple; } }
+        //bool IBasicNack.Requeue { get { return m_requeue; } }
+        BasicNackFlags IBasicNack.Settings { get {return m_settings; } }
 
         public BasicNack() { }
         public BasicNack(
           ulong initDeliveryTag,
-          bool initMultiple,
-          bool initRequeue)
+          BasicNackFlags settings)
         {
             m_deliveryTag = initDeliveryTag;
-            m_multiple = initMultiple;
-            m_requeue = initRequeue;
+            m_settings = settings;
         }
 
         public override ushort ProtocolClassId { get { return 60; } }
@@ -79,32 +79,20 @@ namespace RabbitMQ.Client.Framing.Impl
         public override void ReadArgumentsFrom(ArraySegmentSequence reader)
         {
             m_deliveryTag = reader.ReadUInt64();
-
-            BasicNackFlags flags = (BasicNackFlags) reader.ReadByte();
-
-            m_multiple = (flags & BasicNackFlags.Multiple) == BasicNackFlags.Multiple;
-            m_requeue = (flags & BasicNackFlags.Requeue) == BasicNackFlags.Requeue;
+            m_settings= (BasicNackFlags) reader.ReadByte();
         }
 
         public override void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt64(m_deliveryTag);
-
-            BasicNackFlags flags = BasicNackFlags.None;
-            if (m_multiple) flags |= BasicNackFlags.Multiple;
-            if (m_requeue) flags |= BasicNackFlags.Requeue;
-
-            writer.WriteByte((byte)flags);
-            //writer.WriteBit(m_multiple);
-            //writer.WriteBit(m_requeue);
+            writer.WriteByte((byte)m_settings);
         }
 
         public override void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             sb.Append(m_deliveryTag); sb.Append(",");
-            sb.Append(m_multiple); sb.Append(",");
-            sb.Append(m_requeue);
+            sb.Append(m_settings); 
             sb.Append(")");
         }
     }

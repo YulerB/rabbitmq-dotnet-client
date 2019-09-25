@@ -115,14 +115,12 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public override void BasicNack(ulong deliveryTag,
-            bool multiple,
-            bool requeue)
+        public override void BasicNack(ulong deliveryTag, BasicNackFlags settings)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
             if (realTag > 0 && realTag <= deliveryTag)
             {
-                base.BasicNack(realTag, multiple, requeue);
+                base.BasicNack(realTag, settings);
             }
         }
 

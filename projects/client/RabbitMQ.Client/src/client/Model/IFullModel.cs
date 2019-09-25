@@ -112,9 +112,7 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Handle incoming Basic.Nack methods. Signals a
         ///BasicNackEvent.</summary>
-        void HandleBasicNack(ulong deliveryTag,
-            bool multiple,
-            bool requeue);
+        void HandleBasicNack(ulong deliveryTag,BasicNackFlags settings);
 
         ///<summary>Handle incoming Basic.RecoverOk methods
         ///received in reply to Basic.Recover.

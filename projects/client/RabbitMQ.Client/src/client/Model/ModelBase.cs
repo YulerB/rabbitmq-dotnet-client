@@ -543,7 +543,7 @@ namespace RabbitMQ.Client.Impl
                 }
             }
 
-            HandleAckNack(args.DeliveryTag, args.Multiple, true);
+            HandleAckNack(args.DeliveryTag, (args.Settings & BasicNackFlags.Multiple) == BasicNackFlags.Multiple, true);
         }
 
         public virtual void OnBasicRecoverOk(EventArgs args)
@@ -882,14 +882,12 @@ namespace RabbitMQ.Client.Impl
         }
 
         public void HandleBasicNack(ulong deliveryTag,
-            bool multiple,
-            bool requeue)
+            BasicNackFlags settings)
         {
             OnBasicNack(new BasicNackEventArgs
             {
                 DeliveryTag = deliveryTag,
-                Multiple = multiple,
-                Requeue = requeue
+                Settings = settings
             });
         }
 
@@ -1221,9 +1219,7 @@ namespace RabbitMQ.Client.Impl
             return k.m_result;
         }
 
-        public abstract void BasicNack(ulong deliveryTag,
-            bool multiple,
-            bool requeue);
+        public abstract void BasicNack(ulong deliveryTag,BasicNackFlags settings);
 
         internal void AllocatatePublishSeqNos(int count)
         {

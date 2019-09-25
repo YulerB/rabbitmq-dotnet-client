@@ -38,6 +38,7 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using RabbitMQ.Client.Framing.Impl;
 using System;
 
 namespace RabbitMQ.Client.Events
@@ -53,10 +54,6 @@ namespace RabbitMQ.Client.Events
 
         ///<summary>Whether this nack applies to one message or
         ///multiple messages.</summary>
-        public bool Multiple { get; set; }
-
-        ///<summary>Ignore</summary>
-        ///<remarks>Clients should ignore this field.</remarks>
-        public bool Requeue { get; set; }
+        public BasicNackFlags Settings { get; set; }
     }
 }
