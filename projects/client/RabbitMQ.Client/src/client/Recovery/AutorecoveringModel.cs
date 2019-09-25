@@ -549,18 +549,12 @@ namespace RabbitMQ.Client.Impl
 
         public void _Private_BasicConsume(string queue,
             string consumerTag,
-            bool noLocal,
-            bool autoAck,
-            bool exclusive,
-            bool nowait,
+            BasicConsumeFlags settings,
             IDictionary<string, object> arguments)
         {
             m_delegate._Private_BasicConsume(queue,
                 consumerTag,
-                noLocal,
-                autoAck,
-                exclusive,
-                nowait,
+                settings,
                 arguments);
         }
 
@@ -767,20 +761,16 @@ namespace RabbitMQ.Client.Impl
 
         public string BasicConsume(
             string queue,
-            bool autoAck,
             string consumerTag,
-            bool noLocal,
-            bool exclusive,
+            BasicConsumeFlags settings,
             IDictionary<string, object> arguments,
             IBasicConsumer consumer)
         {
-            var result = m_delegate.BasicConsume(queue, autoAck, consumerTag, noLocal,
-                exclusive, arguments, consumer);
+            var result = m_delegate.BasicConsume(queue, consumerTag, settings, arguments, consumer);
             RecordedConsumer rc = new RecordedConsumer(this, queue).
                 WithConsumerTag(result).
                 WithConsumer(consumer).
-                WithExclusive(exclusive).
-                WithAutoAck(autoAck).
+                WithSettings(settings).
                 WithArguments(arguments);
             m_connection.RecordConsumer(result, rc);
             return result;

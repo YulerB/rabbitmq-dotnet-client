@@ -41,6 +41,7 @@
 using System;
 using System.Collections.Generic;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Framing.Impl;
 
 namespace RabbitMQ.Client.Impl
 {
@@ -55,13 +56,13 @@ namespace RabbitMQ.Client.Impl
         public bool AutoAck { get; set; }
         public IBasicConsumer Consumer { get; set; }
         public string ConsumerTag { get; set; }
-        public bool Exclusive { get; set; }
+        public BasicConsumeFlags Settings { get; set; }
         public string Queue { get; set; }
 
         public string Recover()
         {
-            ConsumerTag = ModelDelegate.BasicConsume(Queue, AutoAck,
-                ConsumerTag, false, Exclusive,
+            ConsumerTag = ModelDelegate.BasicConsume(Queue,
+                ConsumerTag, Settings,
                 Arguments, Consumer);
 
             return ConsumerTag;
@@ -73,9 +74,9 @@ namespace RabbitMQ.Client.Impl
             return this;
         }
 
-        public RecordedConsumer WithAutoAck(bool value)
+        public RecordedConsumer WithSettings(BasicConsumeFlags value)
         {
-            AutoAck = value;
+            Settings = value;
             return this;
         }
 
@@ -91,11 +92,7 @@ namespace RabbitMQ.Client.Impl
             return this;
         }
 
-        public RecordedConsumer WithExclusive(bool value)
-        {
-            Exclusive = value;
-            return this;
-        }
+
 
         public RecordedConsumer WithQueue(string value)
         {

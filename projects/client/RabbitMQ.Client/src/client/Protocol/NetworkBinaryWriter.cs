@@ -142,106 +142,52 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteInt16(this FrameBuilder output, short i)
         {
-            var bytes = BitConverter.GetBytes(i);
-            output.Write(
-                new byte[2]{
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                2);
+            var bytes = new byte[2];
+            BinaryPrimitives.WriteInt16BigEndian(bytes, i);
+            output.Write(bytes,0,2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteUInt16(this FrameBuilder output, ushort i)
         {
-            //var data = new byte[2];
-            //BinaryPrimitives.TryWriteUInt16BigEndian(data, i);
-            //stream.Write(data, 0, 2);
-
-            var bytes = BitConverter.GetBytes(i);
-            output.Write(
-                new byte[2]{
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                2);
+            var bytes = new byte[2];
+            BinaryPrimitives.WriteUInt16BigEndian(bytes, i);
+            output.Write(bytes, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteInt32(this FrameBuilder output, int i)
         {
-            var bytes = BitConverter.GetBytes(i);
-            output.Write(
-                new byte[4]{
-                    bytes[3],
-                    bytes[2],
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                4);
+            var bytes = new byte[4];
+            BinaryPrimitives.WriteInt32BigEndian(bytes, i);
+            output.Write(bytes, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteUInt32(this FrameBuilder output, uint i)
         {
-            //var bts = new byte[4];
-            //BinaryPrimitives.TryWriteUInt32BigEndian(bts, i);
-            //output.Write(bts, 0, 4);
-            var bytes = BitConverter.GetBytes(i);
-            output.Write(
-                new byte[4]{
-                    bytes[3],
-                    bytes[2],
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                4);
+            var bytes = new byte[4];
+            BinaryPrimitives.WriteUInt32BigEndian(bytes, i);
+            output.Write(bytes, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteInt64(this FrameBuilder output, long i)
         {
-            var bytes = BitConverter.GetBytes(i);
-            output.Write(
-                new byte[8]{
-                    bytes[7],
-                    bytes[6],
-                    bytes[5],
-                    bytes[4],
-                    bytes[3],
-                    bytes[2],
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                8);
+            var bytes = new byte[8];
+            BinaryPrimitives.WriteInt64BigEndian(bytes, i);
+            output.Write(bytes, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteUInt64(this FrameBuilder output, ulong i)
         {
-            var bytes = BitConverter.GetBytes(i);
-            output.Write(
-                new byte[8]{
-                    bytes[7],
-                    bytes[6],
-                    bytes[5],
-                    bytes[4],
-                    bytes[3],
-                    bytes[2],
-                    bytes[1],
-                    bytes[0]
-                },
-                0,
-                8);
+            var bytes = new byte[8];
+            BinaryPrimitives.WriteUInt64BigEndian(bytes, i);
+            output.Write(bytes, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteShortstr(this FrameBuilder output, string val)
+        public static void WriteShortString(this FrameBuilder output, string val)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             if (bytes.Length > 255)
             {
-                throw new WireFormattingException("Short string too long; " +
-                                                  "UTF-8 encoded length=" + bytes.Length + ", max=255");
+                throw new WireFormattingException($"Short string too long; UTF-8 encoded length={bytes.Length}, max=255");
             }
             output.WriteByte((byte)bytes.Length);
             output.Write(bytes);
@@ -315,7 +261,7 @@ namespace RabbitMQ.Util
             var stream1 = new FrameBuilder();
             foreach (var entry in val)
             {
-                stream1.WriteShortstr(entry.Key);
+                stream1.WriteShortString(entry.Key);
                 stream1.WriteFieldValue(entry.Value);
             }
             written = Convert.ToUInt32(stream1.Length);
@@ -326,7 +272,7 @@ namespace RabbitMQ.Util
             var stream1 = new FrameBuilder();
             foreach (var entry in val)
             {
-                stream1.WriteShortstr(entry.Key);
+                stream1.WriteShortString(entry.Key);
                 stream1.WriteFieldValue(entry.Value);
             }
             written = Convert.ToUInt32(stream1.Length);

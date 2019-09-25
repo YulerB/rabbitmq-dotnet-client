@@ -24,6 +24,16 @@ namespace RabbitMQ.Client
             var pos = position;
             return new ArraySegment<byte>(bigBuffer, pos, Math.Min(available, capacity - pos));
         }
+        public void Fill(Action<int, int> setBuffer)
+        {
+            var pos = position;
+            setBuffer(pos, Math.Min(available, capacity - pos));
+        }
+        public void InitialFill(Action<byte[], int, int> setBuffer)
+        {
+            var pos = position;
+            setBuffer(bigBuffer, pos, Math.Min(available, capacity - pos));
+        }
 
         public ArraySegment<byte> Take(int usedSize)
         {

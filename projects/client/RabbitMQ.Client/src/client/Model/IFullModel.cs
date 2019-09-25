@@ -41,6 +41,7 @@
 using System;
 using System.Collections.Generic;
 using RabbitMQ.Client.Apigen.Attributes;
+using RabbitMQ.Client.Framing.Impl;
 
 namespace RabbitMQ.Client.Impl
 {
@@ -203,10 +204,7 @@ namespace RabbitMQ.Client.Impl
         [AmqpMethodMapping(null, "basic", "consume")]
         void _Private_BasicConsume(string queue,
             string consumerTag,
-            bool noLocal,
-            [AmqpFieldMapping(null, "noAck")] bool autoAck,
-            bool exclusive,
-            bool nowait,
+            BasicConsumeFlags settings,
             IDictionary<string, object> arguments);
 
         ///<summary>Used to send a Basic.Get. Basic.Get is a special

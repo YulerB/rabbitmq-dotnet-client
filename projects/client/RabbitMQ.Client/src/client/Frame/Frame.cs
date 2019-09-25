@@ -143,7 +143,7 @@ namespace RabbitMQ.Client.Impl
             writer.WriteByte((byte)Type);
             writer.WriteUInt16(Channel);
             WritePayload(writer);
-            writer.WriteByte((byte)Constants.FrameEnd);
+            writer.WriteByte(Constants.FrameEnd);
         }
 
         public abstract void WritePayload(FrameBuilder writer);

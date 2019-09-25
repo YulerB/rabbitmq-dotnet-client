@@ -73,38 +73,36 @@ namespace RabbitMQ.Client
 #else
             sock.Connect(ep, settings.EndPoint.Port);
 #endif
+        
 
-            var peek = ringBuffer.Peek();
-            sEvent.SetBuffer(peek.Array,peek.Offset,peek.Count);
+            ringBuffer.InitialFill(sEvent.SetBuffer);
 
             await Task.Run(async () =>
             {
-                ProcessReceive(sEvent);
+                SEvent_Completed(this, sEvent);
                 await Task.FromResult(0);
             }).ConfigureAwait(false);
         }
 
         private void SEvent_Completed(object sender, SocketAsyncEventArgs e)
         {
-            ProcessReceive(e);
-        }
-        private void ProcessReceive(SocketAsyncEventArgs e)
-        {
-            do
+            try
             {
-                if (e.BytesTransferred > 0)
-                    this.Receive?.Invoke(this, ringBuffer.Take(e.BytesTransferred));
-
-                if (e.SocketError != SocketError.Success)
+                do
                 {
-                    Close();
-                    break;
-                }
-
-                var peek = ringBuffer.Peek();
-                e.SetBuffer(peek.Offset, peek.Count);
-            } while (!sock.ReceiveAsync(e));
-
+                    if (e.BytesTransferred > 0) this.Receive?.Invoke(this, ringBuffer.Take(e.BytesTransferred));
+                    ringBuffer.Fill(e.SetBuffer);
+                } while (e.SocketError == SocketError.Success && !sock.ReceiveAsync(e));
+                if (e.SocketError != SocketError.Success) Close();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Ignore, we need to stop reading when the socket is disposed.
+            }
+            catch (SocketException)
+            {
+                // Ignore, we need to stop reading when the socket is disposed.
+            }
         }
 
         public void Write(ArraySegment<byte> data)
