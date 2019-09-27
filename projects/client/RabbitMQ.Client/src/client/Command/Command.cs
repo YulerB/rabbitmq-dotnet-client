@@ -134,7 +134,7 @@ namespace RabbitMQ.Client.Impl
                 {
                     var remaining = body.Length - offset;
                     var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
-                    frames.Add(new BodySegmentOutboundFrame(channelNumber, body, offset, count));
+                    frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(body, offset, count)));
                 }
             }
 
@@ -160,7 +160,7 @@ namespace RabbitMQ.Client.Impl
                     {
                         var remaining = body.Length - offset;
                         var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
-                        frames.Add(new BodySegmentOutboundFrame(channelNumber, body, offset, count));
+                        frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(body, offset, count)));
                     }
                 }
             }

@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Impl
         private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private int originalSize = 0;
-        private readonly List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
+        private readonly List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>(25);
 
         #region Constructor
         public ArraySegmentSequence(byte[] buffer)

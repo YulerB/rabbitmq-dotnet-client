@@ -312,10 +312,7 @@ namespace RabbitMQ.Util
             {
                 var content = GetTableContent(val, out uint written1);
                 output.WriteUInt32(written1);
-                foreach (var item in content)
-                {
-                    output.WriteSegment(item);
-                }
+                output.WriteSegments(content, written1);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -329,10 +326,7 @@ namespace RabbitMQ.Util
             {
                 var content = GetTableContent(val, out uint written1);
                 output.WriteUInt32(written1);
-                foreach (var item in content)
-                {
-                    output.WriteSegment(item);
-                }
+                output.WriteSegments(content, written1);
             }
         }
 
@@ -380,10 +374,7 @@ namespace RabbitMQ.Util
             {
                 var content = GetArrayContent(val, out uint written1);
                 output.WriteUInt32(written1); // length of table - will be backpatched
-                foreach (var item in content)
-                {
-                    output.WriteSegment(item);
-                }
+                output.WriteSegments(content, written1);
             }
         }
 
@@ -509,12 +500,6 @@ namespace RabbitMQ.Util
             {
                 throw new WireFormattingException("Value cannot appear as table value", value);
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteSegment(this FrameBuilder output, ArraySegment<byte> segment)
-        {
-            output.Write(segment);
         }
     }
 }

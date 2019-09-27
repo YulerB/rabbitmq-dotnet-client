@@ -71,29 +71,22 @@ namespace RabbitMQ.Client.Impl
             nw.WriteUInt16(header.ProtocolClassId);
             header.WriteTo(nw, (ulong)bodyLength);
             writer.WriteUInt32((uint)nw.Length);
-            foreach (var item in nw.ToData())
-            {
-                writer.WriteSegment(item);
-            }
+            writer.WriteSegments(nw.ToData(), (uint) nw.Length);
         }
     }
     public class BodySegmentOutboundFrame : OutboundFrame
     {
-        private readonly byte[] body;
-        private readonly int offset;
-        private readonly int count;
+        private readonly ArraySegment<byte> data;
 
-        public BodySegmentOutboundFrame(ushort channel, byte[] body, int offset, int count) : base(FrameType.FrameBody, channel)
+        public BodySegmentOutboundFrame(ushort channel,ArraySegment<byte> data) : base(FrameType.FrameBody, channel)
         {
-            this.body = body;
-            this.offset = offset;
-            this.count = count;
+            this.data = data;
         }
 
         public override void WritePayload(FrameBuilder writer)
         {
-            writer.WriteUInt32((uint)count);
-            writer.Write(body, offset, count);
+            writer.WriteUInt32((uint)data.Count);
+            writer.Write(data);
         }
     }
 
@@ -113,10 +106,7 @@ namespace RabbitMQ.Client.Impl
             nw.WriteUInt16(method.ProtocolMethodId);
             method.WriteArgumentsTo(nw);
             writer.WriteUInt32((uint)nw.Length);
-            foreach (var item in nw.ToData())
-            {
-                writer.WriteSegment(item);
-            }
+            writer.WriteSegments(nw.ToData(), (uint)nw.Length);
         }
     }
 
@@ -157,10 +147,7 @@ namespace RabbitMQ.Client.Impl
             this.Header = header;
             this.TotalBodyBytes = totalBodyBytes;
         }
-
-
-
-
+        
         public IMethod Method
         {
             get;
