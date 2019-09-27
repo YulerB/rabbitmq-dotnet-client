@@ -861,7 +861,7 @@ namespace RabbitMQ.Client.Impl
             m_delegate.ConfirmSelect();
         }
 
-        public IBasicProperties CreateBasicProperties()
+        public BasicProperties CreateBasicProperties()
         {
             return m_delegate.CreateBasicProperties();
         }

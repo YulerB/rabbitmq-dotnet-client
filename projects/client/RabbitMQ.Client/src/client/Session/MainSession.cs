@@ -84,7 +84,7 @@ namespace RabbitMQ.Client.Impl
 
             if (!m_closeServerInitiated && (frame.IsMethod()))
             {
-                //MethodBase method = Connection.Protocol.DecodeMethodFrom(frame.GetReader());
+                //IMethod method = Connection.Protocol.DecodeMethodFrom(frame.GetReader());
                 if ((frame.Method.ProtocolClassId == m_closeClassId)
                     && (frame.Method.ProtocolMethodId == m_closeMethodId))
                 {
@@ -136,7 +136,7 @@ namespace RabbitMQ.Client.Impl
 
             // Allow always for sending close ok
             // Or if application initiated, allow also for sending close
-            MethodBase method = cmd.Method;
+            IMethod method = cmd.Method;
             if (((method.ProtocolClassId == m_closeOkClassId)
                  && (method.ProtocolMethodId == m_closeOkMethodId))
                 || (!m_closeServerInitiated && (

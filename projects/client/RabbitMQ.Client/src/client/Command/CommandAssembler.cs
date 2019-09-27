@@ -59,8 +59,8 @@ namespace RabbitMQ.Client.Impl
     {
         private const int MaxArrayOfBytesSize = 2_147_483_591;
         
-        public MethodBase m_method;
-        public ContentHeaderBase m_header;
+        public IMethod m_method;
+        public RabbitMQ.Client.Impl.BasicProperties m_header;
         public MemoryStream m_bodyStream;
         public ulong m_remainingBodyBytes;
         public AssemblyState m_state;

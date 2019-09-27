@@ -56,10 +56,10 @@ namespace RabbitMQ.Client.Impl
 {
     public class HeaderOutboundFrame : OutboundFrame
     {
-        private readonly ContentHeaderBase header;
+        private readonly RabbitMQ.Client.Impl.BasicProperties header;
         private readonly int bodyLength;
 
-        public HeaderOutboundFrame(ushort channel, ContentHeaderBase header, int bodyLength) : base(FrameType.FrameHeader, channel)
+        public HeaderOutboundFrame(ushort channel, RabbitMQ.Client.Impl.BasicProperties header, int bodyLength) : base(FrameType.FrameHeader, channel)
         {
             this.header = header;
             this.bodyLength = bodyLength;
@@ -99,9 +99,9 @@ namespace RabbitMQ.Client.Impl
 
     public class MethodOutboundFrame : OutboundFrame
     {
-        private readonly MethodBase method;
+        private readonly IMethod method;
 
-        public MethodOutboundFrame(ushort channel, MethodBase method) : base(FrameType.FrameMethod, channel)
+        public MethodOutboundFrame(ushort channel, IMethod method) : base(FrameType.FrameMethod, channel)
         {
             this.method = method;
         }
@@ -151,7 +151,7 @@ namespace RabbitMQ.Client.Impl
 
     public class InboundFrame : Frame
     {
-        internal InboundFrame(FrameType type, ushort channel, byte[] payload, MethodBase method, ContentHeaderBase header, ulong totalBodyBytes) : base(type, channel, payload)
+        internal InboundFrame(FrameType type, ushort channel, byte[] payload, IMethod method, RabbitMQ.Client.Impl.BasicProperties header, ulong totalBodyBytes) : base(type, channel, payload)
         {
             this.Method = method;
             this.Header = header;
@@ -161,12 +161,12 @@ namespace RabbitMQ.Client.Impl
 
 
 
-        public MethodBase Method
+        public IMethod Method
         {
             get;
             private set;
         }
-        public ContentHeaderBase Header
+        public RabbitMQ.Client.Impl.BasicProperties Header
         {
             get;
             private set;
@@ -251,9 +251,9 @@ namespace RabbitMQ.Client.Impl
             ushort channel = reader.ReadUInt16();
             uint payloadSize = reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
 
-            ContentHeaderBase m_content = null;
+            RabbitMQ.Client.Impl.BasicProperties m_content = null;
             byte[] payload = new byte[] { };
-            MethodBase m_method = null;
+            IMethod m_method = null;
             ulong totalBodyBytes = 0;
 
             if (type == (int)FrameType.FrameMethod)

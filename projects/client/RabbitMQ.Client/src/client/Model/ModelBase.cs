@@ -56,7 +56,7 @@ using Trace = System.Diagnostics.Debug;
 
 namespace RabbitMQ.Client.Impl
 {
-    public abstract class ModelBase : IFullModel, IRecoverable
+    public abstract partial class ModelBase : IFullModel, IRecoverable
     {
         public readonly IDictionary<string, IBasicConsumer> m_consumers = new Dictionary<string, IBasicConsumer>();
 
@@ -463,7 +463,7 @@ namespace RabbitMQ.Client.Impl
                 m_continuationQueue.Next().HandleCommand(cmd);
         }
 
-        public MethodBase ModelRpc(MethodBase method, ContentHeaderBase header, byte[] body)
+        public IMethod ModelRpc(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
         {
             var k = new SimpleBlockingRpcContinuation();
             lock(_rpcLock)
@@ -472,7 +472,8 @@ namespace RabbitMQ.Client.Impl
                 return k.GetReply(this.ContinuationTimeout).Method;
             }
         }
-        public MethodBase ModelRpcX<T>(T method, ContentHeaderBase header, byte[] body) where T: MethodBase
+
+        public IMethod ModelRpcX<T>(T method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body) where T: IMethod
         {
             var k = new SimpleBlockingRpcContinuation();
             lock (_rpcLock)
@@ -483,7 +484,7 @@ namespace RabbitMQ.Client.Impl
         }
 
 
-        public void ModelSend(MethodBase method, ContentHeaderBase header, byte[] body)
+        public void ModelSend(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
         {
             if (method.HasContent)
             {
@@ -1311,7 +1312,7 @@ namespace RabbitMQ.Client.Impl
 
         ///////////////////////////////////////////////////////////////////////////
 
-        public abstract IBasicProperties CreateBasicProperties();
+        public abstract RabbitMQ.Client.Impl.BasicProperties CreateBasicProperties();
         public IBasicPublishBatch CreateBasicPublishBatch()
         {
             return new BasicPublishBatch(this);
@@ -1583,43 +1584,6 @@ namespace RabbitMQ.Client.Impl
                 k.GetReply(this.ContinuationTimeout);
             }
             return k.m_result;
-        }
-
-
-        public class BasicConsumerRpcContinuation : SimpleBlockingRpcContinuation
-        {
-            public BasicConsumerRpcContinuation(string consumerTag)
-            {
-                this.ConsumerTag = consumerTag;
-            }
-            public BasicConsumerRpcContinuation(IBasicConsumer consumer)
-            {
-                this.Consumer = consumer;
-            }
-            public IBasicConsumer Consumer { get; set; }
-            public string ConsumerTag { get; set; }
-        }
-
-        public class BasicGetRpcContinuation : SimpleBlockingRpcContinuation
-        {
-            public BasicGetResult m_result;
-        }
-
-        public class ConnectionOpenContinuation : SimpleBlockingRpcContinuation
-        {
-            public string m_host;
-            public string m_knownHosts;
-            public bool m_redirect;
-        }
-
-        public class ConnectionStartRpcContinuation : SimpleBlockingRpcContinuation
-        {
-            public ConnectionSecureOrTune m_result;
-        }
-
-        public class QueueDeclareRpcContinuation : SimpleBlockingRpcContinuation
-        {
-            public QueueDeclareOk m_result;
         }
     }
 }

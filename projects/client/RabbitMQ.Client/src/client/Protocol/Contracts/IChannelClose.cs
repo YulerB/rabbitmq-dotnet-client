@@ -49,7 +49,5 @@ namespace RabbitMQ.Client.Framing
     {
         ushort ReplyCode { get; }
         string ReplyText { get; }
-        ushort ClassId { get; }
-        ushort MethodId { get; }
     }
 }

@@ -64,7 +64,7 @@ namespace RabbitMQ.Client.Impl
         {
             if (frame.IsMethod())
             {
-                //MethodBase method = Connection.Protocol.DecodeMethodFrom(frame.GetReader());
+                //IMethod method = Connection.Protocol.DecodeMethodFrom(frame.GetReader());
                 if ((frame.Method.ProtocolClassId == ChannelCloseOk.ClassId)
                     && (frame.Method.ProtocolMethodId == ChannelCloseOk.MethodId))
                 {

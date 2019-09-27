@@ -52,14 +52,7 @@ namespace RabbitMQ.Client.Framing
         ushort Reserved1 { get; }
         string Queue { get; }
         string ConsumerTag { get; }
-        //bool NoLocal { get; }
-        //bool NoAck { get; }
-        //bool Exclusive { get; }
-        //bool Nowait { get; }
-        BasicConsumeFlags Settings
-        {
-            get;
-        }
+        BasicConsumeFlags Settings{get;}
         System.Collections.Generic.IDictionary<string, object> Arguments { get; }
     }
 }

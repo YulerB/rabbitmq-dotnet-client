@@ -54,11 +54,11 @@ namespace RabbitMQ.Client.Impl
             this.model = model;
         }
 
-        public void Add(string exchange, string routingKey, bool mandatory, IBasicProperties basicProperties, byte[] body)
+        public void Add(string exchange, string routingKey, bool mandatory, RabbitMQ.Client.Impl.BasicProperties basicProperties, byte[] body)
         {
-            var bp = basicProperties == null ? model.CreateBasicProperties() : basicProperties;
+            var bp = basicProperties ?? model.CreateBasicProperties();
             var method = new BasicPublish(0, exchange,routingKey,mandatory, false);
-            commands.Add(new Command(method, (ContentHeaderBase)bp, body));
+            commands.Add(new Command(method, bp, body));
         }
 
         public void Publish()

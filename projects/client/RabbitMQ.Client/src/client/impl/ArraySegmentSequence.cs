@@ -49,12 +49,14 @@ namespace RabbitMQ.Client.Impl
 {
     public class ArraySegmentSequence : IDisposable
     {
+        public event EventHandler<BufferUsedEventArgs> BufferUsed;
+
         private bool addingComplete=false;
         private ConcurrentQueue<ReadOnlyMemory<byte>> data = new ConcurrentQueue<ReadOnlyMemory<byte>>();
-        public event EventHandler<BufferUsedEventArgs> BufferUsed;
         private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private int originalSize = 0;
+        private readonly List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
 
         #region Constructor
         public ArraySegmentSequence(byte[] buffer)
@@ -74,8 +76,7 @@ namespace RabbitMQ.Client.Impl
 
         public List<ReadOnlyMemory<byte>> ReadNotExpecting(int count)
         {
-            List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
-
+            result.Clear();
             while (count > 0)
             {
                 if (top.Length == 0)
@@ -111,8 +112,7 @@ namespace RabbitMQ.Client.Impl
         }
         public List<ReadOnlyMemory<byte>> Read(int count)
         {
-            List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>();
-
+            result.Clear();
             while (count > 0)
             {
                 if (top.Length == 0)

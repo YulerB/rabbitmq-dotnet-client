@@ -63,11 +63,11 @@ namespace RabbitMQ.Client.Impl
             CheckEmptyFrameSize();
         }
 
-        public Command(MethodBase method) : this(method, null, null)
+        public Command(IMethod method) : this(method, null, null)
         {
         }
 
-        public Command(MethodBase method, ContentHeaderBase header, byte[] body)
+        public Command(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
         {
             Method = method;
             Header = header;
@@ -76,9 +76,9 @@ namespace RabbitMQ.Client.Impl
 
         public byte[] Body { get; private set; }
 
-        public ContentHeaderBase Header { get; private set; }
+        public RabbitMQ.Client.Impl.BasicProperties Header { get; private set; }
 
-        public MethodBase Method { get; private set; }
+        public IMethod Method { get; private set; }
 
         public static void CheckEmptyFrameSize()
         {
