@@ -55,43 +55,27 @@ namespace RabbitMQ.Client.Framing.Impl
         private ushort m_reserved1;
         private string m_exchange;
         private string m_type;
-        private bool m_passive;
-        private bool m_durable;
-        private bool m_autoDelete;
-        private bool m_internal;
-        private bool m_nowait;
         private System.Collections.Generic.IDictionary<string, object> m_arguments;
+        private ExchangeDeclareFlags flag;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Exchange { get { return m_exchange; } }
         public string Type { get { return m_type; } }
-        public bool Passive { get { return m_passive; } }
-        public bool Durable { get { return m_durable; } }
-        public bool AutoDelete { get { return m_autoDelete; } }
-        public bool Internal { get { return m_internal; } }
-        public bool Nowait { get { return m_nowait; } }
         public System.Collections.Generic.IDictionary<string, object> Arguments { get { return m_arguments; } }
+        public ExchangeDeclareFlags Flag { get { return flag; } }
 
         public ExchangeDeclare() { }
         public ExchangeDeclare(
           ushort initReserved1,
           string initExchange,
           string initType,
-          bool initPassive,
-          bool initDurable,
-          bool initAutoDelete,
-          bool initInternal,
-          bool initNowait,
+          ExchangeDeclareFlags flag,
           System.Collections.Generic.IDictionary<string, object> initArguments)
         {
             m_reserved1 = initReserved1;
             m_exchange = initExchange;
             m_type = initType;
-            m_passive = initPassive;
-            m_durable = initDurable;
-            m_autoDelete = initAutoDelete;
-            m_internal = initInternal;
-            m_nowait = initNowait;
+            this.flag = flag;
             m_arguments = initArguments;
         }
 
@@ -105,15 +89,8 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadUInt16();
             m_exchange = reader.ReadShortString();
             m_type = reader.ReadShortString();
-
-            ExchangeDeclareFlags flag =(ExchangeDeclareFlags) reader.ReadByte();
+            flag =(ExchangeDeclareFlags) reader.ReadByte();
             m_arguments = reader.ReadTable();
-
-            m_passive = (flag & ExchangeDeclareFlags.Passive) == ExchangeDeclareFlags.Passive;// reader.ReadBit();
-            m_durable = (flag & ExchangeDeclareFlags.Durable) == ExchangeDeclareFlags.Durable;//reader.ReadBit();
-            m_autoDelete = (flag & ExchangeDeclareFlags.AutoDelete) == ExchangeDeclareFlags.AutoDelete;// reader.ReadBit();
-            m_internal = (flag & ExchangeDeclareFlags.Internal) == ExchangeDeclareFlags.Internal;// reader.ReadBit();
-            m_nowait = (flag & ExchangeDeclareFlags.NoWait) == ExchangeDeclareFlags.NoWait;// reader.ReadBit();
         }
 
         public void WriteArgumentsTo(FrameBuilder writer)
@@ -121,19 +98,9 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortString(m_exchange);
             writer.WriteShortString(m_type);
-
-            ExchangeDeclareFlags flags = ExchangeDeclareFlags.None;
-            if (m_passive) flags |= ExchangeDeclareFlags.Passive;
-            if (m_durable) flags |= ExchangeDeclareFlags.Durable;
-            if (m_autoDelete) flags |= ExchangeDeclareFlags.AutoDelete;
-            if (m_internal) flags |= ExchangeDeclareFlags.Internal;
-            if (m_nowait) flags |= ExchangeDeclareFlags.NoWait;
-
-            writer.WriteByte((byte)flags);
+            writer.WriteByte((byte)flag);
             writer.WriteTable(m_arguments);
         }
-
-
 
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
@@ -141,11 +108,7 @@ namespace RabbitMQ.Client.Framing.Impl
             sb.Append(m_reserved1); sb.Append(",");
             sb.Append(m_exchange); sb.Append(",");
             sb.Append(m_type); sb.Append(",");
-            sb.Append(m_passive); sb.Append(",");
-            sb.Append(m_durable); sb.Append(",");
-            sb.Append(m_autoDelete); sb.Append(",");
-            sb.Append(m_internal); sb.Append(",");
-            sb.Append(m_nowait); sb.Append(",");
+            sb.Append(flag); sb.Append(",");
             sb.Append(m_arguments);
             sb.Append(")");
         }

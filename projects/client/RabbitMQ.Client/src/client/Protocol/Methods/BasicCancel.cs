@@ -53,11 +53,11 @@ namespace RabbitMQ.Client.Framing.Impl
         public const ushort ClassId = 60;
         public const ushort MethodId = 30;
 
-        public string m_consumerTag;
-        public bool m_nowait;
+        private string m_consumerTag;
+        private bool m_nowait;
 
-        string IBasicCancel.ConsumerTag { get { return m_consumerTag; } }
-        bool IBasicCancel.Nowait { get { return m_nowait; } }
+        public string ConsumerTag { get { return m_consumerTag; } }
+        public bool Nowait { get { return m_nowait; } }
 
         public BasicCancel(
           string initConsumerTag,

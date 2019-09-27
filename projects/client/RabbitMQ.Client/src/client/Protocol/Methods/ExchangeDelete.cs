@@ -54,25 +54,21 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private ushort m_reserved1;
         private string m_exchange;
-        private bool m_ifUnused;
-        private bool m_nowait;
+        private ExchangeDeleteFlags flag;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Exchange { get { return m_exchange; } }
-        public bool IfUnused { get { return m_ifUnused; } }
-        public bool Nowait { get { return m_nowait; } }
+        public ExchangeDeleteFlags Flag { get { return flag; } }
 
         public ExchangeDelete() { }
         public ExchangeDelete(
           ushort initReserved1,
           string initExchange,
-          bool initIfUnused,
-          bool initNowait)
+          ExchangeDeleteFlags  flag)
         {
             m_reserved1 = initReserved1;
             m_exchange = initExchange;
-            m_ifUnused = initIfUnused;
-            m_nowait = initNowait;
+            this.flag = flag;
         }
 
         public ushort ProtocolClassId { get { return 40; } }
@@ -85,22 +81,14 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadUInt16();
             m_exchange = reader.ReadShortString();
 
-            ExchangeDeleteFlags flags = (ExchangeDeleteFlags)reader.ReadByte();
-
-            m_ifUnused = (flags & ExchangeDeleteFlags.IfUnused) == ExchangeDeleteFlags.IfUnused;
-            m_nowait = (flags & ExchangeDeleteFlags.NoWait) == ExchangeDeleteFlags.NoWait;
+            flag = (ExchangeDeleteFlags)reader.ReadByte();
         }
 
         public void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortString(m_exchange);
-
-            ExchangeDeleteFlags flags = ExchangeDeleteFlags.None;
-            if (m_ifUnused) flags |= ExchangeDeleteFlags.IfUnused;
-            if (m_nowait) flags |= ExchangeDeleteFlags.NoWait;
-
-            writer.WriteByte((byte)flags);
+            writer.WriteByte((byte)flag);
         }
 
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -108,8 +96,7 @@ namespace RabbitMQ.Client.Framing.Impl
             sb.Append("(");
             sb.Append(m_reserved1); sb.Append(",");
             sb.Append(m_exchange); sb.Append(",");
-            sb.Append(m_ifUnused); sb.Append(",");
-            sb.Append(m_nowait);
+            sb.Append(flag);
             sb.Append(")");
         }
     }

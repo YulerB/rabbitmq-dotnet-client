@@ -311,11 +311,7 @@ namespace RabbitMQ.Client.Impl
         [AmqpMethodMapping(null, "exchange", "declare")]
         void _Private_ExchangeDeclare(string exchange,
             string type,
-            bool passive,
-            bool durable,
-            bool autoDelete,
-            bool @internal,
-            [AmqpNowaitArgument(null)] bool nowait,
+            ExchangeDeclareFlags flag,
             IDictionary<string, object> arguments);
 
         ///<summary>Used to send a Exchange.Delete method. Called by the
@@ -323,8 +319,7 @@ namespace RabbitMQ.Client.Impl
         ///</summary>
         [AmqpMethodMapping(null, "exchange", "delete")]
         void _Private_ExchangeDelete(string exchange,
-            bool ifUnused,
-            [AmqpNowaitArgument(null)] bool nowait);
+            ExchangeDeleteFlags flag);
 
         ///<summary>Used to send a Exchange.Unbind method. Called by the
         ///public unbind method.
@@ -350,21 +345,14 @@ namespace RabbitMQ.Client.Impl
         [AmqpMethodMapping(null, "queue", "declare")]
         [AmqpForceOneWay]
         void _Private_QueueDeclare(string queue,
-            bool passive,
-            bool durable,
-            bool exclusive,
-            bool autoDelete,
-            [AmqpNowaitArgument(null)] bool nowait,
+            QueueDeclareFlags flag,
             IDictionary<string, object> arguments);
 
         ///<summary>Used to send a Queue.Delete method. Called by the
         ///public delete method.</summary>
         [AmqpMethodMapping(null, "queue", "delete")]
         [return: AmqpFieldMapping(null, "messageCount")]
-        uint _Private_QueueDelete(string queue,
-            bool ifUnused,
-            bool ifEmpty,
-            [AmqpNowaitArgument(null, "0xFFFFFFFF")] bool nowait);
+        uint _Private_QueueDelete(string queue, QueueDeleteFlags flag);
 
         ///<summary>Used to send a Queue.Purge method. Called by the
         ///public purge method.</summary>

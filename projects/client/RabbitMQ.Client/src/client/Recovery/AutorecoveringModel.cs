@@ -651,23 +651,16 @@ namespace RabbitMQ.Client.Impl
 
         public void _Private_ExchangeDeclare(string exchange,
             string type,
-            bool passive,
-            bool durable,
-            bool autoDelete,
-            bool @internal,
-            bool nowait,
+              ExchangeDeclareFlags flag,
             IDictionary<string, object> arguments)
         {
-            _Private_ExchangeDeclare(exchange, type, passive,
-                durable, autoDelete, @internal,
-                nowait, arguments);
+            _Private_ExchangeDeclare(exchange, type, flag, arguments);
         }
 
         public void _Private_ExchangeDelete(string exchange,
-            bool ifUnused,
-            bool nowait)
+            ExchangeDeleteFlags flag)
         {
-            _Private_ExchangeDelete(exchange, ifUnused, nowait);
+            _Private_ExchangeDelete(exchange, flag);
         }
 
         public void _Private_ExchangeUnbind(string destination,
@@ -691,25 +684,16 @@ namespace RabbitMQ.Client.Impl
         }
 
         public void _Private_QueueDeclare(string queue,
-            bool passive,
-            bool durable,
-            bool exclusive,
-            bool autoDelete,
-            bool nowait,
+            QueueDeclareFlags flag,
             IDictionary<string, object> arguments)
         {
-            m_delegate._Private_QueueDeclare(queue, passive,
-                durable, exclusive, autoDelete,
-                nowait, arguments);
+            m_delegate._Private_QueueDeclare(queue, flag, arguments);
         }
 
         public uint _Private_QueueDelete(string queue,
-            bool ifUnused,
-            bool ifEmpty,
-            bool nowait)
+            QueueDeleteFlags flag)
         {
-            return m_delegate._Private_QueueDelete(queue, ifUnused,
-                ifEmpty, nowait);
+            return m_delegate._Private_QueueDelete(queue, flag);
         }
 
         public uint _Private_QueuePurge(string queue,

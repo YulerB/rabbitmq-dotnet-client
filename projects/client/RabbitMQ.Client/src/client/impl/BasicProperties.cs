@@ -40,10 +40,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
+using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Impl
 {
-    public abstract class BasicProperties : ContentHeaderBase, IBasicProperties
+    public abstract class BasicProperties : IContentHeader, IBasicProperties
     {
         /// <summary>
         /// Application Id.
@@ -294,7 +296,7 @@ namespace RabbitMQ.Client.Impl
             Persistent = persistent;
         }
 
-        public override object Clone()
+        public object Clone()
         {
             var clone = MemberwiseClone() as BasicProperties;
             if (IsHeadersPresent())
@@ -308,5 +310,41 @@ namespace RabbitMQ.Client.Impl
 
             return clone;
         }
+
+        private const ushort ZERO = 0;
+
+        ///<summary>
+        /// Fill this instance from the given byte buffer stream.
+        ///</summary>
+        public ulong ReadFrom(ArraySegmentSequence stream)
+        {
+            stream.ReadUInt16(); // weight - not currently used
+            ulong bodySize = stream.ReadUInt64();
+            ReadPropertiesFrom(stream);
+            return bodySize;
+        }
+
+        public void WriteTo(FrameBuilder writer, ulong bodySize)
+        {
+            writer.WriteUInt16(ZERO); // weight - not currently used
+            writer.WriteUInt64(bodySize);
+            WritePropertiesTo(writer);
+        }
+
+        ///<summary>
+        /// Retrieve the AMQP class ID of this content header.
+        ///</summary>
+        public abstract ushort ProtocolClassId { get; }
+
+        ///<summary>
+        /// Retrieve the AMQP class name of this content header.
+        ///</summary>
+        public abstract string ProtocolClassName { get; }
+
+        public abstract void AppendPropertyDebugStringTo(StringBuilder stringBuilder);
+
+        public abstract void ReadPropertiesFrom(ArraySegmentSequence stream);
+        public abstract void WritePropertiesTo(FrameBuilder writer);
+
     }
 }

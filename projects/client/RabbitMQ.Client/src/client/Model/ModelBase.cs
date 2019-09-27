@@ -1106,16 +1106,11 @@ namespace RabbitMQ.Client.Impl
 
         public abstract void _Private_ExchangeDeclare(string exchange,
             string type,
-            bool passive,
-            bool durable,
-            bool autoDelete,
-            bool @internal,
-            bool nowait,
+             ExchangeDeclareFlags flag,
             IDictionary<string, object> arguments);
 
         public abstract void _Private_ExchangeDelete(string exchange,
-            bool ifUnused,
-            bool nowait);
+            ExchangeDeleteFlags flag);
 
         public abstract void _Private_ExchangeUnbind(string destination,
             string source,
@@ -1130,17 +1125,11 @@ namespace RabbitMQ.Client.Impl
             IDictionary<string, object> arguments);
 
         public abstract void _Private_QueueDeclare(string queue,
-            bool passive,
-            bool durable,
-            bool exclusive,
-            bool autoDelete,
-            bool nowait,
+            QueueDeclareFlags flag,
             IDictionary<string, object> arguments);
 
         public abstract uint _Private_QueueDelete(string queue,
-            bool ifUnused,
-            bool ifEmpty,
-            bool nowait);
+            QueueDeleteFlags flag);
 
         public abstract uint _Private_QueuePurge(string queue,
             bool nowait);
@@ -1337,7 +1326,9 @@ namespace RabbitMQ.Client.Impl
 
         public void ExchangeDeclare(string exchange, string type, bool durable, bool autoDelete, IDictionary<string, object> arguments)
         {
-            _Private_ExchangeDeclare(exchange, type, false, durable, autoDelete, false, false, arguments);
+            _Private_ExchangeDeclare(exchange, type,
+                (durable ? ExchangeDeclareFlags.Durable : ExchangeDeclareFlags.None) | (autoDelete ? ExchangeDeclareFlags.AutoDelete : ExchangeDeclareFlags.None),
+                arguments);
         }
 
         public void ExchangeDeclareNoWait(string exchange,
@@ -1346,24 +1337,30 @@ namespace RabbitMQ.Client.Impl
             bool autoDelete,
             IDictionary<string, object> arguments)
         {
-            _Private_ExchangeDeclare(exchange, type, false, durable, autoDelete, false, true, arguments);
+            _Private_ExchangeDeclare(
+                exchange, 
+                type, 
+                (durable ? ExchangeDeclareFlags.Durable : ExchangeDeclareFlags.None) | 
+                (autoDelete ? ExchangeDeclareFlags.AutoDelete : ExchangeDeclareFlags.None) | 
+                ExchangeDeclareFlags.NoWait, 
+                arguments);
         }
 
         public void ExchangeDeclarePassive(string exchange)
         {
-            _Private_ExchangeDeclare(exchange, "", true, false, false, false, false, null);
+            _Private_ExchangeDeclare(exchange, string.Empty, ExchangeDeclareFlags.Passive, null);
         }
 
         public void ExchangeDelete(string exchange,
             bool ifUnused)
         {
-            _Private_ExchangeDelete(exchange, ifUnused, false);
+            _Private_ExchangeDelete(exchange, ifUnused ? ExchangeDeleteFlags.IfUnused : ExchangeDeleteFlags.None);
         }
 
         public void ExchangeDeleteNoWait(string exchange,
             bool ifUnused)
         {
-            _Private_ExchangeDelete(exchange, ifUnused, false);
+            _Private_ExchangeDelete(exchange, ifUnused ? ExchangeDeleteFlags.IfUnused : ExchangeDeleteFlags.None);
         }
 
         public void ExchangeUnbind(string destination,
@@ -1398,9 +1395,10 @@ namespace RabbitMQ.Client.Impl
             _Private_QueueBind(queue, exchange, routingKey, true, arguments);
         }
 
-        public QueueDeclareOk QueueDeclare(string queue, bool durable,
-                                           bool exclusive, bool autoDelete,
-                                           IDictionary<string, object> arguments)
+        public QueueDeclareOk QueueDeclare(string queue, 
+            bool durable,
+            bool exclusive, bool autoDelete,
+            IDictionary<string, object> arguments)
         {
             return QueueDeclare(queue, false, durable, exclusive, autoDelete, arguments);
         }
@@ -1408,7 +1406,12 @@ namespace RabbitMQ.Client.Impl
         public void QueueDeclareNoWait(string queue, bool durable, bool exclusive,
             bool autoDelete, IDictionary<string, object> arguments)
         {
-            _Private_QueueDeclare(queue, false, durable, exclusive, autoDelete, true, arguments);
+            _Private_QueueDeclare(queue, 
+                (durable ? QueueDeclareFlags.Durable : QueueDeclareFlags.None) |
+                (exclusive ? QueueDeclareFlags.Exclusive : QueueDeclareFlags.None) | 
+                (autoDelete ? QueueDeclareFlags.AutoDelete : QueueDeclareFlags.None) |
+                QueueDeclareFlags.NoWait,
+                arguments);
         }
 
         public QueueDeclareOk QueueDeclarePassive(string queue)
@@ -1432,14 +1435,18 @@ namespace RabbitMQ.Client.Impl
             bool ifUnused,
             bool ifEmpty)
         {
-            return _Private_QueueDelete(queue, ifUnused, ifEmpty, false);
+            return _Private_QueueDelete(queue, (ifUnused ? QueueDeleteFlags.IfUnused : QueueDeleteFlags.None) |
+                (ifEmpty ? QueueDeleteFlags.IfEmpty : QueueDeleteFlags.None));
         }
 
         public void QueueDeleteNoWait(string queue,
             bool ifUnused,
             bool ifEmpty)
         {
-            _Private_QueueDelete(queue, ifUnused, ifEmpty, true);
+            _Private_QueueDelete(queue, 
+                (ifUnused ? QueueDeleteFlags.IfUnused : QueueDeleteFlags.None) | 
+                (ifEmpty? QueueDeleteFlags.IfEmpty : QueueDeleteFlags.None) | 
+                QueueDeleteFlags.NoWait);
         }
 
         public uint QueuePurge(string queue)
@@ -1580,7 +1587,12 @@ namespace RabbitMQ.Client.Impl
             lock(_rpcLock)
             {
                 Enqueue(k);
-                _Private_QueueDeclare(queue, passive, durable, exclusive, autoDelete, false, arguments);
+                _Private_QueueDeclare(queue,
+                    (passive ? QueueDeclareFlags.Passive : QueueDeclareFlags.None) |
+                    (durable ? QueueDeclareFlags.Durable : QueueDeclareFlags.None) |
+                    (exclusive ? QueueDeclareFlags.Exclusive : QueueDeclareFlags.None) |
+                    (autoDelete ? QueueDeclareFlags.AutoDelete : QueueDeclareFlags.None),
+                    arguments);
                 k.GetReply(this.ContinuationTimeout);
             }
             return k.m_result;

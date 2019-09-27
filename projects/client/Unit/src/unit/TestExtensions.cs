@@ -52,7 +52,7 @@ namespace RabbitMQ.Client.Unit
             Model.ConfirmSelect();
             for (int i = 0; i < 10; i++)
             {
-                Model.BasicPublish("", String.Empty, null, new byte[] {});
+                Model.BasicPublish(string.Empty, String.Empty, null, new byte[] {});
             }
             Assert.That(Model.WaitForConfirms(), Is.True);
         }

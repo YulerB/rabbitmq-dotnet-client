@@ -54,29 +54,21 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private ushort m_reserved1;
         private string m_queue;
-        private bool m_ifUnused;
-        private bool m_ifEmpty;
-        private bool m_nowait;
+        private QueueDeleteFlags flag;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Queue { get { return m_queue; } }
-        public bool IfUnused { get { return m_ifUnused; } }
-        public bool IfEmpty { get { return m_ifEmpty; } }
-        public bool Nowait { get { return m_nowait; } }
+        public QueueDeleteFlags Flag { get { return flag; } }
 
         public QueueDelete() { }
         public QueueDelete(
           ushort initReserved1,
           string initQueue,
-          bool initIfUnused,
-          bool initIfEmpty,
-          bool initNowait)
+          QueueDeleteFlags flag)
         {
             m_reserved1 = initReserved1;
             m_queue = initQueue;
-            m_ifUnused = initIfUnused;
-            m_ifEmpty = initIfEmpty;
-            m_nowait = initNowait;
+            this.flag = flag;
         }
 
         public ushort ProtocolClassId { get { return 50; } }
@@ -88,29 +80,14 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             m_reserved1 = reader.ReadUInt16();
             m_queue = reader.ReadShortString();
-
-            QueueDeleteFlags flags = (QueueDeleteFlags)reader.ReadByte();
-
-            m_ifUnused = (flags & QueueDeleteFlags.IfUnused) == QueueDeleteFlags.IfUnused;// reader.ReadBit();
-            m_ifEmpty = (flags & QueueDeleteFlags.IfEmpty) == QueueDeleteFlags.IfEmpty;//reader.ReadBit();
-            m_nowait = (flags & QueueDeleteFlags.NoWait) == QueueDeleteFlags.NoWait;//reader.ReadBit();
+            flag = (QueueDeleteFlags)reader.ReadByte();
         }
 
         public void WriteArgumentsTo(FrameBuilder writer)
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortString(m_queue);
-
-            QueueDeleteFlags flags = QueueDeleteFlags.None;
-            if (m_ifUnused) flags |= QueueDeleteFlags.IfUnused;
-            if (m_ifEmpty) flags |= QueueDeleteFlags.IfEmpty;
-            if (m_nowait) flags |= QueueDeleteFlags.NoWait;
-
-            writer.WriteByte((byte)flags);
-
-            //writer.WriteBit(m_ifUnused);
-            //writer.WriteBit(m_ifEmpty);
-            //writer.WriteBit(m_nowait);
+            writer.WriteByte((byte)flag);
         }
 
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
@@ -118,9 +95,7 @@ namespace RabbitMQ.Client.Framing.Impl
             sb.Append("(");
             sb.Append(m_reserved1); sb.Append(",");
             sb.Append(m_queue); sb.Append(",");
-            sb.Append(m_ifUnused); sb.Append(",");
-            sb.Append(m_ifEmpty); sb.Append(",");
-            sb.Append(m_nowait);
+            sb.Append(flag);
             sb.Append(")");
         }
     }

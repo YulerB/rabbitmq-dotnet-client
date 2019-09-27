@@ -83,10 +83,9 @@ namespace RabbitMQ.Client.Framing.Impl
           RabbitMQ.Client.IBasicProperties @basicProperties,
           byte[] @body)
         {
-            ModelSend(new BasicPublish(0, exchange, routingKey, mandatory, false), (BasicProperties)basicProperties, body);
+            ModelSend(new BasicPublish(0, exchange, routingKey, mandatory ? BasicPublishFlags.Mandatory : BasicPublishFlags.None), (BasicProperties)basicProperties, body);
         }
-        public override void _Private_BasicRecover(
-          bool @requeue)
+        public override void _Private_BasicRecover(bool @requeue)
         {
             ModelSend(new BasicRecover(requeue), null, null);
         }
@@ -177,15 +176,11 @@ namespace RabbitMQ.Client.Framing.Impl
         public override void _Private_ExchangeDeclare(
           string @exchange,
           string @type,
-          bool @passive,
-          bool @durable,
-          bool @autoDelete,
-          bool @internal,
-          bool @nowait,
+          ExchangeDeclareFlags flag,
           System.Collections.Generic.IDictionary<string, object> @arguments)
         {
-            ExchangeDeclare __req = new ExchangeDeclare(0, exchange, type, passive, durable, autoDelete,@internal, nowait, arguments);
-            if (nowait)
+            ExchangeDeclare __req = new ExchangeDeclare(0, exchange, type, flag, arguments);
+            if ((flag & ExchangeDeclareFlags.NoWait) == ExchangeDeclareFlags.NoWait)
             {
                 ModelSend(__req, null, null);
                 return;
@@ -195,11 +190,10 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         public override void _Private_ExchangeDelete(
           string @exchange,
-          bool @ifUnused,
-          bool @nowait)
+          ExchangeDeleteFlags flag)
         {
-            ExchangeDelete __req = new ExchangeDelete(0, exchange, ifUnused, nowait);
-            if (nowait)
+            ExchangeDelete __req = new ExchangeDelete(0, exchange, flag);
+            if ((flag & ExchangeDeleteFlags.NoWait) == ExchangeDeleteFlags.NoWait)
             {
                 ModelSend(__req, null, null);
                 return;
@@ -241,23 +235,17 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         public override void _Private_QueueDeclare(
           string @queue,
-          bool @passive,
-          bool @durable,
-          bool @exclusive,
-          bool @autoDelete,
-          bool @nowait,
+          QueueDeclareFlags flag,
           System.Collections.Generic.IDictionary<string, object> @arguments)
         {
-            ModelSend(new QueueDeclare(0, @queue, @passive, @durable, @exclusive, @autoDelete, @nowait, @arguments), null, null);
+            ModelSend(new QueueDeclare(0, @queue, flag, @arguments), null, null);
         }
         public override uint _Private_QueueDelete(
           string @queue,
-          bool @ifUnused,
-          bool @ifEmpty,
-          bool @nowait)
+          QueueDeleteFlags flag)
         {
-            QueueDelete __req = new QueueDelete(0,@queue,@ifUnused,@ifEmpty,@nowait);
-            if (nowait)
+            QueueDelete __req = new QueueDelete(0,@queue, flag);
+            if ((flag & QueueDeleteFlags.NoWait) == QueueDeleteFlags.NoWait)
             {
                 ModelSend(__req, null, null);
                 return 0xFFFFFFFF;
@@ -360,7 +348,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 case 3932190:
                     {
                         BasicCancel __impl = (BasicCancel)__method;
-                        HandleBasicCancel(__impl.m_consumerTag,__impl.m_nowait);
+                        HandleBasicCancel(__impl.ConsumerTag,__impl.Nowait);
                         return true;
                     }
                 case 3932191:

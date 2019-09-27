@@ -54,40 +54,24 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private ushort m_reserved1;
         private string m_queue;
-        private bool m_passive;
-        private bool m_durable;
-        private bool m_exclusive;
-        private bool m_autoDelete;
-        private bool m_nowait;
+        private QueueDeclareFlags flag;
         private System.Collections.Generic.IDictionary<string, object> m_arguments;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Queue { get { return m_queue; } }
-        public bool Passive { get { return m_passive; } }
-        public bool Durable { get { return m_durable; } }
-        public bool Exclusive { get { return m_exclusive; } }
-        public bool AutoDelete { get { return m_autoDelete; } }
-        public bool Nowait { get { return m_nowait; } }
+        public QueueDeclareFlags Flag { get { return flag; } }
         public System.Collections.Generic.IDictionary<string, object> Arguments { get { return m_arguments; } }
 
         public QueueDeclare() { }
         public QueueDeclare(
           ushort initReserved1,
           string initQueue,
-          bool initPassive,
-          bool initDurable,
-          bool initExclusive,
-          bool initAutoDelete,
-          bool initNowait,
+          QueueDeclareFlags flag,
           System.Collections.Generic.IDictionary<string, object> initArguments)
         {
             m_reserved1 = initReserved1;
             m_queue = initQueue;
-            m_passive = initPassive;
-            m_durable = initDurable;
-            m_exclusive = initExclusive;
-            m_autoDelete = initAutoDelete;
-            m_nowait = initNowait;
+            this.flag = flag;
             m_arguments = initArguments;
         }
 
@@ -100,15 +84,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             m_reserved1 = reader.ReadUInt16();
             m_queue = reader.ReadShortString();
-
-            QueueDeclareFlags flag = (QueueDeclareFlags) reader.ReadByte();
-
-            m_passive = (flag & QueueDeclareFlags.Passive) == QueueDeclareFlags.Passive;// reader.ReadBit();
-            m_durable = (flag & QueueDeclareFlags.Durable) == QueueDeclareFlags.Durable;//reader.ReadBit();
-            m_exclusive = (flag & QueueDeclareFlags.Exclusive) == QueueDeclareFlags.Exclusive;//reader.ReadBit();
-            m_autoDelete = (flag & QueueDeclareFlags.AutoDelete) == QueueDeclareFlags.AutoDelete;//reader.ReadBit();
-            m_nowait = (flag & QueueDeclareFlags.NoWait) == QueueDeclareFlags.NoWait;//reader.ReadBit();
-
+            flag = (QueueDeclareFlags) reader.ReadByte();
             m_arguments = reader.ReadTable();
         }
 
@@ -116,15 +92,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             writer.WriteUInt16(m_reserved1);
             writer.WriteShortString(m_queue);
-
-            QueueDeclareFlags flags = QueueDeclareFlags.None;
-            if (m_passive) flags |= QueueDeclareFlags.Passive;
-            if (m_durable) flags |= QueueDeclareFlags.Durable;
-            if (m_exclusive) flags |= QueueDeclareFlags.Exclusive;
-            if (m_autoDelete) flags |= QueueDeclareFlags.AutoDelete;
-            if (m_nowait) flags |= QueueDeclareFlags.NoWait;
-
-            writer.WriteByte((byte)flags);
+            writer.WriteByte((byte)flag);
             writer.WriteTable(m_arguments);
         }
 
@@ -133,11 +101,7 @@ namespace RabbitMQ.Client.Framing.Impl
             sb.Append("(");
             sb.Append(m_reserved1); sb.Append(",");
             sb.Append(m_queue); sb.Append(",");
-            sb.Append(m_passive); sb.Append(",");
-            sb.Append(m_durable); sb.Append(",");
-            sb.Append(m_exclusive); sb.Append(",");
-            sb.Append(m_autoDelete); sb.Append(",");
-            sb.Append(m_nowait); sb.Append(",");
+            sb.Append(flag); sb.Append(",");
             sb.Append(m_arguments);
             sb.Append(")");
         }
