@@ -1282,7 +1282,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void StartAndTune()
         {
-            var connectionStartCell = new BlockingCell<ConnectionStartDetails>();
+            var connectionStartCell = new BlockingCell<ConnectionStartDetailsEventArgs>();
             m_model0.m_connectionStartCell = connectionStartCell;
             m_model0.HandshakeContinuationTimeout = m_factory.HandshakeContinuationTimeout;
             //m_frameHandler.ReadTimeout = (int)m_factory.HandshakeContinuationTimeout.TotalMilliseconds;
@@ -1298,7 +1298,7 @@ namespace RabbitMQ.Client.Framing.Impl
             //}
         }
 
-        private void OnConnectionStarted(object sender, ConnectionStartDetails connectionStart)
+        private void OnConnectionStarted(object sender, ConnectionStartDetailsEventArgs connectionStart)
         {
             ServerProperties = connectionStart.ServerProperties;
 

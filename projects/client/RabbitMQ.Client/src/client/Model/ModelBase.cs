@@ -62,7 +62,7 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Only used to kick-start a connection open
         ///sequence. See <see cref="Connection.Open"/> </summary>
-        public BlockingCell<ConnectionStartDetails> m_connectionStartCell = null;
+        public BlockingCell<ConnectionStartDetailsEventArgs> m_connectionStartCell = null;
 
         private TimeSpan m_handshakeContinuationTimeout = TimeSpan.FromSeconds(10);
         private TimeSpan m_continuationTimeout = TimeSpan.FromSeconds(20);
@@ -1016,7 +1016,7 @@ namespace RabbitMQ.Client.Impl
                         "Unexpected Connection.Start");
                 ((Connection)Session.Connection).Close(reason);
             }
-            var details = new ConnectionStartDetails(versionMajor,versionMinor,serverProperties,mechanisms,locales);
+            var details = new ConnectionStartDetailsEventArgs(versionMajor,versionMinor,serverProperties,mechanisms,locales);
             m_connectionStartCell.ContinueWithValue(details);
             m_connectionStartCell = null;
         }

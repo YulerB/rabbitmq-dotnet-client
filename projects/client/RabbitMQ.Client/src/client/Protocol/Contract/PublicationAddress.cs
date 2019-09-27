@@ -111,9 +111,7 @@ namespace RabbitMQ.Client
             Match match = PSEUDO_URI_PARSER.Match(uriLikeString);
             if (match.Success)
             {
-                return new PublicationAddress(match.Groups[1].Value,
-                    match.Groups[2].Value,
-                    match.Groups[3].Value);
+                return new PublicationAddress(match.Groups[1].Value, match.Groups[2].Value, match.Groups[3].Value);
             }
             return null;
         }

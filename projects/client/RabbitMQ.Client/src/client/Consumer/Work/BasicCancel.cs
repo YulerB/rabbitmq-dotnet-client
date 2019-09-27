@@ -7,7 +7,7 @@ namespace RabbitMQ.Client.Impl
 {
     public sealed class BasicCancel : Work
     {
-        readonly string consumerTag;
+        private readonly string consumerTag;
 
         public BasicCancel(IBasicConsumer consumer, string consumerTag) : base(consumer)
         {

@@ -43,9 +43,9 @@ using System.Collections.Generic;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class ConnectionStartDetails : EventArgs
+    public class ConnectionStartDetailsEventArgs : EventArgs
     {
-        public ConnectionStartDetails(
+        public ConnectionStartDetailsEventArgs(
             byte versionMajor,
             byte versionMinor,
             IDictionary<string, object> serverProperties,

@@ -67,16 +67,8 @@ namespace RabbitMQ.Client
     /// of this class must be used.
     /// </para>
     /// </remarks>
-    public class BinaryTableValue
+    public struct BinaryTableValue
     {
-        /// <summary>
-        /// Creates a new instance of the <see cref="BinaryTableValue"/> with null for its Bytes property.
-        /// </summary>
-        public BinaryTableValue() : this(null)
-        {
-        }
-
-
         /// <summary>
         /// Creates a new instance of the <see cref="BinaryTableValue"/>.
         /// </summary>
@@ -89,6 +81,6 @@ namespace RabbitMQ.Client
         /// <summary>
         /// The wrapped byte array, as decoded or as to be encoded.
         /// </summary>
-        public byte[] Bytes { get; set; }
+        public byte[] Bytes { get; private set; }
     }
 }

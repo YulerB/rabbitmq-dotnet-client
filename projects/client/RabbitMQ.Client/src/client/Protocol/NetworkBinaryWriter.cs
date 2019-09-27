@@ -494,7 +494,7 @@ namespace RabbitMQ.Util
             else if (value is BinaryTableValue)
             {
                 output.WriteByte(x);
-                output.Write((value as BinaryTableValue).Bytes);
+                output.Write(((BinaryTableValue)value).Bytes);
             }
             else
             {
