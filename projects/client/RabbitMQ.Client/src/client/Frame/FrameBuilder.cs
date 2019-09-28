@@ -49,8 +49,15 @@ namespace RabbitMQ.Client.Impl
 {
     public class FrameBuilder  
     {
+        private long len = 0;
+        private List<ArraySegment<byte>> data;
+
         public FrameBuilder() {
-            data = new List<ArraySegment<byte>>(10);
+            data = new List<ArraySegment<byte>>(5);
+        }
+        public FrameBuilder(int capacity)
+        {
+            data = new List<ArraySegment<byte>>(capacity);
         }
         public FrameBuilder(byte[] bytes) {
 
@@ -61,8 +68,6 @@ namespace RabbitMQ.Client.Impl
             len += bytes.Length;
         }
 
-        private long len = 0;
-        private List<ArraySegment<byte>> data;
 
         public  long Length => len;
 

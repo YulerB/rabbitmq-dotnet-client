@@ -258,7 +258,7 @@ namespace RabbitMQ.Util
         ///</remarks>
         private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, object> val, out uint written)
         {
-            var stream1 = new FrameBuilder();
+            var stream1 = new FrameBuilder(val.Count * 4);
             foreach (var entry in val)
             {
                 stream1.WriteShortString(entry.Key);
@@ -269,7 +269,7 @@ namespace RabbitMQ.Util
         }
         private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, bool> val, out uint written)
         {
-            var stream1 = new FrameBuilder();
+            var stream1 = new FrameBuilder(val.Count * 4);
             foreach (var entry in val)
             {
                 stream1.WriteShortString(entry.Key);
@@ -355,7 +355,7 @@ namespace RabbitMQ.Util
 
         private static IList<ArraySegment<byte>> GetArrayContent(IList val, out uint written)
         {
-            var stream1 = new FrameBuilder();
+            var stream1 = new FrameBuilder(val.Count * 4);
             foreach (object entry in val)
             {
                 stream1.WriteFieldValue(entry);

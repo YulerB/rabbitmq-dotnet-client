@@ -67,7 +67,7 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(FrameBuilder writer)
         {
-            FrameBuilder nw = new FrameBuilder();
+            FrameBuilder nw = new FrameBuilder(10);
             nw.WriteUInt16(header.ProtocolClassId);
             header.WriteTo(nw, (ulong)bodyLength);
             writer.WriteUInt32((uint)nw.Length);
@@ -101,7 +101,7 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(FrameBuilder writer)
         {
-            FrameBuilder nw = new FrameBuilder();
+            FrameBuilder nw = new FrameBuilder(5);
             nw.WriteUInt16(method.ProtocolClassId);
             nw.WriteUInt16(method.ProtocolMethodId);
             method.WriteArgumentsTo(nw);
