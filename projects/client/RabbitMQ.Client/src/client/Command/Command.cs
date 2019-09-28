@@ -67,14 +67,14 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public Command(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
+        public Command(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, FrameBuilder body)
         {
             Method = method;
             Header = header;
-            Body = body ?? m_emptyByteArray;
+            Body = body ?? new FrameBuilder();
         }
 
-        public byte[] Body { get; private set; }
+        public FrameBuilder Body { get; private set; }
 
         public RabbitMQ.Client.Impl.BasicProperties Header { get; private set; }
 
@@ -130,11 +130,15 @@ namespace RabbitMQ.Client.Impl
                 var frameMax = (int)Math.Min(int.MaxValue, connection.FrameMax);
                 var frameMaxEqualsZero = frameMax == 0;
                 var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - EmptyFrameSize;
-                for (int offset = 0; offset < body.Length; offset += bodyPayloadMax)
+
+                ArraySegmentSequence sequence = new ArraySegmentSequence (body.ToData());
+
+                for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
                 {
                     var remaining = body.Length - offset;
                     var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
-                    frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(body, offset, count)));
+                    
+                    frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(sequence.ReadBytes((int)count), 0, (int)count)));
                 }
             }
 
@@ -153,14 +157,15 @@ namespace RabbitMQ.Client.Impl
                 if (cmd.Method.HasContent)
                 {
                     var body = cmd.Body;
+                    ArraySegmentSequence sequence = new ArraySegmentSequence(body.ToData());
 
                     frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header, body.Length));
                     var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - EmptyFrameSize;
-                    for (int offset = 0; offset < body.Length; offset += bodyPayloadMax)
+                    for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
                     {
                         var remaining = body.Length - offset;
                         var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
-                        frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(body, offset, count)));
+                        frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(sequence.ReadBytes((int)count), 0, (int)count)));
                     }
                 }
             }

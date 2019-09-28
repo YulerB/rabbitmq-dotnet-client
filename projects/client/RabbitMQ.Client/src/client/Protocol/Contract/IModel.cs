@@ -61,7 +61,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Channel number, unique per connections.
         /// </summary>
-        int ChannelNumber { get; }
+        ushort ChannelNumber { get; }
 
         /// <summary>
         /// Returns null if the session is still in a state where it can be used,

@@ -618,7 +618,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 fh, this.ClientProvidedName);
 
             AutorecoveringConnection self = this;
-            EventHandler<ShutdownEventArgs> recoveryListener = (_, args) =>
+            void recoveryListener(object _, ShutdownEventArgs args)
             {
                 lock (recoveryLockTarget)
                 {
@@ -634,7 +634,7 @@ namespace RabbitMQ.Client.Framing.Impl
                         }
                     }
                 }
-            };
+            }
             lock (m_eventLock)
             {
                 ConnectionShutdown += recoveryListener;

@@ -177,14 +177,6 @@ namespace RabbitMQ.Client.Impl
 
         public virtual void Transmit(Command cmd)
         {
-//#if (DEBUG)
-//            if (cmd != null && cmd.Header != null && cmd.Header.ProtocolClassName != null)
-//                Console.Write(cmd.Header.ProtocolClassName);
-//            Console.Write(".");
-//            if (cmd != null && cmd.Method != null && cmd.Method.ProtocolMethodName != null)
-//                Console.WriteLine(cmd.Method.ProtocolMethodName);
-//#endif
-
             if (CloseReason != null)
             {
                 lock (_shutdownLock)
@@ -204,17 +196,6 @@ namespace RabbitMQ.Client.Impl
         }
         public virtual void Transmit(IList<Command> commands)
         {
-//#if (DEBUG)
-//            foreach (var cmd in commands)
-//            {
-//                if (cmd != null && cmd.Header != null && cmd.Header.ProtocolClassName != null)
-//                    Console.Write(cmd.Header.ProtocolClassName);
-//                Console.Write(".");
-//                if (cmd != null && cmd.Method != null && cmd.Method.ProtocolMethodName != null)
-//                    Console.WriteLine(cmd.Method.ProtocolMethodName);
-//            }
-//#endif
-
             Connection.WriteFrameSet(Command.CalculateFrames(ChannelNumber, Connection, commands));
         }
     }

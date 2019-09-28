@@ -219,7 +219,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public int ChannelNumber
+        public ushort ChannelNumber
         {
             get { return m_delegate.ChannelNumber; }
         }

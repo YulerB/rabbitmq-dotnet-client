@@ -7,7 +7,7 @@ namespace RabbitMQ.Client.Impl
     internal class ConcurrentConsumerDispatcher : IConsumerDispatcher
     {
         private ModelBase model;
-        private ConsumerWorkService workService;
+        private readonly ConsumerWorkService workService;
 
         public ConcurrentConsumerDispatcher(ModelBase model, ConsumerWorkService ws)
         {

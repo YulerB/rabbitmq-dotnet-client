@@ -252,8 +252,7 @@ namespace RabbitMQ.Client
         /// </summary>
         public override bool Equals(object obj)
         {
-            var other = obj as AmqpTcpEndpoint;
-            if (other == null)
+            if (!(obj is AmqpTcpEndpoint other))
             {
                 return false;
             }

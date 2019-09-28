@@ -58,7 +58,7 @@ namespace RabbitMQ.Client.Impl
         {
             var bp = basicProperties ?? model.CreateBasicProperties();
             var method = new BasicPublish(0, exchange,routingKey, mandatory ? BasicPublishFlags.Mandatory : BasicPublishFlags.None);
-            commands.Add(new Command(method, bp, body));
+            commands.Add(new Command(method, bp, new FrameBuilder(body)));
         }
 
         public void Publish()

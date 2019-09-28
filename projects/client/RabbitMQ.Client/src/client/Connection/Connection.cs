@@ -1327,7 +1327,7 @@ namespace RabbitMQ.Client.Framing.Impl
             {
                 string mechanismsString = connectionStart.Mechanisms;
                 string[] mechanisms = mechanismsString.Split(' ');
-                AuthMechanismFactory mechanismFactory = m_factory.AuthMechanismFactory(mechanisms);
+                IAuthMechanismFactory mechanismFactory = m_factory.AuthMechanismFactory(mechanisms);
                 if (mechanismFactory == null)
                 {
                     throw new IOException("No compatible authentication mechanism found - server offered [" + mechanismsString + "]");

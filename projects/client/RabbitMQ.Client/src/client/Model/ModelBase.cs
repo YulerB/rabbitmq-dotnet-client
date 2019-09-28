@@ -285,9 +285,9 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public int ChannelNumber
+        public ushort ChannelNumber
         {
-            get { return ((Session)Session).ChannelNumber; }
+            get { return Session.ChannelNumber; }
         }
 
         public ShutdownEventArgs CloseReason { get; private set; }
@@ -463,37 +463,48 @@ namespace RabbitMQ.Client.Impl
                 m_continuationQueue.Next().HandleCommand(cmd);
         }
 
-        public IMethod ModelRpc(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
-        {
-            var k = new SimpleBlockingRpcContinuation();
-            lock(_rpcLock)
-            {
-                TransmitAndEnqueue(new Command(method, header, body), k);
-                return k.GetReply(this.ContinuationTimeout).Method;
-            }
-        }
-
-        public IMethod ModelRpcX<T>(T method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body) where T: IMethod
+        //public IMethod ModelRpc(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
+        //{
+        //    var k = new SimpleBlockingRpcContinuation();
+        //    lock(_rpcLock)
+        //    {
+        //        TransmitAndEnqueue(new Command(method, header,new FrameBuilder(body)), k);
+        //        return k.GetReply(this.ContinuationTimeout).Method;
+        //    }
+        //}
+        public IMethod ModelRpc(IMethod method)
         {
             var k = new SimpleBlockingRpcContinuation();
             lock (_rpcLock)
             {
-                TransmitAndEnqueue(new Command(method, header, body), k);
+                TransmitAndEnqueue(new Command(method), k);
                 return k.GetReply(this.ContinuationTimeout).Method;
             }
         }
-
 
         public void ModelSend(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
         {
             if (method.HasContent)
             {
                 m_flowControlBlock.WaitOne();
-                Session.Transmit(new Command(method, header, body));
+                Session.Transmit(new Command(method, header, new FrameBuilder(body)));
             }
             else
             {
-                Session.Transmit(new Command(method, header, body));
+                Session.Transmit(new Command(method, header, new FrameBuilder(body)));
+            }
+        }
+
+        public void ModelSend(IMethod method)
+        {
+            if (method.HasContent)
+            {
+                m_flowControlBlock.WaitOne();
+                Session.Transmit(new Command(method));
+            }
+            else
+            {
+                Session.Transmit(new Command(method));
             }
         }
 

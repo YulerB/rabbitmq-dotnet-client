@@ -49,8 +49,20 @@ namespace RabbitMQ.Client.Impl
 {
     public class FrameBuilder  
     {
+        public FrameBuilder() {
+            data = new List<ArraySegment<byte>>(10);
+        }
+        public FrameBuilder(byte[] bytes) {
+
+            data = new List<ArraySegment<byte>>
+            {
+                new ArraySegment<byte>(bytes, 0, bytes.Length)
+            };
+            len += bytes.Length;
+        }
+
         private long len = 0;
-        private List<ArraySegment<byte>> data = new List<ArraySegment<byte>>(25);
+        private List<ArraySegment<byte>> data;
 
         public  long Length => len;
 
@@ -75,6 +87,16 @@ namespace RabbitMQ.Client.Impl
         {
             data.AddRange(content);
             len += written1;
+        }
+
+        public byte[] ToByteArray()
+        {
+            MemoryStream stream = new MemoryStream((int)len);
+            foreach(var item in data)
+            {
+                stream.Write(item.Array, item.Offset, item.Count);
+            }
+            return stream.ToArray();
         }
     }
 }

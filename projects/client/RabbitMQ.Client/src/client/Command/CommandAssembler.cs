@@ -61,7 +61,7 @@ namespace RabbitMQ.Client.Impl
         
         public IMethod m_method;
         public RabbitMQ.Client.Impl.BasicProperties m_header;
-        public MemoryStream m_bodyStream;
+        public FrameBuilder frameBuilder;
         public ulong m_remainingBodyBytes;
         public AssemblyState m_state;
       
@@ -112,13 +112,16 @@ namespace RabbitMQ.Client.Impl
                                     m_remainingBodyBytes,
                                     f.Payload.Length));
                         }
-                        if (m_bodyStream == null)
+                        if (frameBuilder == null)
                         {
-                            m_bodyStream = new MemoryStream(f.Payload, true);
+                            frameBuilder = new FrameBuilder();
+                            frameBuilder.Write(f.Payload, 0, f.Payload.Length);
+                            //m_bodyStream = new MemoryStream(f.Payload, true);
                         }
                         else
                         {
-                            m_bodyStream.Write(f.Payload, 0, f.Payload.Length);
+                            frameBuilder.Write(f.Payload, 0, f.Payload.Length);
+                            //m_bodyStream.Write(f.Payload, 0, f.Payload.Length);
                         }
                         m_remainingBodyBytes -= (ulong)f.Payload.Length;
                         UpdateContentBodyState();
@@ -138,15 +141,15 @@ namespace RabbitMQ.Client.Impl
         {
             if (m_state == AssemblyState.Complete)
             {
-                if (m_bodyStream == null)
+                if (frameBuilder == null)
                 {
-                    Command result = new Command(m_method, m_header, new byte[] { });
+                    Command result = new Command(m_method, m_header, new FrameBuilder());
                     Reset();
                     return result;
                 }
                 else
                 {
-                    Command result = new Command(m_method, m_header, m_bodyStream.ToArray());
+                    Command result = new Command(m_method, m_header, frameBuilder);
                     Reset();
                     return result;
                 }
@@ -162,7 +165,7 @@ namespace RabbitMQ.Client.Impl
             m_state = AssemblyState.ExpectingMethod;
             m_method = null;
             m_header = null;
-            m_bodyStream = null;
+            frameBuilder = null;
             m_remainingBodyBytes = 0;
         }
 

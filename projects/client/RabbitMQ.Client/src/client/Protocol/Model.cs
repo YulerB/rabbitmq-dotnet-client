@@ -49,18 +49,15 @@ namespace RabbitMQ.Client.Framing.Impl
     {
         public Model(RabbitMQ.Client.Impl.ISession session) : base(session) { }
         public Model(RabbitMQ.Client.Impl.ISession session, RabbitMQ.Client.ConsumerWorkService workService) : base(session, workService) { }
-        public override void ConnectionTuneOk(
-          ushort @channelMax,
-          uint @frameMax,
-          ushort @heartbeat)
+        public override void ConnectionTuneOk(ushort @channelMax,uint @frameMax,ushort @heartbeat)
         {
-            ModelSend(new ConnectionTuneOk(@channelMax,@frameMax,@heartbeat), null, null);
+            ModelSend(new ConnectionTuneOk(@channelMax,@frameMax,@heartbeat));
         }
         public override void _Private_BasicCancel(
           string @consumerTag,
           bool @nowait)
         {
-            ModelSend(new BasicCancel(consumerTag, nowait), null, null);
+            ModelSend(new BasicCancel(consumerTag, nowait));
         }
         public override void _Private_BasicConsume(
           string @queue,
@@ -68,13 +65,13 @@ namespace RabbitMQ.Client.Framing.Impl
           BasicConsumeFlags settings ,
           System.Collections.Generic.IDictionary<string, object> @arguments)
         {
-            ModelSend(new BasicConsume(0, queue, consumerTag, settings, arguments), null, null);
+            ModelSend(new BasicConsume(0, queue, consumerTag, settings, arguments));
         }
         public override void _Private_BasicGet(
           string @queue,
           bool @autoAck)
         {
-            ModelSend(new BasicGet(0, queue, autoAck), null, null);
+            ModelSend(new BasicGet(0, queue, autoAck));
         }
         public override void _Private_BasicPublish(
           string @exchange,
@@ -87,7 +84,7 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         public override void _Private_BasicRecover(bool @requeue)
         {
-            ModelSend(new BasicRecover(requeue), null, null);
+            ModelSend(new BasicRecover(requeue));
         }
         public override void _Private_ChannelClose(
           ushort @replyCode,
@@ -95,20 +92,20 @@ namespace RabbitMQ.Client.Framing.Impl
           ushort @classId,
           ushort @methodId)
         {
-            ModelSend(new ChannelClose(replyCode, replyText, classId, methodId), null, null);
+            ModelSend(new ChannelClose(replyCode, replyText, classId, methodId));
         }
         public override void _Private_ChannelCloseOk()
         {
-            ModelSend(new ChannelCloseOk(), null, null);
+            ModelSend(new ChannelCloseOk());
         }
         public override void _Private_ChannelFlowOk(bool @active)
         {
-            ModelSend(new ChannelFlowOk(active), null, null);
+            ModelSend(new ChannelFlowOk(active));
         }
         public override void _Private_ChannelOpen(
           string @outOfBand)
         {
-            IMethod __repBase = ModelRpc(new ChannelOpen(outOfBand), null, null);
+            IMethod __repBase = ModelRpc(new ChannelOpen(outOfBand));
             if (!(__repBase is ChannelOpenOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_ConfirmSelect(
@@ -117,10 +114,10 @@ namespace RabbitMQ.Client.Framing.Impl
             ConfirmSelect __req = new ConfirmSelect(nowait);
             if (nowait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is ConfirmSelectOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_ConnectionClose(
@@ -130,24 +127,24 @@ namespace RabbitMQ.Client.Framing.Impl
           ushort @methodId)
         {
             ConnectionClose __req = new ConnectionClose(replyCode, replyText, classId, methodId);
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is ConnectionCloseOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_ConnectionCloseOk()
         {
-            ModelSend(new ConnectionCloseOk(), null, null);
+            ModelSend(new ConnectionCloseOk());
         }
         public override void _Private_ConnectionOpen(
           string @virtualHost,
           string @capabilities,
           bool @insist)
         {
-            ModelSend(new ConnectionOpen(@virtualHost, @capabilities, @insist), null, null);
+            ModelSend(new ConnectionOpen(@virtualHost, @capabilities, @insist));
         }
         public override void _Private_ConnectionSecureOk(
           string @response)
         {
-            ModelSend(new ConnectionSecureOk(response), null, null);
+            ModelSend(new ConnectionSecureOk(response));
         }
         public override void _Private_ConnectionStartOk(
           System.Collections.Generic.IDictionary<string, object> @clientProperties,
@@ -155,7 +152,7 @@ namespace RabbitMQ.Client.Framing.Impl
           string @response,
           string @locale)
         {
-            ModelSend(new ConnectionStartOk(clientProperties, mechanism, response, locale), null, null);
+            ModelSend(new ConnectionStartOk(clientProperties, mechanism, response, locale));
         }
         public override void _Private_ExchangeBind(
           string @destination,
@@ -167,10 +164,10 @@ namespace RabbitMQ.Client.Framing.Impl
             ExchangeBind __req = new ExchangeBind(0, destination, source, routingKey, nowait, arguments);
             if (nowait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is ExchangeBindOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_ExchangeDeclare(
@@ -182,10 +179,10 @@ namespace RabbitMQ.Client.Framing.Impl
             ExchangeDeclare __req = new ExchangeDeclare(0, exchange, type, flag, arguments);
             if ((flag & ExchangeDeclareFlags.NoWait) == ExchangeDeclareFlags.NoWait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is ExchangeDeclareOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_ExchangeDelete(
@@ -195,10 +192,10 @@ namespace RabbitMQ.Client.Framing.Impl
             ExchangeDelete __req = new ExchangeDelete(0, exchange, flag);
             if ((flag & ExchangeDeleteFlags.NoWait) == ExchangeDeleteFlags.NoWait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is ExchangeDeleteOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_ExchangeUnbind(
@@ -211,10 +208,10 @@ namespace RabbitMQ.Client.Framing.Impl
             ExchangeUnbind __req = new ExchangeUnbind(0, destination, source, routingKey, nowait, arguments);
             if (nowait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is ExchangeUnbindOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_QueueBind(
@@ -227,10 +224,10 @@ namespace RabbitMQ.Client.Framing.Impl
             QueueBind __req = new QueueBind(0, queue, exchange, routingKey, nowait, arguments);
             if (nowait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is QueueBindOk __rep)) throw new UnexpectedMethodException(__repBase);
         }
         public override void _Private_QueueDeclare(
@@ -238,7 +235,7 @@ namespace RabbitMQ.Client.Framing.Impl
           QueueDeclareFlags flag,
           System.Collections.Generic.IDictionary<string, object> @arguments)
         {
-            ModelSend(new QueueDeclare(0, @queue, flag, @arguments), null, null);
+            ModelSend(new QueueDeclare(0, @queue, flag, @arguments));
         }
         public override uint _Private_QueueDelete(
           string @queue,
@@ -247,10 +244,10 @@ namespace RabbitMQ.Client.Framing.Impl
             QueueDelete __req = new QueueDelete(0,@queue, flag);
             if ((flag & QueueDeleteFlags.NoWait) == QueueDeleteFlags.NoWait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return 0xFFFFFFFF;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is QueueDeleteOk __rep)) throw new UnexpectedMethodException(__repBase);
             return __rep.MessageCount;
         }
@@ -261,10 +258,10 @@ namespace RabbitMQ.Client.Framing.Impl
             QueuePurge __req = new QueuePurge(0, @queue, @nowait);
             if (nowait)
             {
-                ModelSend(__req, null, null);
+                ModelSend(__req);
                 return 0xFFFFFFFF;
             }
-            IMethod __repBase = ModelRpc(__req, null, null);
+            IMethod __repBase = ModelRpc(__req);
             if (!(__repBase is QueuePurgeOk __rep)) throw new UnexpectedMethodException(__repBase);
             return __rep.MessageCount;
         }
@@ -272,32 +269,32 @@ namespace RabbitMQ.Client.Framing.Impl
           ulong @deliveryTag,
           bool @multiple)
         {
-            ModelSend(new BasicAck(deliveryTag, multiple), null, null);
+            ModelSend(new BasicAck(deliveryTag, multiple));
         }
         public override void BasicNack(
           ulong @deliveryTag,
           BasicNackFlags settings)
         {
-            ModelSend(new BasicNack(deliveryTag, settings), null, null);
+            ModelSend(new BasicNack(deliveryTag, settings));
         }
         public override void BasicQos(
           uint @prefetchSize,
           ushort @prefetchCount,
           bool @global)
         {
-            IMethod __repBase = ModelRpc(new BasicQos(@prefetchSize, @prefetchCount, @global), null, null);
-            if (!(__repBase is BasicQosOk __rep)) throw new UnexpectedMethodException(__repBase);
+            IMethod __repBase = ModelRpc(new BasicQos(@prefetchSize, @prefetchCount, @global));
+            if (!(__repBase is BasicQosOk)) throw new UnexpectedMethodException(__repBase);
         }
         public override void BasicRecoverAsync(
           bool @requeue)
         {
-            ModelSend(new BasicRecoverAsync(@requeue), null, null);
+            ModelSend(new BasicRecoverAsync(@requeue));
         }
         public override void BasicReject(
           ulong @deliveryTag,
           bool @requeue)
         {
-            ModelSend(new BasicReject(deliveryTag, requeue), null, null);
+            ModelSend(new BasicReject(deliveryTag, requeue));
         }
         public override RabbitMQ.Client.Impl.BasicProperties CreateBasicProperties()
         {
@@ -310,26 +307,26 @@ namespace RabbitMQ.Client.Framing.Impl
           System.Collections.Generic.IDictionary<string, object> @arguments)
         {
             QueueUnbind __req = new QueueUnbind(0,@queue,@exchange,@routingKey,@arguments);
-            IMethod __repBase = ModelRpc(__req, null, null);
-            if (!(__repBase is QueueUnbindOk __rep)) throw new UnexpectedMethodException(__repBase);
+            IMethod __repBase = ModelRpc(__req);
+            if (!(__repBase is QueueUnbindOk)) throw new UnexpectedMethodException(__repBase);
         }
         public override void TxCommit()
         {
             TxCommit __req = new TxCommit();
-            IMethod __repBase = ModelRpc(__req, null, null);
-            if (!(__repBase is TxCommitOk __rep)) throw new UnexpectedMethodException(__repBase);
+            IMethod __repBase = ModelRpc(__req);
+            if (!(__repBase is TxCommitOk)) throw new UnexpectedMethodException(__repBase);
         }
         public override void TxRollback()
         {
             TxRollback __req = new TxRollback();
-            IMethod __repBase = ModelRpc(__req, null, null);
-            if (!(__repBase is TxRollbackOk __rep)) throw new UnexpectedMethodException(__repBase);
+            IMethod __repBase = ModelRpc(__req);
+            if (!(__repBase is TxRollbackOk)) throw new UnexpectedMethodException(__repBase);
         }
         public override void TxSelect()
         {
             TxSelect __req = new TxSelect();
-            IMethod __repBase = ModelRpc(__req, null, null);
-            if (!(__repBase is TxSelectOk __rep))
+            IMethod __repBase = ModelRpc(__req);
+            if (!(__repBase is TxSelectOk))
             {
                 throw new UnexpectedMethodException(__repBase);
             }
@@ -373,7 +370,7 @@ namespace RabbitMQ.Client.Framing.Impl
                           __impl.Exchange,
                           __impl.RoutingKey,
                           cmd.Header,
-                          cmd.Body);
+                          cmd.Body.ToByteArray());
                         return true;
                     }
                 case 3932232:
@@ -391,7 +388,7 @@ namespace RabbitMQ.Client.Framing.Impl
                           __impl.RoutingKey,
                           __impl.MessageCount,
                           cmd.Header,
-                          cmd.Body);
+                          cmd.Body.ToByteArray());
                         return true;
                     }
                 case 3932280:
@@ -416,7 +413,7 @@ namespace RabbitMQ.Client.Framing.Impl
                           __impl.Exchange,
                           __impl.RoutingKey,
                           cmd.Header,
-                          cmd.Body);
+                          cmd.Body.ToByteArray());
                         return true;
                     }
                 case 1310760:

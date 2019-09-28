@@ -52,15 +52,15 @@ namespace RabbitMQ.Client.Unit
         public void TestRandomAllocation()
         {
             int repeatCount = 10000;
-            int range = 100;
-            IList<int> allocated = new List<int>();
-            IntAllocator intAllocator = new IntAllocator(0, range);
+            ushort range = 100;
+            IList<ushort> allocated = new List<ushort>();
+            UIntAllocator intAllocator = new UIntAllocator(0, range);
             Random rand = new Random();
             while (repeatCount-- > 0)
             {
                 if (rand.Next(2) == 0)
                 {
-                    int? a = intAllocator.Allocate();
+                    ushort? a = intAllocator.Allocate();
                     if (a.HasValue)
                     {
                         Assert.False(allocated.Contains(a.Value));
@@ -69,7 +69,7 @@ namespace RabbitMQ.Client.Unit
                 }
                 else if (allocated.Count > 0)
                 {
-                    int a = allocated[0];
+                    ushort a = allocated[0];
                     intAllocator.Free(a);
                     allocated.RemoveAt(0);
                 }
@@ -79,13 +79,13 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestAllocateAll()
         {
-            int range = 100;
-            IList<int> allocated = new List<int>();
-            IntAllocator intAllocator = new IntAllocator(0, range);
+            ushort range = 100;
+            IList<ushort> allocated = new List<ushort>();
+            UIntAllocator intAllocator = new UIntAllocator(0, range);
             for (int i=0; i <= range; i++)
             {
-                int? a = intAllocator.Allocate();
-                Assert.AreNotEqual(default(int?), a);
+                ushort? a = intAllocator.Allocate();
+                Assert.AreNotEqual(default(ushort?), a);
                 Assert.False(allocated.Contains(a.Value));
                 allocated.Add(a.Value);
             }

@@ -57,9 +57,9 @@ namespace RabbitMQ.Client.Impl
     public class HeaderOutboundFrame : OutboundFrame
     {
         private readonly RabbitMQ.Client.Impl.BasicProperties header;
-        private readonly int bodyLength;
+        private readonly long bodyLength;
 
-        public HeaderOutboundFrame(ushort channel, RabbitMQ.Client.Impl.BasicProperties header, int bodyLength) : base(FrameType.FrameHeader, channel)
+        public HeaderOutboundFrame(ushort channel, RabbitMQ.Client.Impl.BasicProperties header, long bodyLength) : base(FrameType.FrameHeader, channel)
         {
             this.header = header;
             this.bodyLength = bodyLength;
