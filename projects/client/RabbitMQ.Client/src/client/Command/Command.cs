@@ -118,18 +118,18 @@ namespace RabbitMQ.Client.Impl
 
         public void TransmitAsFrameSet(ushort channelNumber, Connection connection)
         {
-            var frames = new List<OutboundFrame>
-            {
-                new MethodOutboundFrame(channelNumber, Method)
-            };
             if (Method.HasContent)
             {
                 var body = Body;
-
-                frames.Add(new HeaderOutboundFrame(channelNumber, Header, body.Length));
                 var frameMax = (int)Math.Min(int.MaxValue, connection.FrameMax);
                 var frameMaxEqualsZero = frameMax == 0;
                 var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - EmptyFrameSize;
+
+                var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax) )
+                {
+                    new MethodOutboundFrame(channelNumber, Method),
+                    new HeaderOutboundFrame(channelNumber, Header, body.Length)
+                };
 
                 ArraySegmentSequence sequence = new ArraySegmentSequence (body.ToData());
 
@@ -140,16 +140,22 @@ namespace RabbitMQ.Client.Impl
                     
                     frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(sequence.ReadBytes((int)count), 0, (int)count)));
                 }
+                connection.WriteFrameSet(frames);
             }
-
-            connection.WriteFrameSet(frames);
+            else
+            {
+                connection.WriteFrameSet(new List<OutboundFrame>
+                {
+                    new MethodOutboundFrame(channelNumber, Method)
+                });
+            }
         }
 
 
         public static List<OutboundFrame> CalculateFrames(ushort channelNumber, Connection connection, IList<Command> commands)
         {
             var frameMax = (int)Math.Min(int.MaxValue, connection.FrameMax);
-            var frames = new List<OutboundFrame>();
+            var frames = new List<OutboundFrame>(commands.Count*3);
             var frameMaxEqualsZero = frameMax == 0;
             foreach (var cmd in commands)
             {

@@ -381,6 +381,13 @@ namespace RabbitMQ.Util
         private static void WriteDecimal(this FrameBuilder output, decimal value)
         {
             DecimalToAmqp(value, out byte scale, out int mantissa);
+
+            //var data = new byte[5];
+            //Span<byte> span = new Span<byte>(data);
+            //span[0] = scale;
+            //BinaryPrimitives.WriteUInt32BigEndian(span.Slice(1), (uint)mantissa);
+            //output.Write(data, 0, 5);
+
             output.WriteByte(scale);
             output.WriteUInt32((uint)mantissa);
         }

@@ -56,37 +56,39 @@ namespace RabbitMQ.Client.Unit
         public void TestStandardTypesE()
         {
             FrameBuilder writerStream = new FrameBuilder();
-            
-                IDictionary<string, object> t = new Dictionary<string, object>();
-                t["string"] = "Hello";
-                t["int"] = 1234;
-                t["decimal"] = 12.34m;
-                t["timestamp"] = new AmqpTimestamp(0);
-                IDictionary<string, object> t2 = new Dictionary<string, object>();
-                t["fieldtable"] = t2;
-                t2["test"] = "test";
-                IList array = new List<object>();
-                array.Add("longstring");
-                array.Add(1234);
-                t["fieldarray"] = array;
-                writerStream.WriteTable(t);
 
-                using (ArraySegmentSequence readerSequence = new ArraySegmentSequence(writerStream.ToData()))
+            IDictionary<string, object> t2 = new Dictionary<string, object>();
+            t2["test"] = "test";
+
+            IDictionary<string, object> t = new Dictionary<string, object>
+            {
+                ["string"] = "Hello",
+                ["int"] = 1234,
+                ["decimal"] = 12.34m,
+                ["timestamp"] = new AmqpTimestamp(0),
+                ["fieldtable"] = t2,
+                ["fieldarray"] = new List<object>
                 {
-                    IDictionary<string, object> nt = readerSequence.ReadTable(out long read);
-
-                    Assert.AreEqual(Encoding.UTF8.GetBytes("Hello"), nt["string"]);
-                    Assert.AreEqual(1234, nt["int"]);
-                    Assert.AreEqual(12.34m, nt["decimal"]);
-                    Assert.AreEqual(0, ((AmqpTimestamp)nt["timestamp"]).UnixTime);
-                    IDictionary<string, object> nt2 = (IDictionary<string, object>)nt["fieldtable"];
-                    Assert.AreEqual(Encoding.UTF8.GetBytes("test"), nt2["test"]);
-                    IList<object> narray = (IList<object>)nt["fieldarray"];
-                    Assert.AreEqual(Encoding.UTF8.GetBytes("longstring"), narray[0]);
-                    Assert.AreEqual(1234, narray[1]);
+                    "longstring",
+                    1234
                 }
-            
+            };
+            writerStream.WriteTable(t);
+
+            using (ArraySegmentSequence readerSequence = new ArraySegmentSequence(writerStream.ToData()))
+            {
+                IDictionary<string, object> nt = readerSequence.ReadTable(out long read);
+
+                Assert.AreEqual(Encoding.UTF8.GetBytes("Hello"), nt["string"]);
+                Assert.AreEqual(1234, nt["int"]);
+                Assert.AreEqual(12.34m, nt["decimal"]);
+                Assert.AreEqual(0, ((AmqpTimestamp)nt["timestamp"]).UnixTime);
+                IDictionary<string, object> nt2 = (IDictionary<string, object>)nt["fieldtable"];
+                Assert.AreEqual(Encoding.UTF8.GetBytes("test"), nt2["test"]);
+                IList<object> narray = (IList<object>)nt["fieldarray"];
+                Assert.AreEqual(Encoding.UTF8.GetBytes("longstring"), narray[0]);
+                Assert.AreEqual(1234, narray[1]);
+            }
         }
-        
     }
 }

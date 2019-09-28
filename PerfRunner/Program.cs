@@ -11,7 +11,7 @@ namespace PerfRunner
             try
             {
                 c.Init();
-                c.TestEventingConsumerDeliveryEventsWithAck1Short();
+                c.TestEventingConsumerDeliveryEventsWithAck1();
             }
             finally
             {
