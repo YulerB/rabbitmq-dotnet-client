@@ -350,7 +350,7 @@ namespace RabbitMQ.Util
                 return null;
             }
 
-            IDictionary<string, object> table = new Dictionary<string, object>();
+            IDictionary<string, object> table = new Dictionary<string, object>(Convert.ToInt32(tableLength / 4));
             long left = tableLength;
             while (left> 0)
             {
@@ -381,7 +381,7 @@ namespace RabbitMQ.Util
                 return null;
             }
 
-            IList<object> array = new List<object>();
+            IList<object> array = new List<object>(Convert.ToInt32(arrayLength/3));
             long left = arrayLength;
             while (left > 0)
             {
