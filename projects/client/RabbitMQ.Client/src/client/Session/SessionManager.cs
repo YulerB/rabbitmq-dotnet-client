@@ -58,7 +58,7 @@ namespace RabbitMQ.Client.Impl
         public readonly ushort ChannelMax;
         private readonly UIntAllocator UInts;
         private readonly Connection m_connection;
-        private readonly IDictionary<int, ISession> m_sessionMap = new Dictionary<int, ISession>();
+        private readonly IDictionary<ushort, ISession> m_sessionMap = new Dictionary<ushort, ISession>();
         private bool m_autoClose = false;
 
         public SessionManager(Connection connection, ushort channelMax)
@@ -174,7 +174,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public ISession Lookup(int number)
+        public ISession Lookup(ushort number)
         {
             lock (m_sessionMap)
             {

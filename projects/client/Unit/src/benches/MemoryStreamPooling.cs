@@ -24,7 +24,7 @@ namespace Unit.src.benches
         [RankColumn]
         public class Benches
         {
-            int processors = Environment.ProcessorCount;
+            readonly int processors = Environment.ProcessorCount;
 
             [GlobalSetup]
             public void Setup()
