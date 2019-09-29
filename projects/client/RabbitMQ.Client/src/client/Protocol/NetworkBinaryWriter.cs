@@ -355,7 +355,7 @@ namespace RabbitMQ.Util
 
         private static IList<ArraySegment<byte>> GetArrayContent(IList val, out uint written)
         {
-            var stream1 = new FrameBuilder(val.Count * 4);
+            var stream1 = new FrameBuilder(val.Count * 2);
             foreach (object entry in val)
             {
                 stream1.WriteFieldValue(entry);

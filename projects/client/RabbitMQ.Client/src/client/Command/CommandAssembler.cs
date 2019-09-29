@@ -114,14 +114,12 @@ namespace RabbitMQ.Client.Impl
                         }
                         if (frameBuilder == null)
                         {
-                            frameBuilder = new FrameBuilder();
+                            frameBuilder = new FrameBuilder(2);
                             frameBuilder.Write(f.Payload, 0, f.Payload.Length);
-                            //m_bodyStream = new MemoryStream(f.Payload, true);
                         }
                         else
                         {
                             frameBuilder.Write(f.Payload, 0, f.Payload.Length);
-                            //m_bodyStream.Write(f.Payload, 0, f.Payload.Length);
                         }
                         m_remainingBodyBytes -= (ulong)f.Payload.Length;
                         UpdateContentBodyState();

@@ -160,7 +160,7 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteFrameSet(IList<OutboundFrame> frames)
         {
-            FrameBuilder stream = new FrameBuilder(frames.Count * 5);
+            FrameBuilder stream = new FrameBuilder(frames.Count * 10);
             foreach (var f in frames) f.WriteTo(stream);
             m_socket.Write(stream.ToData());
         }

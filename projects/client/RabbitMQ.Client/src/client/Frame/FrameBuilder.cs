@@ -96,12 +96,14 @@ namespace RabbitMQ.Client.Impl
 
         public byte[] ToByteArray()
         {
-            MemoryStream stream = new MemoryStream((int)len);
-            foreach(var item in data)
+            using (var stream = MemoryStreamPool.GetObject())
             {
-                stream.Write(item.Array, item.Offset, item.Count);
+                foreach (var item in data)
+                {
+                    stream.Instance.Write(item.Array, item.Offset, item.Count);
+                }
+                return stream.Instance.ToArray();
             }
-            return stream.ToArray();
         }
     }
 }
