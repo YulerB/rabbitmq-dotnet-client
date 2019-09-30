@@ -16,7 +16,11 @@
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="src\benches\NetworkBinaryReaderTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../RabbitMQ.Client/RabbitMQ.Client.csproj" />
+    <ProjectReference Include="..\RabbitMQ.Client1\RabbitMQ.Client1.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -42,6 +42,7 @@ using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.Framing;
 using RabbitMQ.Util;
 using System;
+using System.Buffers;
 using System.IO;
 
 #if NETFX_CORE
@@ -70,6 +71,7 @@ namespace RabbitMQ.Client.Impl
             FrameBuilder nw = new FrameBuilder(5);
             nw.WriteUInt16(header.ProtocolClassId);
             header.WriteTo(nw, (ulong)bodyLength);
+
             writer.WriteUInt32((uint)nw.Length);
             writer.WriteSegments(nw.ToData(), (uint) nw.Length);
         }

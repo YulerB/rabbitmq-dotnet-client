@@ -46,14 +46,9 @@ namespace RabbitMQ.Client.Framing
 {
     public class Constants
     {
-        ///<summary>(= 1)</summary>
-        public const int FrameMethod = 1;
-        ///<summary>(= 2)</summary>
-        public const int FrameHeader = 2;
-        ///<summary>(= 3)</summary>
-        public const int FrameBody = 3;
-        ///<summary>(= 8)</summary>
-        public const int FrameHeartbeat = 8;
+        public const long EmptyFrameSize = 8;
+        public static readonly byte[] m_emptyByteArray = new byte[0];
+
         ///<summary>(= 4096)</summary>
         public const int FrameMinSize = 4096;
         ///<summary>(= 206)</summary>

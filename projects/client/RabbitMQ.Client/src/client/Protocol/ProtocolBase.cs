@@ -89,7 +89,7 @@ namespace RabbitMQ.Client.Framing.Impl
             out ushort replyClassId,
             out ushort replyMethodId)
         {
-            request = new Command(new Impl.ChannelClose(reasonCode,
+            request = new Command<Impl.ChannelClose>(new Impl.ChannelClose(reasonCode,
                 reasonText,
                 0, 0));
             replyClassId = Impl.ChannelCloseOk.ClassId;
@@ -102,7 +102,7 @@ namespace RabbitMQ.Client.Framing.Impl
             out ushort replyClassId,
             out ushort replyMethodId)
         {
-            request = new Command(new Impl.ConnectionClose(reasonCode,
+            request = new Command<Impl.ConnectionClose>(new Impl.ConnectionClose(reasonCode,
                 reasonText,
                 0, 0));
             replyClassId = Impl.ConnectionCloseOk.ClassId;

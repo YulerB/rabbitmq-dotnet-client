@@ -48,6 +48,15 @@ using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Impl
 {
+    public class Command<T> : Command where T: IMethod
+    {
+
+        public Command(T method) : this(method, null, null)
+        {
+        }
+
+        public Command(T method, RabbitMQ.Client.Impl.BasicProperties header, FrameBuilder body) : base(method, header, body) { }
+    }
     public class Command
     {
         // EmptyFrameSize, 8 = 1 + 2 + 4 + 1
@@ -55,8 +64,6 @@ namespace RabbitMQ.Client.Impl
         // - 2 bytes of channel number
         // - 4 bytes of frame payload length
         // - 1 byte of payload trailer FrameEnd byte
-        private const long EmptyFrameSize = 8;
-        private static readonly byte[] m_emptyByteArray = new byte[0];
 
         static Command()
         {
@@ -89,11 +96,11 @@ namespace RabbitMQ.Client.Impl
                 actualLength = stream.Length;
             }
 
-            if (EmptyFrameSize != actualLength)
+            if (Constants.EmptyFrameSize != actualLength)
             {
                 string message =
                     string.Format("EmptyFrameSize is incorrect - defined as {0} where the computed value is in fact {1}.",
-                        EmptyFrameSize,
+                        Constants.EmptyFrameSize,
                         actualLength);
                 throw new ProtocolViolationException(message);
             }
@@ -123,7 +130,7 @@ namespace RabbitMQ.Client.Impl
                 var body = Body;
                 var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
                 var frameMaxEqualsZero = frameMax == 0;
-                var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - EmptyFrameSize;
+                var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
 
                 var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax) )
                 {
@@ -153,7 +160,6 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-
         public static List<OutboundFrame> CalculateFrames(ushort channelNumber, Connection connection, IList<Command> commands)
         {
             var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
@@ -168,7 +174,7 @@ namespace RabbitMQ.Client.Impl
                     using (ArraySegmentSequence sequence = new ArraySegmentSequence(body.ToData()))
                     {
                         frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header, body.Length));
-                        var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - EmptyFrameSize;
+                        var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
                         for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
                         {
                             var remaining = body.Length - offset;
