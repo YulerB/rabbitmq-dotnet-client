@@ -39,6 +39,7 @@
 //---------------------------------------------------------------------------
 
 using RabbitMQ.Client.Impl;
+using System;
 using System.Text;
 
 namespace RabbitMQ.Client
@@ -81,5 +82,6 @@ namespace RabbitMQ.Client
         void AppendArgumentDebugStringTo(StringBuilder stringBuilder);
         void ReadArgumentsFrom(ArraySegmentSequence reader);
         void WriteArgumentsTo(FrameBuilder writer);
+        void WriteArgumentsTo(ref Span<byte> writer, out int written);
     }
 }

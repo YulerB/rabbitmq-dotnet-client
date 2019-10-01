@@ -331,6 +331,14 @@ namespace RabbitMQ.Client.Impl
             WritePropertiesTo(writer);
         }
 
+        public void WriteTo(Span<byte> writer, ulong bodySize, out int written)
+        {
+            NetworkBinaryWriter1.WriteUInt16(ref writer, ZERO, out int written1); // weight - not currently used
+            NetworkBinaryWriter1.WriteUInt64(ref writer, bodySize, out int written2);
+            WritePropertiesTo(writer, out int written3);
+            written = written1 + written2 + written3;
+        }
+
         ///<summary>
         /// Retrieve the AMQP class ID of this content header.
         ///</summary>
@@ -345,6 +353,7 @@ namespace RabbitMQ.Client.Impl
 
         public abstract void ReadPropertiesFrom(ArraySegmentSequence stream);
         public abstract void WritePropertiesTo(FrameBuilder writer);
+        public abstract void WritePropertiesTo(Span<byte> writer, out int written);
 
     }
 }

@@ -154,6 +154,9 @@ namespace RabbitMQ.Client.Impl
         public void WriteFrame(OutboundFrame frame)
         {
             FrameBuilder stream = new FrameBuilder(5);
+
+
+
             frame.WriteTo(stream);
             m_socket.Write(stream.ToData());
         }

@@ -77,7 +77,11 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             writer.WriteByte(Convert.ToByte(m_requeue));
         }
-
+        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        {
+            NetworkBinaryWriter1.WriteByte(ref writer, Convert.ToByte(m_requeue), out int written1);
+            written = written1;
+        }
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");

@@ -90,7 +90,13 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteShortString(m_queue);
             writer.WriteByte(Convert.ToByte(m_noAck));
         }
-
+        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        {
+            NetworkBinaryWriter1.WriteUInt16(ref writer, m_reserved1, out int written1);
+            NetworkBinaryWriter1.WriteShortString(ref writer, m_queue, out int written2);
+            NetworkBinaryWriter1.WriteByte(ref writer, Convert.ToByte(m_noAck), out int written3);
+            written = written1 + written2 + written3;
+        }
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");

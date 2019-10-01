@@ -108,6 +108,16 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteByte(Convert.ToByte(m_nowait));
             writer.WriteTable(m_arguments);
         }
+        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        {
+            NetworkBinaryWriter1.WriteUInt16(ref writer, m_reserved1, out int written1);
+            NetworkBinaryWriter1.WriteShortString(ref writer, m_queue, out int written2);
+            NetworkBinaryWriter1.WriteShortString(ref writer, m_exchange, out int written3);
+            NetworkBinaryWriter1.WriteShortString(ref writer, m_routingKey, out int written4);
+            NetworkBinaryWriter1.WriteByte(ref writer, Convert.ToByte(m_nowait), out int written5);
+            NetworkBinaryWriter1.WriteTable(ref writer, m_arguments, out int written6);
+            written = written1 + written2 + written3 + written4 + written5 + written6;
+        }
 
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {

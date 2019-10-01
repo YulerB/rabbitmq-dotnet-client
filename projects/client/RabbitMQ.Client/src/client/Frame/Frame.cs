@@ -68,12 +68,13 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(FrameBuilder writer)
         {
-            FrameBuilder nw = new FrameBuilder(5);
-            nw.WriteUInt16(header.ProtocolClassId);
-            header.WriteTo(nw, (ulong)bodyLength);
-
-            writer.WriteUInt32((uint)nw.Length);
-            writer.WriteSegments(nw.ToData(), (uint) nw.Length);
+            var byteBuffer = new byte[200];
+            Span<byte> buffer = new Span<byte>(byteBuffer);
+            NetworkBinaryWriter1.WriteUInt16(ref buffer, header.ProtocolClassId, out int written);
+            header.WriteTo(buffer, (ulong)bodyLength, out int written1);
+            var total = written + written1;
+            writer.WriteUInt32((uint)total);
+            writer.Write(byteBuffer, 0, total);
         }
     }
     public class BodySegmentOutboundFrame : OutboundFrame
@@ -103,12 +104,14 @@ namespace RabbitMQ.Client.Impl
 
         public override void WritePayload(FrameBuilder writer)
         {
-            FrameBuilder nw = new FrameBuilder(5);
-            nw.WriteUInt16(method.ProtocolClassId);
-            nw.WriteUInt16(method.ProtocolMethodId);
-            method.WriteArgumentsTo(nw);
-            writer.WriteUInt32((uint)nw.Length);
-            writer.WriteSegments(nw.ToData(), (uint)nw.Length);
+            var byteBuffer = new byte[500];
+            Span<byte> buffer = new Span<byte>(byteBuffer);
+            NetworkBinaryWriter1.WriteUInt16(ref buffer, method.ProtocolClassId, out int written);
+            NetworkBinaryWriter1.WriteUInt16(ref buffer, method.ProtocolMethodId, out int written1);
+            method.WriteArgumentsTo(ref buffer, out int written2);
+            var total = written + written1 + written2;
+            writer.WriteUInt32((uint)total);
+            writer.Write(byteBuffer,0, total);
         }
     }
 

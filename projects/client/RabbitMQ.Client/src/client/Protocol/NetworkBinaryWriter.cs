@@ -511,7 +511,14 @@ namespace RabbitMQ.Util
     public static class NetworkBinaryWriter1
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBits(this ref Span<byte> output, bool[] bits)
+        public static void WriteByte(this ref Span<byte> output, byte buffer, out int written)
+        {
+            output[0]=buffer;
+            output = output.Slice(1);
+            written = 1;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void WriteBits(this ref Span<byte> output, bool[] bits, out int written)
         {
             int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == 0 ? 1 : bits.Length / 15D));
             BitArray arr = new BitArray(totalBits);
@@ -534,8 +541,9 @@ namespace RabbitMQ.Util
                 bytes[i] = Reverse(bytes[i]);
             }
 
-            output = bytes;
+            bytes.AsSpan().CopyTo(output);
             output = output.Slice(bytes.Length);
+            written = bytes.Length;
         }
         private static byte Reverse(byte b)
         {
@@ -546,83 +554,93 @@ namespace RabbitMQ.Util
             return (byte)a;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Write(this ref Span<byte> output, byte[] buffer)
+        public static void Write(this ref Span<byte> output, byte[] buffer, out int written)
         {
-            output=buffer;
-            output = output.Slice(1);
+            buffer.AsSpan().CopyTo(output);
+            output = output.Slice(buffer.Length);
+            written = buffer.Length;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Write(this ref Span<byte> output, byte[] buffer, int offset, int count)
+        public static void Write(this ref Span<byte> output, byte[] buffer, int offset, int count, out int written)
         {
-            output = buffer.AsSpan().Slice(offset);
+            buffer.AsSpan().Slice(offset, count).CopyTo(output);
             output = output.Slice(count);
+            written = count;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteInt16(this ref Span<byte> output, short i)
+        public static void WriteInt16(this ref Span<byte> output, short i, out int written)
         {
             BinaryPrimitives.WriteInt16BigEndian(output, i);
             output = output.Slice(2);
+            written = 2;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteUInt16(this ref Span<byte> output, ushort i)
+        public static void WriteUInt16(this ref Span<byte> output, ushort i, out int written)
         {
             BinaryPrimitives.WriteUInt16BigEndian(output, i);
             output = output.Slice(2);
+            written = 2;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteInt32(this ref Span<byte> output, int i)
+        public static void WriteInt32(this ref Span<byte> output, int i, out int written)
         {
             BinaryPrimitives.WriteInt32BigEndian(output, i);
             output = output.Slice(4);
+            written = 4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteUInt32(this ref Span<byte> output, uint i)
+        public static void WriteUInt32(this ref Span<byte> output, uint i, out int written)
         {
             BinaryPrimitives.WriteUInt32BigEndian(output, i);
             output = output.Slice(4);
+            written = 4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteInt64(this ref Span<byte> output, long i)
+        public static void WriteInt64(this ref Span<byte> output, long i, out int written)
         {
             BinaryPrimitives.WriteInt64BigEndian(output, i);
             output = output.Slice(8);
+            written = 8;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteUInt64(this ref Span<byte> output, ulong i)
+        public static void WriteUInt64(this ref Span<byte> output, ulong i, out int written)
         {
             BinaryPrimitives.WriteUInt64BigEndian(output, i);
             output = output.Slice(8);
+            written = 8;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteShortString(this ref Span<byte> output, string val)
+        public static void WriteShortString(this ref Span<byte> output, string val, out int written)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             if (bytes.Length > 255)
             {
                 throw new WireFormattingException($"Short string too long; UTF-8 encoded length={bytes.Length}, max=255");
             }
-            output.Fill(Convert.ToByte(bytes.Length));
+            output[0] = Convert.ToByte(bytes.Length);
             output = output.Slice(1);
-            output = bytes;
+            bytes.AsSpan().CopyTo(output);
             output = output.Slice(bytes.Length);
+            written = bytes.Length + 1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteFloat(this ref Span<byte> output, float f)
+        public static void WriteFloat(this ref Span<byte> output, float f, out int written)
         {
             var bytes = BitConverter.GetBytes(f);
-            output = new byte[4]{
+            new byte[4]{
                     bytes[3],
                     bytes[2],
                     bytes[1],
                     bytes[0]
-                };
+                }.AsSpan().CopyTo(output);
             output = output.Slice(4);
+            written = 4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteDouble(this ref Span<byte> output, double d)
+        public static void WriteDouble(this ref Span<byte> output, double d, out int written)
         {
             var bytes = BitConverter.GetBytes(d);
-            output = new byte[8]{
+            new byte[8]{
                     bytes[7],
                     bytes[6],
                     bytes[5],
@@ -631,31 +649,35 @@ namespace RabbitMQ.Util
                     bytes[2],
                     bytes[1],
                     bytes[0]
-                };
+                }.AsSpan().CopyTo(output);
             output = output.Slice(8);
+            written = 8;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteLongString(this ref Span<byte> output, byte[] val)
+        public static void WriteLongString(this ref Span<byte> output, byte[] val, out int written)
         {
             BinaryPrimitives.WriteUInt32BigEndian(output, (uint)val.Length);
             output = output.Slice(4);
-            output = val;
+            val.AsSpan().CopyTo(output);
             output = output.Slice(val.Length);
+            written = val.Length+4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteLongString(this ref Span<byte> output, string val)
+        public static void WriteLongString(this ref Span<byte> output, string val, out int written)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             BinaryPrimitives.WriteUInt32BigEndian(output, (uint)bytes.Length);
             output = output.Slice(4);
-            output = bytes;
+            bytes.AsSpan().CopyTo(output);
             output = output.Slice(bytes.Length);
+            written = bytes.Length + 4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteSByte(this ref Span<byte> output, sbyte val)
+        public static void WriteSByte(this ref Span<byte> output, sbyte val, out int written)
         {
-            output.Fill((byte)val);
+            output[0]=(byte)val;
             output = output.Slice(1);
+            written = 1;
         }
         ///<summary>Writes an AMQP "table" to the writer.</summary>
         ///<remarks>
@@ -671,7 +693,7 @@ namespace RabbitMQ.Util
         /// x and V types and the AMQP 0-9-1 A type.
         ///</para>
         ///</remarks>
-        private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, object> val, out uint written)
+        private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, object> val, out int written)
         {
             var stream1 = new FrameBuilder(val.Count * 4);
             foreach (var entry in val)
@@ -679,10 +701,10 @@ namespace RabbitMQ.Util
                 stream1.WriteShortString(entry.Key);
                 stream1.WriteFieldValue(entry.Value);
             }
-            written = Convert.ToUInt32(stream1.Length);
+            written = Convert.ToInt32(stream1.Length);
             return stream1.ToData();
         }
-        private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, bool> val, out uint written)
+        private static IList<ArraySegment<byte>> GetTableContent(IDictionary<string, bool> val, out int written)
         {
             var stream1 = new FrameBuilder(val.Count * 4);
             foreach (var entry in val)
@@ -690,15 +712,16 @@ namespace RabbitMQ.Util
                 stream1.WriteShortString(entry.Key);
                 stream1.WriteFieldValue(entry.Value);
             }
-            written = Convert.ToUInt32(stream1.Length);
+            written = Convert.ToInt32(stream1.Length);
             return stream1.ToData();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTimestamp(this ref Span<byte> output, AmqpTimestamp val)
+        public static void WriteTimestamp(this ref Span<byte> output, AmqpTimestamp val, out int written)
         {
             BinaryPrimitives.WriteUInt64BigEndian(output, (ulong)val.UnixTime);
             output = output.Slice(8);
+            written = 8;
             // 0-9 is afaict silent on the signedness of the timestamp.
             // See also MethodArgumentReader.ReadTimestamp and AmqpTimestamp itself
         }
@@ -718,45 +741,47 @@ namespace RabbitMQ.Util
         ///</para>
         ///</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTable(this ref Span<byte> output, IDictionary<string, object> val)
+        public static void WriteTable(this ref Span<byte> output, IDictionary<string, object> val, out int written)
         {
             if (val == null)
             {
                 BinaryPrimitives.WriteUInt32BigEndian(output, 0U);
                 output = output.Slice(4);
+                written = 4;
             }
             else
             {
-                var content = GetTableContent(val, out uint written1);
-                BinaryPrimitives.WriteUInt32BigEndian(output, written1);
+                var content = GetTableContent(val, out int written1);
+                BinaryPrimitives.WriteUInt32BigEndian(output,(uint) written1);
                 output = output.Slice(4);
                 foreach(var item in content)
                 {
-                    output = item.AsSpan().Slice(item.Offset);
+                    item.AsSpan().Slice(item.Offset, item.Count).CopyTo(output);
                     output = output.Slice(item.Count);
                 }
-                output = output.Slice(Convert.ToInt32(written1));
+                written = written1+4;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTable(this ref Span<byte> output, IDictionary<string, bool> val)
+        public static void WriteTable(this ref Span<byte> output, IDictionary<string, bool> val, out int written)
         {
             if (val == null)
             {
                 BinaryPrimitives.WriteUInt32BigEndian(output, 0U);
                 output = output.Slice(4);
+                written = 4;
             }
             else
             {
-                var content = GetTableContent(val, out uint written1);
-                BinaryPrimitives.WriteUInt32BigEndian(output, written1);
+                var content = GetTableContent(val, out int written1);
+                BinaryPrimitives.WriteUInt32BigEndian(output, (uint)written1);
                 output = output.Slice(4);
                 foreach (var item in content)
                 {
-                    output = item.AsSpan().Slice(item.Offset);
+                    item.AsSpan().Slice(item.Offset, item.Count).CopyTo(output);
                     output = output.Slice(item.Count);
                 }
-                output = output.Slice(Convert.ToInt32(written1));
+                written = written1 + 4;
             }
         }
 
@@ -783,45 +808,47 @@ namespace RabbitMQ.Util
                              (((uint)bitRepresentation[0]) & 0x7FFFFFFF));
         }
 
-        private static IList<ArraySegment<byte>> GetArrayContent(IList val, out uint written)
+        private static IList<ArraySegment<byte>> GetArrayContent(IList val, out int written)
         {
             var stream1 = new FrameBuilder(val.Count * 2);
             foreach (object entry in val)
             {
                 stream1.WriteFieldValue(entry);
             }
-            written = Convert.ToUInt32(stream1.Length);
+            written = Convert.ToInt32(stream1.Length);
             return stream1.ToData();
         }
 
-        private static void WriteArray(this ref Span<byte> output, IList val)
+        private static void WriteArray(this ref Span<byte> output, IList val, out int written)
         {
             if (val == null)
             {
                 BinaryPrimitives.WriteUInt32BigEndian(output, 0U);
                 output = output.Slice(4);
+                written = 4;
             }
             else
             {
-                var content = GetArrayContent(val, out uint written1);
-                BinaryPrimitives.WriteUInt32BigEndian(output, written1);
+                var content = GetArrayContent(val, out int written1);
+                BinaryPrimitives.WriteUInt32BigEndian(output,(uint) written1);
                 output = output.Slice(4);
                 foreach (var item in content)
                 {
-                    output = item.AsSpan().Slice(item.Offset);
+                    item.AsSpan().Slice(item.Offset, item.Count).CopyTo(output);
                     output = output.Slice(item.Count);
                 }
-                output = output.Slice(Convert.ToInt32(written1));
+                written = written1 + 4;
             }
         }
 
-        private static void WriteDecimal(this ref Span<byte> output, decimal value)
+        private static void WriteDecimal(this ref Span<byte> output, decimal value, out int written)
         {
             DecimalToAmqp(value, out byte scale, out int mantissa);
-            output.Fill(scale);
+            output[0]=scale;
             output = output.Slice(1);
             BinaryPrimitives.WriteUInt32BigEndian(output,(uint) mantissa);
             output = output.Slice(4);
+            written = 5;
         }
 
         private const byte S = 83;
@@ -839,132 +866,151 @@ namespace RabbitMQ.Util
         private const byte t = 116;
         private const byte x = 120;
 
-        private static void WriteFieldValue(this ref Span<byte> output, object value)
+        private static void WriteFieldValue(this ref Span<byte> output, object value, out int written)
         {
             if (value == null)
             {
-                output.Fill(V);
+                output[0] = V;
                 output = output.Slice(1);
+                written = 1;
             }
             else if (value is string)
             {
-                output.Fill(S);
+                output[0] = S;
                 output = output.Slice(1);
                 var val = Encoding.UTF8.GetBytes(value as string);
-                WriteLongString(ref output, val);
+                WriteLongString(ref output, val, out int written1);
+                written = written1 + 1;
             }
             else if (value is byte[])
             {
-                output.Fill(S);
+                output[0] = S;
                 output = output.Slice(1);
                 var val = value as byte[];
-                WriteLongString(ref output, val);
+                WriteLongString(ref output, val, out int written1);
+                written = written1 + 1;
             }
             else if (value is int)
             {
-                output.Fill(I);
+                output[0] = I;
                 output = output.Slice(1);
                 BinaryPrimitives.WriteInt32BigEndian(output, (int)value);
                 output = output.Slice(4);
+                written = 5;
             }
             else if (value is decimal)
             {
-                output.Fill(D);
+                output[0] = D;
                 output = output.Slice(1);
-                WriteDecimal(ref output, (decimal)value);
+                WriteDecimal(ref output, (decimal)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is AmqpTimestamp)
             {
-                output.Fill(T);
+                output[0] = T;
                 output = output.Slice(1);
-                WriteTimestamp(ref output, (AmqpTimestamp)value);
+                WriteTimestamp(ref output, (AmqpTimestamp)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is IDictionary<string, bool>)
             {
-                output.Fill(F);
+                output[0] = F;
                 output = output.Slice(1);
-                WriteTable(ref output, value as IDictionary<string, bool>);
+                WriteTable(ref output, value as IDictionary<string, bool>, out int written1);
+                written = written1 + 1;
             }
             else if (value is IDictionary)
             {
-                output.Fill(F);
+                output[0] = F;
                 output = output.Slice(1);
-                WriteTable(ref output, value as IDictionary<string, object>);
+                WriteTable(ref output, value as IDictionary<string, object>, out int written1);
+                written = written1 + 1;
             }
             else if (value is IList)
             {
-                output.Fill(A);
+                output[0] = A;
                 output = output.Slice(1);
-                WriteArray(ref output, value as IList);
+                WriteArray(ref output, value as IList, out int written1);
+                written = written1 + 1;
             }
             else if (value is sbyte)
             {
-                output.Fill(b);
+                output[0] = b;
                 output = output.Slice(1);
-                WriteSByte(ref output, (sbyte)value);
+                WriteSByte(ref output, (sbyte)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is double)
             {
-                output.Fill(d);
+                output[0] = d;
                 output = output.Slice(1);
-
-                WriteDouble(ref output, (double)value);
+                WriteDouble(ref output, (double)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is float)
             {
-                output.Fill(f);
+                output[0] = f;
                 output = output.Slice(1);
-                WriteFloat(ref output, (float)value);
+                WriteFloat(ref output, (float)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is long)
             {
-                output.Fill(l);
+                output[0] = l;
                 output = output.Slice(1);
-                WriteInt64(ref output, (long)value);
+                WriteInt64(ref output, (long)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is ulong)
             {
-                output.Fill(l);
+                output[0] = l;
                 output = output.Slice(1);
-                WriteUInt64(ref output, (ulong)value);
+                WriteUInt64(ref output, (ulong)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is uint)
             {
-                output.Fill(I);
+                output[0] = I;
                 output = output.Slice(1);
-                WriteUInt32(ref output, (uint)value);
+                WriteUInt32(ref output, (uint)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is short)
             {
-                output.Fill(s);
+                output[0] = s;
                 output = output.Slice(1);
-                WriteInt16(ref output, (short)value);
+                WriteInt16(ref output, (short)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is ushort)
             {
-                output.Fill(s);
+                output[0] = s;
                 output = output.Slice(1);
-                WriteUInt16(ref output, (ushort)value);
+                WriteUInt16(ref output, (ushort)value, out int written1);
+                written = written1 + 1;
             }
             else if (value is bool)
             {
-                output.Fill(t);
-                output = output.Slice(1);
-                output.Fill((byte)(((bool)value) ? 1 : 0));
-                output = output.Slice(1);
+                output[0] = t;
+                output[1] = (bool)value ? bOne : bZero;
+                output = output.Slice(2);
+                written = 2;
             }
             else if (value is BinaryTableValue)
             {
-                output.Fill(x);
+                output[0] = x;
                 output = output.Slice(1);
                 var val = ((BinaryTableValue)value).Bytes;
-                output = val;
+                val.AsSpan().CopyTo(output);
                 output = output.Slice(val.Length);
+                written = val.Length + 1;
             }
             else
             {
                 throw new WireFormattingException("Value cannot appear as table value", value);
             }
         }
+        private const byte bZero = 0;
+        private const byte bOne = 1;
     }    
 }
