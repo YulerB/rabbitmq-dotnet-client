@@ -91,9 +91,8 @@ namespace RabbitMQ.Client.Impl
         {
             long actualLength = 0;
             {
-                FrameBuilder stream = new FrameBuilder(5);
-                new EmptyOutboundFrame().WriteTo(stream);
-                actualLength = stream.Length;
+                var x = new EmptyOutboundFrame();
+                actualLength = x.EstimatedSize();
             }
 
             if (Constants.EmptyFrameSize != actualLength)

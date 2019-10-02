@@ -66,17 +66,6 @@ namespace RabbitMQ.Client.Impl
             this.bodyLength = bodyLength;
         }
 
-        public override void WritePayload(FrameBuilder writer)
-        {
-            var byteBuffer = new byte[200];
-            Span<byte> buffer = new Span<byte>(byteBuffer);
-            NetworkBinaryWriter1.WriteUInt16(ref buffer, header.ProtocolClassId, out int written);
-            header.WriteTo(ref buffer, (ulong)bodyLength, out int written1);
-            var total = written + written1;
-            writer.WriteUInt32((uint)total);
-            writer.Write(byteBuffer, 0, total);
-        }
-
         public override void WritePayload(ref Span<byte> writer, out int written)
         {
             var total = 2 + header.EstimateSize();
@@ -97,12 +86,6 @@ namespace RabbitMQ.Client.Impl
         public BodySegmentOutboundFrame(ushort channel,ArraySegment<byte> data) : base(FrameType.FrameBody, channel)
         {
             this.data = data;
-        }
-
-        public override void WritePayload(FrameBuilder writer)
-        {
-            writer.WriteUInt32((uint)data.Count);
-            writer.Write(data);
         }
 
         public override void WritePayload(ref Span<byte> writer, out int written)
@@ -126,19 +109,6 @@ namespace RabbitMQ.Client.Impl
             this.method = method;
         }
 
-        public override void WritePayload(FrameBuilder writer)
-        {
-            using (var byteBuffer = MemoryPool<byte>.Shared.Rent(512))
-            {
-                Span<byte> buffer = byteBuffer.Memory.Span;
-                NetworkBinaryWriter1.WriteUInt16(ref buffer, method.ProtocolClassId, out int written2);
-                NetworkBinaryWriter1.WriteUInt16(ref buffer, method.ProtocolMethodId, out int written3);
-                method.WriteArgumentsTo(ref buffer, out int written4);
-                var total = written2 + written3 + written4;
-                writer.WriteUInt32((uint)total);
-                writer.Write(byteBuffer.Memory.ToArray(), 0, total);
-            }
-        }
 
         public override void WritePayload(ref Span<byte> writer, out int written)
         {
@@ -161,10 +131,6 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public override void WritePayload(FrameBuilder writer)
-        {
-            writer.WriteUInt32(0U);
-        }
 
         public override void WritePayload(ref Span<byte> writer, out int written)
         {
@@ -184,13 +150,6 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public void WriteTo(FrameBuilder writer)
-        {
-            writer.WriteByte((byte)Type);
-            writer.WriteUInt16(Channel);
-            WritePayload(writer);
-            writer.WriteByte(Constants.FrameEnd);
-        }
         public void WriteTo(ref Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteByte(ref writer, (byte)Type, out int written1);
@@ -205,7 +164,6 @@ namespace RabbitMQ.Client.Impl
         }
         internal abstract int EstimatePayloadSize();
 
-        public abstract void WritePayload(FrameBuilder writer);
         public abstract void WritePayload(ref Span<byte> writer, out int written);
     }
 

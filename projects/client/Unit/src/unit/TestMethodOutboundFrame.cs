@@ -52,14 +52,20 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestCreateMethodOutboundFrame()
         {
-            var ms = new FrameBuilder();
+
                 ushort channel = 1;
                 MethodOutboundFrame mFrame = new MethodOutboundFrame(channel, new ConnectionSecureOk(" "));
-                Assert.AreEqual(channel, mFrame.Channel);
+            byte[] bytes = new byte[mFrame.EstimatedSize()*2];
+
+
+            Assert.AreEqual(channel, mFrame.Channel);
                 Assert.IsNull(mFrame.Payload);
-                mFrame.WritePayload(ms);
-                mFrame.WriteTo(ms);
-                Assert.AreEqual(30, ms.Length);
+
+            Span<byte> data = bytes.AsSpan();
+
+            mFrame.WritePayload(ref data, out int written);
+                mFrame.WriteTo(ref data, out int written1);
+                Assert.AreEqual(30, written + written1);
         }
     }
 }
