@@ -50,6 +50,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Buffers;
 
 namespace RabbitMQ.Client.Impl
 {
@@ -153,19 +154,34 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteFrame(OutboundFrame frame)
         {
-            FrameBuilder stream = new FrameBuilder(5);
-
-
-
-            frame.WriteTo(stream);
-            m_socket.Write(stream.ToData());
+            var size = frame.EstimatedSize();
+            using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
+            {
+                Span<byte> buffer = byteBuffer.Memory.Span;
+                frame.WriteTo(ref buffer, out int written);
+                Console.WriteLine($"Rented:{size}, Used: {written}");
+                m_socket.Write(new ArraySegment<byte>(byteBuffer.Memory.ToArray(), 0, written));
+            }
         }
-
         public void WriteFrameSet(IList<OutboundFrame> frames)
         {
-            FrameBuilder stream = new FrameBuilder(frames.Count * 10);
-            foreach (var f in frames) f.WriteTo(stream);
-            m_socket.Write(stream.ToData());
+            var size = 0;
+            foreach (var frame in frames)
+            {
+                size += frame.EstimatedSize();
+            }
+            using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
+            {
+                Span<byte> buffer = byteBuffer.Memory.Span;
+                var total = 0;
+                foreach (var f in frames)
+                {
+                    f.WriteTo(ref buffer, out int written);
+                    total += written;
+                }
+                Console.WriteLine($"Rented:{size}, Used: {total}");
+                m_socket.Write(new ArraySegment<byte>(byteBuffer.Memory.ToArray(), 0, total));
+            }
         }
 
         private IHyperTcpClient ConnectUsingAddressFamily(HyperTcpClientSettings settings)

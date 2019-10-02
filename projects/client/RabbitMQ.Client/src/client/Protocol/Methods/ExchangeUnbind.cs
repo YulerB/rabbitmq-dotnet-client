@@ -108,6 +108,14 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteByte(Convert.ToByte(m_nowait));
             writer.WriteTable(m_arguments);
         }
+        public int EstimateSize()
+        {
+            return 6 +
+                System.Text.Encoding.UTF8.GetByteCount(m_destination) +
+                System.Text.Encoding.UTF8.GetByteCount(m_source) +
+                System.Text.Encoding.UTF8.GetByteCount(m_routingKey) +
+                NetworkBinaryWriter1.EstimateTableSize(m_arguments);
+        }
 
         public void WriteArgumentsTo(ref Span<byte> writer, out int written)
         {

@@ -341,7 +341,7 @@ namespace RabbitMQ.Client.Framing
             if (m_clusterId_present) { writer.WriteShortString(m_clusterId); }
         }
 
-        public override void WritePropertiesTo(Span<byte> writer, out int written)
+        public override void WritePropertiesTo(ref Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteBits(ref writer, new bool[] {m_contentType_present,m_contentEncoding_present,m_headers_present,
                 m_deliveryMode_present,m_priority_present,m_correlationId_present,m_replyTo_present,
@@ -427,6 +427,70 @@ namespace RabbitMQ.Client.Framing
             sb.Append("app-id="); sb.Append(m_appId_present ? (m_appId == null ? "(null)" : m_appId.ToString()) : "_"); sb.Append(", ");
             sb.Append("cluster-id="); sb.Append(m_clusterId_present ? (m_clusterId == null ? "(null)" : m_clusterId.ToString()) : "_");
             sb.Append(")");
+        }
+
+        internal override int EstimatePropertiesSize()
+        {
+            var total = 2;
+
+            if (m_contentType_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_contentType);
+            }
+            if (m_contentEncoding_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_contentEncoding );
+            }
+            if (m_headers_present)
+            {
+                total += NetworkBinaryWriter1.EstimateTableSize(m_headers);
+            }
+            if (m_deliveryMode_present)
+            {
+                total += 1;
+            }
+            if (m_priority_present)
+            {
+                total += 1;
+            }
+            if (m_correlationId_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_correlationId );
+            }
+            if (m_replyTo_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_replyTo );
+            }
+            if (m_expiration_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_expiration );
+            }
+            if (m_messageId_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_messageId );
+            }
+            if (m_timestamp_present)
+            {
+                total += 8;
+            }
+            if (m_type_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_type );
+            }
+            if (m_userId_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_userId );
+            }
+            if (m_appId_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_appId );
+            }
+            if (m_clusterId_present)
+            {
+                total += 1 + System.Text.Encoding.UTF8.GetByteCount(m_clusterId );
+            }
+
+            return total;
         }
     }
 }

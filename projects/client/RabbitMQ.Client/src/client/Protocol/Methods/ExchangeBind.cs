@@ -119,7 +119,14 @@ namespace RabbitMQ.Client.Framing.Impl
             NetworkBinaryWriter1.WriteTable(ref writer, m_arguments, out int written6);
             written = written1 + written2 + written3 + written4 + written5 + written6;
         }
-
+        public int EstimateSize()
+        {
+            return 6 +
+                System.Text.Encoding.UTF8.GetByteCount(m_destination ) +
+                System.Text.Encoding.UTF8.GetByteCount(m_source ) +
+                System.Text.Encoding.UTF8.GetByteCount(m_routingKey ) +
+                NetworkBinaryWriter1.EstimateTableSize(m_arguments);
+        }
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");

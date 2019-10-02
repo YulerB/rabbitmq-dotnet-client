@@ -20,10 +20,8 @@ namespace Unit.src.benches
             var summary = BenchmarkRunner.Run<Benches>(DefaultConfig.Instance.With(ConfigOptions.DisableOptimizationsValidator));
         }
 
-        [MemoryDiagnoser]
-        //[RyuJitX64Job]
-        //[DisassemblyDiagnoser]
         [CoreJob]
+        [MemoryDiagnoser]
         [BenchmarkDotNet.Attributes.HardwareCounters]
         [RankColumn]
         public class Benches

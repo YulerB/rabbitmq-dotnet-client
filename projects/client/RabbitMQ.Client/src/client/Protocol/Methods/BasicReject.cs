@@ -89,6 +89,10 @@ namespace RabbitMQ.Client.Framing.Impl
             NetworkBinaryWriter1.WriteByte(ref writer, Convert.ToByte(m_requeue), out int written2);
             written = written1 + written2;
         }
+        public int EstimateSize()
+        {
+            return 9;
+        }
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");

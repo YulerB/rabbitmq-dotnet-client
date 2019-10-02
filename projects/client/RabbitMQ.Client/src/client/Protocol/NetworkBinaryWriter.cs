@@ -379,13 +379,6 @@ namespace RabbitMQ.Util
         private static void WriteDecimal(this FrameBuilder output, decimal value)
         {
             DecimalToAmqp(value, out byte scale, out int mantissa);
-
-            //var data = new byte[5];
-            //Span<byte> span = new Span<byte>(data);
-            //span[0] = scale;
-            //BinaryPrimitives.WriteUInt32BigEndian(span.Slice(1), (uint)mantissa);
-            //output.Write(data, 0, 5);
-
             output.WriteByte(scale);
             output.WriteUInt32((uint)mantissa);
         }
@@ -564,6 +557,21 @@ namespace RabbitMQ.Util
         public static void Write(this ref Span<byte> output, byte[] buffer, int offset, int count, out int written)
         {
             buffer.AsSpan().Slice(offset, count).CopyTo(output);
+            output = output.Slice(count);
+            written = count;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write(this ref Span<byte> output, Span<byte> buffer, int count, out int written)
+        {
+            buffer.Slice(0, count).CopyTo(output);
+            output = output.Slice(count);
+            written = count;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Write(this ref Span<byte> output, Span<byte> buffer, int offset, int count, out int written)
+        {
+            buffer.Slice(offset, count).CopyTo(output);
             output = output.Slice(count);
             written = count;
         }
@@ -785,6 +793,13 @@ namespace RabbitMQ.Util
             }
         }
 
+        internal static int EstimateTableSize(IDictionary<string, object> m_arguments)
+        {
+            if (m_arguments == null) return 4;
+            GetTableContent(m_arguments, out int written);
+            return written+4;
+        }
+        
         private static void DecimalToAmqp(decimal value, out byte scale, out int mantissa)
         {
             // According to the documentation :-
@@ -1010,6 +1025,8 @@ namespace RabbitMQ.Util
                 throw new WireFormattingException("Value cannot appear as table value", value);
             }
         }
+
+  
         private const byte bZero = 0;
         private const byte bOne = 1;
     }    

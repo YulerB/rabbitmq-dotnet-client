@@ -111,6 +111,13 @@ namespace RabbitMQ.Client.Framing.Impl
             NetworkBinaryWriter1.WriteShortString(ref writer, m_routingKey, out int written5);
             written = written1 + written2 + written3 + written4 + written5;
         }
+        public int EstimateSize()
+        {
+            return 12 +
+                System.Text.Encoding.UTF8.GetByteCount(m_consumerTag )+
+                System.Text.Encoding.UTF8.GetByteCount(m_exchange )+
+                System.Text.Encoding.UTF8.GetByteCount(m_routingKey );
+        }
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");

@@ -105,6 +105,11 @@ namespace RabbitMQ.Client.Framing.Impl
             NetworkBinaryWriter1.WriteTable(ref writer, m_arguments, out int written4);
             written = written1 + written2 + written3 + written4;
         }
+        public int EstimateSize()
+        {
+            return 4 + System.Text.Encoding.UTF8.GetByteCount(m_queue) + NetworkBinaryWriter1.EstimateTableSize(m_arguments);
+        }
+
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");

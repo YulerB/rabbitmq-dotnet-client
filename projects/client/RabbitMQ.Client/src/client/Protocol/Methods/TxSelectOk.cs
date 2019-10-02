@@ -74,5 +74,10 @@ namespace RabbitMQ.Client.Framing.Impl
             sb.Append("(");
             sb.Append(")");
         }
+
+        public int EstimateSize()
+        {
+            return 0;
+        }
     }
 }

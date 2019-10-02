@@ -68,6 +68,10 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             written = 0;
         }
+        public int EstimateSize()
+        {
+            return 0;
+        }
 
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {

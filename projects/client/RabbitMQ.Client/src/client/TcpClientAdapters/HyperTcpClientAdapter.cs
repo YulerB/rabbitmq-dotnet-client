@@ -109,7 +109,7 @@ namespace RabbitMQ.Client
         {
             sock.Send(data.Array, data.Offset, data.Count, SocketFlags.None);
         }
-
+    
         public void Write(IList<ArraySegment<byte>> data)
         {
             sock.Send(data);

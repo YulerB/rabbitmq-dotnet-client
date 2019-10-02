@@ -104,6 +104,12 @@ namespace RabbitMQ.Client.Framing.Impl
             NetworkBinaryWriter1.WriteUInt16(ref writer, m_methodId, out int written4);
             written = written1 + written2 + written3 + written4;
         }
+        public int EstimateSize()
+        {
+            return 7 +
+                System.Text.Encoding.UTF8.GetByteCount(m_replyText );
+        }
+
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");

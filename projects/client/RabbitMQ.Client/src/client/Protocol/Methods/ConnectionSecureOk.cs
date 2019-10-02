@@ -83,7 +83,11 @@ namespace RabbitMQ.Client.Framing.Impl
             NetworkBinaryWriter1.WriteLongString(ref writer, m_response, out int written1);
             written = written1;
         }
-
+        public int EstimateSize()
+        {
+            return 4 +
+                System.Text.Encoding.UTF8.GetByteCount(m_response);
+        }
         public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
