@@ -98,16 +98,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
             m_arguments = reader.ReadTable();
         }
-
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt16(m_reserved1);
-            writer.WriteShortString(m_destination);
-            writer.WriteShortString(m_source);
-            writer.WriteShortString(m_routingKey);
-            writer.WriteByte(Convert.ToByte(m_nowait));
-            writer.WriteTable(m_arguments);
-        }
+        
         public int EstimateSize()
         {
             return 6 +

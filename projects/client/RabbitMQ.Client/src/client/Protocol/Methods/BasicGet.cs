@@ -84,12 +84,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_noAck = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt16(m_reserved1);
-            writer.WriteShortString(m_queue);
-            writer.WriteByte(Convert.ToByte(m_noAck));
-        }
+
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt16(writer, m_reserved1, out int written1);

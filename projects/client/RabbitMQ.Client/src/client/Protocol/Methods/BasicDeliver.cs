@@ -94,14 +94,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_routingKey = reader.ReadShortString();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteShortString(m_consumerTag);
-            writer.WriteUInt64(m_deliveryTag);
-            writer.WriteByte(Convert.ToByte(m_redelivered));
-            writer.WriteShortString(m_exchange);
-            writer.WriteShortString(m_routingKey);
-        }
+       
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteShortString(writer, m_consumerTag, out int written1);

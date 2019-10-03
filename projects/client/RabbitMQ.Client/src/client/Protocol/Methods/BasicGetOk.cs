@@ -94,14 +94,6 @@ namespace RabbitMQ.Client.Framing.Impl
             m_messageCount = reader.ReadUInt32();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt64(m_deliveryTag);
-            writer.WriteByte(Convert.ToByte(m_redelivered));
-            writer.WriteShortString(m_exchange);
-            writer.WriteShortString(m_routingKey);
-            writer.WriteUInt32(m_messageCount);
-        }
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt64(writer, m_deliveryTag, out int written1);

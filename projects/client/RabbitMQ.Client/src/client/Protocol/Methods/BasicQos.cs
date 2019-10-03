@@ -82,13 +82,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_prefetchCount = reader.ReadUInt16();
             m_global = Convert.ToBoolean(reader.ReadByte());
         }
-
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt32(m_prefetchSize);
-            writer.WriteUInt16(m_prefetchCount);
-            writer.WriteByte(Convert.ToByte(m_global));
-        }
+        
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt32(writer, m_prefetchSize, out int written1);

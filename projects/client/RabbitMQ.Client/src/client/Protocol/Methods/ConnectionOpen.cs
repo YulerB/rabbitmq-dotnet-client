@@ -84,12 +84,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_insist = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteShortString(m_virtualHost);
-            writer.WriteShortString(m_capabilities);
-            writer.WriteByte(System.Convert.ToByte(m_insist));
-        }
+     
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteShortString(writer, m_virtualHost, out int written1);

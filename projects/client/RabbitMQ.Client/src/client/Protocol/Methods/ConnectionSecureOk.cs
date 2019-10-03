@@ -73,10 +73,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_response = reader.ReadLongString();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteLongString(m_response);
-        }
+     
 
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {

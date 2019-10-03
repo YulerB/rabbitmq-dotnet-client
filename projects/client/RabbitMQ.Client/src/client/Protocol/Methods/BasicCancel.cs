@@ -78,11 +78,6 @@ namespace RabbitMQ.Client.Framing.Impl
             m_nowait = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteShortString(m_consumerTag);
-            writer.WriteByte(Convert.ToByte(m_nowait));
-        }
 
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {

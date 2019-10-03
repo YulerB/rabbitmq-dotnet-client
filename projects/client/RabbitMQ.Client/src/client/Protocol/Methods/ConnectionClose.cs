@@ -89,13 +89,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_methodId = reader.ReadUInt16();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt16(m_replyCode);
-            writer.WriteShortString(m_replyText);
-            writer.WriteUInt16(m_classId);
-            writer.WriteUInt16(m_methodId);
-        }
+       
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt16(writer, m_replyCode, out int written1);

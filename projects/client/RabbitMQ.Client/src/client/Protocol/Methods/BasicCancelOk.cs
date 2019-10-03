@@ -73,10 +73,6 @@ namespace RabbitMQ.Client.Framing.Impl
             m_consumerTag = reader.ReadShortString();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteShortString(m_consumerTag);
-        }
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteShortString(writer, m_consumerTag, out int written1);

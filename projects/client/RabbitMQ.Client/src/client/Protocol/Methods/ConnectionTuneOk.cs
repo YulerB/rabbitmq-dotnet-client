@@ -83,12 +83,6 @@ namespace RabbitMQ.Client.Framing.Impl
             m_heartbeat = reader.ReadUInt16();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt16(m_channelMax);
-            writer.WriteUInt32(m_frameMax);
-            writer.WriteUInt16(m_heartbeat);
-        }
 
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {

@@ -73,10 +73,6 @@ namespace RabbitMQ.Client.Framing.Impl
             m_challenge = reader.ReadLongString();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteLongString(m_challenge);
-        }
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteLongString(writer, m_challenge, out int written1);

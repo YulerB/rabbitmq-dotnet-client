@@ -89,13 +89,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_locale = reader.ReadShortString();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteTable(m_clientProperties);
-            writer.WriteShortString(m_mechanism);
-            writer.WriteLongString(m_response);
-            writer.WriteShortString(m_locale);
-        }
+     
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteTable(writer, m_clientProperties, out int written1);

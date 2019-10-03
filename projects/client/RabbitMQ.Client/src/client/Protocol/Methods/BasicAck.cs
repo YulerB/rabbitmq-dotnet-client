@@ -78,11 +78,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_multiple = Convert.ToBoolean(reader.ReadByte());
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt64(m_deliveryTag);
-            writer.WriteByte(Convert.ToByte(m_multiple));
-        }
+
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt64(writer, m_deliveryTag, out int written1);

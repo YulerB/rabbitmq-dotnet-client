@@ -94,15 +94,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_settings = (BasicConsumeFlags)reader.ReadByte();
             m_arguments = reader.ReadTable();
         }
-
-        public void WriteArgumentsTo(FrameBuilder writer)
-        {
-            writer.WriteUInt16(m_reserved1);
-            writer.WriteShortString(m_queue);
-            writer.WriteShortString(m_consumerTag);
-            writer.WriteByte((byte)m_settings);
-            writer.WriteTable(m_arguments);
-        }
+        
         public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt16(writer, m_reserved1, out int written1);
