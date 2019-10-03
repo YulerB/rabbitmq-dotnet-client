@@ -89,11 +89,11 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteUInt32(m_frameMax);
             writer.WriteUInt16(m_heartbeat);
         }
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteUInt16(ref writer, m_channelMax, out int written1);
-            NetworkBinaryWriter1.WriteUInt32(ref writer, m_frameMax, out int written2);
-            NetworkBinaryWriter1.WriteUInt16(ref writer, m_heartbeat, out int written3);
+            NetworkBinaryWriter1.WriteUInt16(writer, m_channelMax, out int written1);
+            NetworkBinaryWriter1.WriteUInt32(writer.Slice(written1), m_frameMax, out int written2);
+            NetworkBinaryWriter1.WriteUInt16(writer.Slice(written1+ written2), m_heartbeat, out int written3);
             written = written1 + written2 + written3;
         }
         public int EstimateSize()

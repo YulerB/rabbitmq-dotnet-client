@@ -115,7 +115,7 @@ namespace RabbitMQ.Client.Unit
                     1234
                 }
             };
-            NetworkBinaryWriter1.WriteTable(ref buffer, t, out int written);
+            NetworkBinaryWriter1.WriteTable(buffer, t, out int written);
 
             using (ArraySegmentSequence readerSequence = new ArraySegmentSequence(byteBuffer))
             {

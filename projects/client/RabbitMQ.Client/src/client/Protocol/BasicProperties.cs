@@ -319,9 +319,9 @@ namespace RabbitMQ.Client.Framing
         }
 
 
-        public override void WritePropertiesTo(ref Span<byte> writer, out int written)
+        public override void WritePropertiesTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteBits(ref writer, new bool[] {m_contentType_present,m_contentEncoding_present,m_headers_present,
+            NetworkBinaryWriter1.WriteBits(writer, new bool[] {m_contentType_present,m_contentEncoding_present,m_headers_present,
                 m_deliveryMode_present,m_priority_present,m_correlationId_present,m_replyTo_present,
             m_expiration_present,m_messageId_present,m_timestamp_present,m_type_present,m_userId_present,
             m_appId_present,m_clusterId_present }, out int written1);
@@ -329,60 +329,60 @@ namespace RabbitMQ.Client.Framing
             written = written1;
 
             if (m_contentType_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_contentType, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_contentType, out int written2);
                 written += written2;
             }
             if (m_contentEncoding_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_contentEncoding, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_contentEncoding, out int written2);
                 written += written2;
             }
             if (m_headers_present) {
-                NetworkBinaryWriter1.WriteTable(ref writer, m_headers, out int written2);
+                NetworkBinaryWriter1.WriteTable(writer.Slice(written1), m_headers, out int written2);
                 written += written2;
             }
             if (m_deliveryMode_present) {
-                NetworkBinaryWriter1.WriteByte(ref writer, m_deliveryMode, out int written2);
+                NetworkBinaryWriter1.WriteByte(writer.Slice(written1), m_deliveryMode, out int written2);
                 written += written2;
             }
             if (m_priority_present)
             {
-                NetworkBinaryWriter1.WriteByte(ref writer, m_priority, out int written2);
+                NetworkBinaryWriter1.WriteByte(writer.Slice(written1), m_priority, out int written2);
                 written += written2;
             }
             if (m_correlationId_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_correlationId, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_correlationId, out int written2);
                 written += written2;
             }
             if (m_replyTo_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_replyTo, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_replyTo, out int written2);
                 written += written2;
             }
             if (m_expiration_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_expiration, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_expiration, out int written2);
                 written += written2;
             }
             if (m_messageId_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_messageId, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_messageId, out int written2);
                 written += written2;
             }
             if (m_timestamp_present) {
-                NetworkBinaryWriter1.WriteTimestamp(ref writer, m_timestamp, out int written2);
+                NetworkBinaryWriter1.WriteTimestamp(writer.Slice(written1), m_timestamp, out int written2);
                 written += written2;
             }
             if (m_type_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_type, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_type, out int written2);
                 written += written2;
             }
             if (m_userId_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_userId, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_userId, out int written2);
                 written += written2;
             }
             if (m_appId_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_appId, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_appId, out int written2);
                 written += written2;
             }
             if (m_clusterId_present) {
-                NetworkBinaryWriter1.WriteShortString(ref writer, m_clusterId, out int written2);
+                NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_clusterId, out int written2);
                 written += written2;
             }
         }

@@ -102,13 +102,13 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteLongString(m_locales);
         }
 
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteByte(ref writer, m_versionMajor, out int written1);
-            NetworkBinaryWriter1.WriteByte(ref writer, m_versionMinor, out int written2);
-            NetworkBinaryWriter1.WriteTable(ref writer, m_serverProperties, out int written3);
-            NetworkBinaryWriter1.WriteLongString(ref writer, m_mechanisms, out int written4);
-            NetworkBinaryWriter1.WriteLongString(ref writer, m_locales, out int written5);
+            NetworkBinaryWriter1.WriteByte(writer, m_versionMajor, out int written1);
+            NetworkBinaryWriter1.WriteByte(writer.Slice(written1), m_versionMinor, out int written2);
+            NetworkBinaryWriter1.WriteTable(writer.Slice(written1+ written2), m_serverProperties, out int written3);
+            NetworkBinaryWriter1.WriteLongString(writer.Slice(written1 + written2 + written3), m_mechanisms, out int written4);
+            NetworkBinaryWriter1.WriteLongString(writer.Slice(written1 + written2 + written3 + written4), m_locales, out int written5);
             written = written1 + written2 + written3 + written4 + written5;
         }
         public int EstimateSize()

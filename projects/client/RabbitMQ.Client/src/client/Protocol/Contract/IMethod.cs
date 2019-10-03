@@ -81,8 +81,7 @@ namespace RabbitMQ.Client
 
         void AppendArgumentDebugStringTo(StringBuilder stringBuilder);
         void ReadArgumentsFrom(ArraySegmentSequence reader);
-        void WriteArgumentsTo(FrameBuilder writer);
-        void WriteArgumentsTo(ref Span<byte> writer, out int written);
+        void WriteArgumentsTo(Span<byte> writer, out int written);
         int EstimateSize();
     }
 }

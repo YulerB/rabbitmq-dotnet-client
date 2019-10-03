@@ -78,9 +78,9 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteLongString(m_response);
         }
 
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteLongString(ref writer, m_response, out int written1);
+            NetworkBinaryWriter1.WriteLongString(writer, m_response, out int written1);
             written = written1;
         }
         public int EstimateSize()

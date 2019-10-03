@@ -83,10 +83,10 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteUInt64(m_deliveryTag);
             writer.WriteByte(Convert.ToByte(m_requeue));
         }
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteUInt64(ref writer, m_deliveryTag, out int written1);
-            NetworkBinaryWriter1.WriteByte(ref writer, Convert.ToByte(m_requeue), out int written2);
+            NetworkBinaryWriter1.WriteUInt64(writer, m_deliveryTag, out int written1);
+            NetworkBinaryWriter1.WriteByte(writer.Slice(written1), Convert.ToByte(m_requeue), out int written2);
             written = written1 + written2;
         }
         public int EstimateSize()

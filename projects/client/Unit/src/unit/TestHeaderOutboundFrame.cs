@@ -61,8 +61,8 @@ namespace RabbitMQ.Client.Unit
 
             Span<byte> data = bytes.AsSpan();
 
-            mFrame.WritePayload(ref data, out int written);
-            mFrame.WriteTo(ref data, out int written1);
+            mFrame.WritePayload(data, out int written);
+            mFrame.WriteTo(data.Slice(written), out int written1);
             Assert.AreEqual(40, written + written1);
         }
     }

@@ -89,11 +89,11 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteUInt16(m_prefetchCount);
             writer.WriteByte(Convert.ToByte(m_global));
         }
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteUInt32(ref writer, m_prefetchSize, out int written1);
-            NetworkBinaryWriter1.WriteUInt16(ref writer, m_prefetchCount, out int written2);
-            NetworkBinaryWriter1.WriteByte(ref writer, Convert.ToByte(m_global), out int written3);
+            NetworkBinaryWriter1.WriteUInt32(writer, m_prefetchSize, out int written1);
+            NetworkBinaryWriter1.WriteUInt16(writer.Slice(written1), m_prefetchCount, out int written2);
+            NetworkBinaryWriter1.WriteByte(writer.Slice(written1 + written2), Convert.ToByte(m_global), out int written3);
             written = written1 + written2 + written3;
         }
         public int EstimateSize()

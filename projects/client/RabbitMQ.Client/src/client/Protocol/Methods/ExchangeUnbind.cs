@@ -117,14 +117,14 @@ namespace RabbitMQ.Client.Framing.Impl
                 NetworkBinaryWriter1.EstimateTableSize(m_arguments);
         }
 
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteUInt16(ref writer, m_reserved1, out int written1);
-            NetworkBinaryWriter1.WriteShortString(ref writer, m_destination, out int written2);
-            NetworkBinaryWriter1.WriteShortString(ref writer, m_source, out int written3);
-            NetworkBinaryWriter1.WriteShortString(ref writer, m_routingKey, out int written4);
-            NetworkBinaryWriter1.WriteByte(ref writer, Convert.ToByte(m_nowait), out int written5);
-            NetworkBinaryWriter1.WriteTable(ref writer, m_arguments, out int written6);
+            NetworkBinaryWriter1.WriteUInt16(writer, m_reserved1, out int written1);
+            NetworkBinaryWriter1.WriteShortString(writer.Slice(written1), m_destination, out int written2);
+            NetworkBinaryWriter1.WriteShortString(writer.Slice(written1+ written2), m_source, out int written3);
+            NetworkBinaryWriter1.WriteShortString(writer.Slice(written1 + written2 + written3), m_routingKey, out int written4);
+            NetworkBinaryWriter1.WriteByte(writer.Slice(written1 + written2 + written3 + written4), Convert.ToByte(m_nowait), out int written5);
+            NetworkBinaryWriter1.WriteTable(writer.Slice(written1 + written2 + written3 + written4 + written5), m_arguments, out int written6);
             written = written1 + written2 + written3 + written4 + written5 + written6;
         }
 

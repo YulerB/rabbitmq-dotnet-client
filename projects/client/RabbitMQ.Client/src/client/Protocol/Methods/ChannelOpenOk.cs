@@ -73,13 +73,9 @@ namespace RabbitMQ.Client.Framing.Impl
             m_reserved1 = reader.ReadLongString();
         }
 
-        public void WriteArgumentsTo(FrameBuilder writer)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            writer.WriteLongString(m_reserved1);
-        }
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
-        {
-            NetworkBinaryWriter1.WriteLongString(ref writer, m_reserved1, out int written1);
+            NetworkBinaryWriter1.WriteLongString(writer, m_reserved1, out int written1);
             written = written1;
         }
         public int EstimateSize()

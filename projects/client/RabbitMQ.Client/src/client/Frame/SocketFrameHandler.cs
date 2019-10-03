@@ -158,7 +158,7 @@ namespace RabbitMQ.Client.Impl
             using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
             {
                 Span<byte> buffer = byteBuffer.Memory.Span;
-                frame.WriteTo(ref buffer, out int written);
+                frame.WriteTo(buffer, out int written);
                 m_socket.Write(new ArraySegment<byte>(byteBuffer.Memory.ToArray(), 0, written));
             }
         }
@@ -172,7 +172,7 @@ namespace RabbitMQ.Client.Impl
                 var total = 0;
                 foreach (var f in frames)
                 {
-                    f.WriteTo(ref buffer, out int written);
+                    f.WriteTo(buffer.Slice(total), out int written);
                     total += written;
                 }
                 m_socket.Write(new ArraySegment<byte>(byteBuffer.Memory.ToArray(), 0, total));

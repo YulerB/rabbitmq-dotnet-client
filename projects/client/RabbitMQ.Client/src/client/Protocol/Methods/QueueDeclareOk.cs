@@ -90,11 +90,11 @@ namespace RabbitMQ.Client.Framing.Impl
             writer.WriteUInt32(m_messageCount);
             writer.WriteUInt32(m_consumerCount);
         }
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
-            NetworkBinaryWriter1.WriteShortString(ref writer, m_queue, out int written1);
-            NetworkBinaryWriter1.WriteUInt32(ref writer, m_messageCount, out int written2);
-            NetworkBinaryWriter1.WriteUInt32(ref writer, m_consumerCount, out int written3);
+            NetworkBinaryWriter1.WriteShortString(writer, m_queue, out int written1);
+            NetworkBinaryWriter1.WriteUInt32(writer.Slice(written1), m_messageCount, out int written2);
+            NetworkBinaryWriter1.WriteUInt32(writer.Slice(written1+ written2), m_consumerCount, out int written3);
             written = written1 + written2 + written3;
         }
         public int EstimateSize()

@@ -68,7 +68,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
         }
 
-        public void WriteArgumentsTo(ref Span<byte> writer, out int written)
+        public void WriteArgumentsTo(Span<byte> writer, out int written)
         {
             written = 0;
         }
