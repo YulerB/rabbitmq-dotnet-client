@@ -318,28 +318,6 @@ namespace RabbitMQ.Client.Framing
             if (m_clusterId_present) { m_clusterId = stream.ReadShortString(); }
         }
 
-        public override void WritePropertiesTo(FrameBuilder writer)
-        {
-            writer.WriteBits(new bool[] {m_contentType_present,m_contentEncoding_present,m_headers_present,
-                m_deliveryMode_present,m_priority_present,m_correlationId_present,m_replyTo_present,
-            m_expiration_present,m_messageId_present,m_timestamp_present,m_type_present,m_userId_present,
-            m_appId_present,m_clusterId_present });
-
-            if (m_contentType_present) { writer.WriteShortString(m_contentType); }
-            if (m_contentEncoding_present) { writer.WriteShortString(m_contentEncoding); }
-            if (m_headers_present) { writer.WriteTable(m_headers); }
-            if (m_deliveryMode_present) { writer.WriteByte(m_deliveryMode); }
-            if (m_priority_present) { writer.WriteByte(m_priority); }
-            if (m_correlationId_present) { writer.WriteShortString(m_correlationId); }
-            if (m_replyTo_present) { writer.WriteShortString(m_replyTo); }
-            if (m_expiration_present) { writer.WriteShortString(m_expiration); }
-            if (m_messageId_present) { writer.WriteShortString(m_messageId); }
-            if (m_timestamp_present) { writer.WriteTimestamp(m_timestamp); }
-            if (m_type_present) { writer.WriteShortString(m_type); }
-            if (m_userId_present) { writer.WriteShortString(m_userId); }
-            if (m_appId_present) { writer.WriteShortString(m_appId); }
-            if (m_clusterId_present) { writer.WriteShortString(m_clusterId); }
-        }
 
         public override void WritePropertiesTo(ref Span<byte> writer, out int written)
         {

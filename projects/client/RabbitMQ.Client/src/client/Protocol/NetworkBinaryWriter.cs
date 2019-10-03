@@ -62,7 +62,7 @@ namespace RabbitMQ.Util
     /// See also NetworkBinaryReader.
     /// </p>
     /// </remarks>
-    public static class NetworkBinaryWriter 
+    public static class NetworkBinaryWriter
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteBits1(this FrameBuilder output, bool[] bits)
@@ -142,7 +142,7 @@ namespace RabbitMQ.Util
         {
             var bytes = new byte[2];
             BinaryPrimitives.WriteInt16BigEndian(bytes, i);
-            output.Write(bytes,0,2);
+            output.Write(bytes, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteUInt16(this FrameBuilder output, ushort i)
@@ -354,10 +354,14 @@ namespace RabbitMQ.Util
         private static IList<ArraySegment<byte>> GetArrayContent(IList val, out uint written)
         {
             var stream1 = new FrameBuilder(val.Count * 2);
-            foreach (object entry in val)
-            {
-                stream1.WriteFieldValue(entry);
-            }
+            foreach (object entry in val) stream1.WriteFieldValue(entry);
+            written = Convert.ToUInt32(stream1.Length);
+            return stream1.ToData();
+        }
+        private static IList<ArraySegment<byte>> GetArrayContent<T>(IList<T> val, out uint written)
+        {
+            var stream1 = new FrameBuilder(val.Count * 2);
+            foreach (T entry in val) WriteFieldValue(stream1,entry);
             written = Convert.ToUInt32(stream1.Length);
             return stream1.ToData();
         }
@@ -371,6 +375,19 @@ namespace RabbitMQ.Util
             else
             {
                 var content = GetArrayContent(val, out uint written1);
+                output.WriteUInt32(written1); // length of table - will be backpatched
+                output.WriteSegments(content, written1);
+            }
+        }
+        private static void WriteArray<T>(this FrameBuilder output, IList<T> val)
+        {
+            if (val == null)
+            {
+                output.WriteUInt32(0U); // length of table - will be backpatched
+            }
+            else
+            {
+                var content = GetArrayContent<T>(val, out uint written1);
                 output.WriteUInt32(written1); // length of table - will be backpatched
                 output.WriteSegments(content, written1);
             }
@@ -398,6 +415,99 @@ namespace RabbitMQ.Util
         private const byte t = 116;
         private const byte x = 120;
 
+        public static void WriteFieldValue(this FrameBuilder output, byte[] value)
+        {
+            if (value == null)
+            {
+                output.WriteByte(V);
+            }
+            else
+            {
+                output.WriteByte(S);
+                output.WriteLongString(value);
+            }
+        }
+        public static void WriteFieldValue(this FrameBuilder output, int? value)
+        {
+            if (value == null)
+            {
+                output.WriteByte(V);
+            }
+            else
+            {
+                output.WriteByte(I);
+                output.WriteInt32(value.Value);
+            }
+        }
+        public static void WriteFieldValue(this FrameBuilder output, string value)
+        {
+            if (value == null)
+            {
+                output.WriteByte(V);
+            }
+            else
+            {
+                output.WriteByte(S);
+                output.WriteLongString(Encoding.UTF8.GetBytes(value));
+            }
+        }
+        public static void WriteFieldValue(this FrameBuilder output, bool? value)
+        {
+            if (value == null)
+            {
+                output.WriteByte(V);
+            }
+            else
+            {
+                output.WriteByte(t);
+                output.WriteByte(value.Value ? bOne : bZero);
+            }
+        }
+
+        private const byte bZero = 0;
+        private const byte bOne = 1;
+
+        public static void WriteFieldValue(this FrameBuilder output, decimal? value)
+        {
+            if (value == null)
+            {
+                output.WriteByte(V);
+            }
+            else
+            {
+                output.WriteByte(D);
+                output.WriteDecimal(value.Value);
+            }
+        }
+        public static void WriteFieldValue(this FrameBuilder output, AmqpTimestamp value)
+        {
+            output.WriteByte(T);
+            output.WriteTimestamp(value);
+        }
+        public static void WriteFieldValue(this FrameBuilder output, IDictionary<string, bool> value)
+        {
+            if (value == null)
+            {
+                output.WriteByte(V);
+            }
+            else
+            {
+                output.WriteByte(F);
+                output.WriteTable(value);
+            }
+        }
+        public static void WriteFieldValue(this FrameBuilder output, IDictionary<string, object> value)
+        {
+            if (value == null)
+            {
+                output.WriteByte(V);
+            }
+            else
+            {
+                output.WriteByte(F);
+                output.WriteTable(value);
+            }
+        }
         public static void WriteFieldValue(this FrameBuilder output, object value)
         {
             if (value == null)
@@ -427,7 +537,7 @@ namespace RabbitMQ.Util
             else if (value is AmqpTimestamp)
             {
                 output.WriteByte(T);
-                output.WriteTimestamp((AmqpTimestamp) value);
+                output.WriteTimestamp((AmqpTimestamp)value);
             }
             else if (value is IDictionary<string, bool>)
             {
@@ -506,7 +616,7 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteByte(this ref Span<byte> output, byte buffer, out int written)
         {
-            output[0]=buffer;
+            output[0] = buffer;
             output = output.Slice(1);
             written = 1;
         }
@@ -560,7 +670,6 @@ namespace RabbitMQ.Util
             output = output.Slice(count);
             written = count;
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(this ref Span<byte> output, Span<byte> buffer, int count, out int written)
         {
@@ -668,7 +777,7 @@ namespace RabbitMQ.Util
             output = output.Slice(4);
             val.AsSpan().CopyTo(output);
             output = output.Slice(val.Length);
-            written = val.Length+4;
+            written = val.Length + 4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteLongString(this ref Span<byte> output, string val, out int written)
@@ -683,7 +792,7 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteSByte(this ref Span<byte> output, sbyte val, out int written)
         {
-            output[0]=(byte)val;
+            output[0] = (byte)val;
             output = output.Slice(1);
             written = 1;
         }
@@ -723,7 +832,6 @@ namespace RabbitMQ.Util
             written = Convert.ToInt32(stream1.Length);
             return stream1.ToData();
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteTimestamp(this ref Span<byte> output, AmqpTimestamp val, out int written)
         {
@@ -733,7 +841,6 @@ namespace RabbitMQ.Util
             // 0-9 is afaict silent on the signedness of the timestamp.
             // See also MethodArgumentReader.ReadTimestamp and AmqpTimestamp itself
         }
-
         ///<summary>Writes an AMQP "table" to the writer.</summary>
         ///<remarks>
         ///<para>
@@ -760,14 +867,14 @@ namespace RabbitMQ.Util
             else
             {
                 var content = GetTableContent(val, out int written1);
-                BinaryPrimitives.WriteUInt32BigEndian(output,(uint) written1);
+                BinaryPrimitives.WriteUInt32BigEndian(output, (uint)written1);
                 output = output.Slice(4);
-                foreach(var item in content)
+                foreach (var item in content)
                 {
                     item.AsSpan().Slice(item.Offset, item.Count).CopyTo(output);
                     output = output.Slice(item.Count);
                 }
-                written = written1+4;
+                written = written1 + 4;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -792,14 +899,12 @@ namespace RabbitMQ.Util
                 written = written1 + 4;
             }
         }
-
         internal static int EstimateTableSize(IDictionary<string, object> m_arguments)
         {
             if (m_arguments == null) return 4;
             GetTableContent(m_arguments, out int written);
-            return written+4;
+            return written + 4;
         }
-        
         private static void DecimalToAmqp(decimal value, out byte scale, out int mantissa)
         {
             // According to the documentation :-
@@ -822,7 +927,6 @@ namespace RabbitMQ.Util
             mantissa = (int)((((uint)bitRepresentation[3]) & 0x80000000) |
                              (((uint)bitRepresentation[0]) & 0x7FFFFFFF));
         }
-
         private static IList<ArraySegment<byte>> GetArrayContent(IList val, out int written)
         {
             var stream1 = new FrameBuilder(val.Count * 2);
@@ -833,7 +937,6 @@ namespace RabbitMQ.Util
             written = Convert.ToInt32(stream1.Length);
             return stream1.ToData();
         }
-
         private static void WriteArray(this ref Span<byte> output, IList val, out int written)
         {
             if (val == null)
@@ -845,7 +948,7 @@ namespace RabbitMQ.Util
             else
             {
                 var content = GetArrayContent(val, out int written1);
-                BinaryPrimitives.WriteUInt32BigEndian(output,(uint) written1);
+                BinaryPrimitives.WriteUInt32BigEndian(output, (uint)written1);
                 output = output.Slice(4);
                 foreach (var item in content)
                 {
@@ -855,13 +958,12 @@ namespace RabbitMQ.Util
                 written = written1 + 4;
             }
         }
-
         private static void WriteDecimal(this ref Span<byte> output, decimal value, out int written)
         {
             DecimalToAmqp(value, out byte scale, out int mantissa);
-            output[0]=scale;
+            output[0] = scale;
             output = output.Slice(1);
-            BinaryPrimitives.WriteUInt32BigEndian(output,(uint) mantissa);
+            BinaryPrimitives.WriteUInt32BigEndian(output, (uint)mantissa);
             output = output.Slice(4);
             written = 5;
         }
@@ -880,6 +982,8 @@ namespace RabbitMQ.Util
         private const byte s = 115;
         private const byte t = 116;
         private const byte x = 120;
+        private const byte bZero = 0;
+        private const byte bOne = 1;
 
         private static void WriteFieldValue(this ref Span<byte> output, object value, out int written)
         {
@@ -1025,9 +1129,5 @@ namespace RabbitMQ.Util
                 throw new WireFormattingException("Value cannot appear as table value", value);
             }
         }
-
-  
-        private const byte bZero = 0;
-        private const byte bOne = 1;
-    }    
+    }
 }

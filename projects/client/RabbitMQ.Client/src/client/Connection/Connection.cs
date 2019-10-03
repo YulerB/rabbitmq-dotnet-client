@@ -709,8 +709,7 @@ namespace RabbitMQ.Client.Framing.Impl
             // We have received an actual frame.
             if (frame.IsHeartbeat())
             {
-                // Ignore it: we've already just reset the heartbeat
-                // latch.
+                // Ignore it: we've already just reset the heartbeat latch.
                 return;
             }
 
@@ -796,11 +795,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         protected virtual void OnConnectionBlocked(ConnectionBlockedEventArgs args)
         {
-            EventHandler<ConnectionBlockedEventArgs> handler;
-            lock (m_eventLock)
-            {
-                handler = m_connectionBlocked;
-            }
+            EventHandler<ConnectionBlockedEventArgs> handler= m_connectionBlocked;
             if (handler != null)
             {
                 foreach (EventHandler<ConnectionBlockedEventArgs> h in handler.GetInvocationList())
@@ -823,11 +818,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         protected virtual void OnConnectionUnblocked()
         {
-            EventHandler<EventArgs> handler;
-            lock (m_eventLock)
-            {
-                handler = m_connectionUnblocked;
-            }
+            EventHandler<EventArgs> handler= m_connectionUnblocked;
             if (handler != null)
             {
                 foreach (EventHandler<EventArgs> h in handler.GetInvocationList())

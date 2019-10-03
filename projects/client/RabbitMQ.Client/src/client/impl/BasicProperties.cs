@@ -326,12 +326,12 @@ namespace RabbitMQ.Client.Impl
             return bodySize;
         }
 
-        public void WriteTo(FrameBuilder writer, ulong bodySize)
-        {
-            writer.WriteUInt16(ZERO); // weight - not currently used
-            writer.WriteUInt64(bodySize);
-            WritePropertiesTo(writer);
-        }
+        //public void WriteTo(FrameBuilder writer, ulong bodySize)
+        //{
+        //    writer.WriteUInt16(ZERO); // weight - not currently used
+        //    writer.WriteUInt64(bodySize);
+        //    WritePropertiesTo(writer);
+        //}
 
         public void WriteTo(ref Span<byte> writer, ulong bodySize, out int written)
         {
@@ -358,7 +358,7 @@ namespace RabbitMQ.Client.Impl
         public abstract void AppendPropertyDebugStringTo(StringBuilder stringBuilder);
 
         public abstract void ReadPropertiesFrom(ArraySegmentSequence stream);
-        public abstract void WritePropertiesTo(FrameBuilder writer);
+        //public abstract void WritePropertiesTo(FrameBuilder writer);
         public abstract void WritePropertiesTo(ref Span<byte> writer, out int written);
         internal abstract int EstimatePropertiesSize();
     }

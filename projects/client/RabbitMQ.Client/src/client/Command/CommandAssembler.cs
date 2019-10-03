@@ -70,7 +70,7 @@ namespace RabbitMQ.Client.Impl
             Reset();
         }
 
-        public Command HandleFrame(InboundFrame f)
+        public bool HandleFrame(InboundFrame f, out Command result)
         {
             switch (m_state)
             {
@@ -82,7 +82,8 @@ namespace RabbitMQ.Client.Impl
                         }
                         m_method = f.Method;
                         m_state = f.Method.HasContent ? AssemblyState.ExpectingContentHeader : AssemblyState.Complete;
-                        return CompletedCommand();
+                        result = CompletedCommand();
+                        return result != null;
                     }
                 case AssemblyState.ExpectingContentHeader:
                     {
@@ -97,7 +98,8 @@ namespace RabbitMQ.Client.Impl
                         }
                         m_remainingBodyBytes = f.TotalBodyBytes;
                         UpdateContentBodyState();
-                        return CompletedCommand();
+                        result = CompletedCommand();
+                        return result != null;
                     }
                 case AssemblyState.ExpectingContentBody:
                     {
@@ -123,7 +125,8 @@ namespace RabbitMQ.Client.Impl
                         }
                         m_remainingBodyBytes -= (ulong)f.Payload.Length;
                         UpdateContentBodyState();
-                        return CompletedCommand();
+                        result = CompletedCommand();
+                        return result != null;
                     }
                 case AssemblyState.Complete:
 
@@ -131,7 +134,8 @@ namespace RabbitMQ.Client.Impl
 #if NETFX_CORE
                     Debug.WriteLine("Received frame in invalid state {0}; {1}", m_state, f);
 #endif
-                    return null;
+                    result = null;
+                    return false;
             }
         }
 

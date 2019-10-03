@@ -27,28 +27,36 @@ namespace Unit.src.benches
         public class Benches
         {
             readonly int processors = Environment.ProcessorCount;
+            TestEventingConsumer ec;
+            TestEventingConsumer1 ec1; 
 
             [GlobalSetup]
             public void Setup()
             {
+                ec = new TestEventingConsumer();
+                ec1 = new TestEventingConsumer1();
+                ec.Init();
+                ec1.Init();
+            }
+            [GlobalCleanup]
+            public void Cleanup()
+            {
+                ec.Dispose();
+                ec1.Dispose();
+                ec = null;
+                ec1 = null;
             }
 
             [Benchmark]
             public void Mine()
             {
-                TestEventingConsumer ec = new TestEventingConsumer();
-                ec.Init();
                 ec.TestEventingConsumerDeliveryEventsWithAck1Short();
-                ec.Dispose();
             }
 
             [Benchmark]
             public void Existing()
             {
-                TestEventingConsumer1 ec = new TestEventingConsumer1();
-                ec.Init();
-                ec.TestEventingConsumerDeliveryEventsWithAck1Short();
-                ec.Dispose();
+                ec1.TestEventingConsumerDeliveryEventsWithAck1Short();
             }
         }
     }
