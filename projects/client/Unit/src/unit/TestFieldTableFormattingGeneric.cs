@@ -95,7 +95,7 @@ namespace RabbitMQ.Client.Unit
         [Test]
         public void TestStandardTypesF()
         {
-            var byteBuffer = new byte[130];
+            var byteBuffer = new byte[129];
             Span<byte> buffer = new Span<byte>(byteBuffer);
             
 
@@ -116,6 +116,8 @@ namespace RabbitMQ.Client.Unit
                 }
             };
             NetworkBinaryWriter1.WriteTable(buffer, t, out int written);
+
+            Assert.AreEqual(NetworkBinaryWriter1.EstimateTableSize(t), written);
 
             using (ArraySegmentSequence readerSequence = new ArraySegmentSequence(byteBuffer))
             {
