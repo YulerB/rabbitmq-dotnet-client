@@ -129,15 +129,9 @@ namespace RabbitMQ.Client
         /// Overrides <see cref="DefaultBasicConsumer"/>'s  <see cref="HandleBasicDeliver"/> implementation,
         ///  building a <see cref="BasicDeliverEventArgs"/> instance and placing it in the Queue.
         /// </summary>
-        public override void HandleBasicDeliver(string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            IBasicProperties properties,
-            byte[] body)
+        public override void HandleBasicDeliver(BasicDeliverEventArgs args)
         {
-            Queue.Enqueue(new BasicDeliverEventArgs(consumerTag, deliveryTag, redelivered, exchange, routingKey, properties, body));
+            Queue.Enqueue(args);
         }
 
         /// <summary>

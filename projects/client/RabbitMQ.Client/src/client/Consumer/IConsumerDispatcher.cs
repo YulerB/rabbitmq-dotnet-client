@@ -38,6 +38,7 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -53,13 +54,7 @@ namespace RabbitMQ.Client.Impl
                              string consumerTag);
 
         void HandleBasicDeliver(IBasicConsumer consumer,
-                            string consumerTag,
-                            ulong deliveryTag,
-                            bool redelivered,
-                            string exchange,
-                            string routingKey,
-                            IBasicProperties basicProperties,
-                            byte[] body);
+                            BasicDeliverEventArgs args);
 
         void HandleBasicCancelOk(IBasicConsumer consumer,
                             string consumerTag);

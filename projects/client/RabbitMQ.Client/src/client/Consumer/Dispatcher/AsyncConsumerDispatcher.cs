@@ -1,4 +1,6 @@
-﻿namespace RabbitMQ.Client.Impl
+﻿using RabbitMQ.Client.Events;
+
+namespace RabbitMQ.Client.Impl
 {
     internal class AsyncConsumerDispatcher : IConsumerDispatcher
     {
@@ -41,16 +43,9 @@
             ScheduleUnlessShuttingDown(new BasicConsumeOk(consumer, consumerTag));
         }
 
-        public void HandleBasicDeliver(IBasicConsumer consumer,
-            string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public void HandleBasicDeliver(IBasicConsumer consumer, BasicDeliverEventArgs args)
         {
-            ScheduleUnlessShuttingDown(new BasicDeliver(consumer, consumerTag, deliveryTag, redelivered, exchange, routingKey, basicProperties, body));
+            ScheduleUnlessShuttingDown(new BasicDeliver(consumer, args));
         }
 
         public void HandleBasicCancelOk(IBasicConsumer consumer, string consumerTag)

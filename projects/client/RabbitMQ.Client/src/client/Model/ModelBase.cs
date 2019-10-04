@@ -830,18 +830,12 @@ namespace RabbitMQ.Client.Impl
             k.HandleCommand(null); // release the continuation.
         }
 
-        public virtual void HandleBasicDeliver(string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public virtual void HandleBasicDeliver(BasicDeliverEventArgs args)
         {
             IBasicConsumer consumer;
             lock (m_consumers)
             {
-                consumer = m_consumers[consumerTag];
+                consumer = m_consumers[args.ConsumerTag];
             }
             if (consumer == null)
             {
@@ -858,13 +852,7 @@ namespace RabbitMQ.Client.Impl
             }
 
             ConsumerDispatcher.HandleBasicDeliver(consumer,
-                    consumerTag,
-                    deliveryTag,
-                    redelivered,
-                    exchange,
-                    routingKey,
-                    basicProperties,
-                    body);
+                    args);
         }
 
         public void HandleBasicGetEmpty()

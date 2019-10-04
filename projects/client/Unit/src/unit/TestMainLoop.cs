@@ -54,13 +54,7 @@ namespace RabbitMQ.Client.Unit {
         {
             public FaultyConsumer(IModel model) : base(model) {}
 
-            public override void HandleBasicDeliver(string consumerTag,
-                                               ulong deliveryTag,
-                                               bool redelivered,
-                                               string exchange,
-                                               string routingKey,
-                                               IBasicProperties properties,
-                                               byte[] body)
+            public override void HandleBasicDeliver(BasicDeliverEventArgs args)
             {
                 throw new Exception("I am a bad consumer");
             }

@@ -1151,17 +1151,11 @@ namespace RabbitMQ.Client.Unit
                 action = fn;
             }
 
-            public override void HandleBasicDeliver(string consumerTag,
-                ulong deliveryTag,
-                bool redelivered,
-                string exchange,
-                string routingKey,
-                IBasicProperties properties,
-                byte[] body)
+            public override void HandleBasicDeliver(BasicDeliverEventArgs args)
             {
                 try
                 {
-                    if (deliveryTag == 7 && counter < 10)
+                    if (args.DeliveryTag == 7 && counter < 10)
                     {
                         action();
                     }
@@ -1169,7 +1163,7 @@ namespace RabbitMQ.Client.Unit
                     {
                         latch.Set();
                     }
-                    PostHandleDelivery(deliveryTag);
+                    PostHandleDelivery(args.DeliveryTag);
                 }
                 finally
                 {

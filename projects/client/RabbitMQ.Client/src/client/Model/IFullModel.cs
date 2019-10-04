@@ -41,6 +41,7 @@
 using System;
 using System.Collections.Generic;
 using RabbitMQ.Client.Apigen.Attributes;
+using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Framing.Impl;
 
 namespace RabbitMQ.Client.Impl
@@ -83,13 +84,7 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Handle incoming Basic.Deliver methods. Dispatches
         ///to waiting consumers.</summary>
-        void HandleBasicDeliver(string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            [AmqpContentHeaderMapping] IBasicProperties basicProperties,
-            [AmqpContentBodyMapping] byte[] body);
+        void HandleBasicDeliver(BasicDeliverEventArgs args);
 
         ///<summary>Handle incoming Basic.GetEmpty methods. Routes the
         ///information to a waiting Basic.Get continuation.</summary>

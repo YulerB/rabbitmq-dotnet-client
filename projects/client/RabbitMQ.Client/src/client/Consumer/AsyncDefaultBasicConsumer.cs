@@ -97,13 +97,7 @@ namespace RabbitMQ.Client
         /// Note that in particular, some delivered messages may require acknowledgement via <see cref="IModel.BasicAck"/>.
         /// The implementation of this method in this class does NOT acknowledge such messages.
         /// </remarks>
-        public virtual Task HandleBasicDeliver(string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            IBasicProperties properties,
-            byte[] body)
+        public virtual Task HandleBasicDeliver(BasicDeliverEventArgs args)
         {
             // Nothing to do here.
             return TaskExtensions.CompletedTask;
@@ -155,7 +149,7 @@ namespace RabbitMQ.Client
             throw new InvalidOperationException("Should never be called.");
         }
 
-        void IBasicConsumer.HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
+        void IBasicConsumer.HandleBasicDeliver(BasicDeliverEventArgs args)
         {
             throw new InvalidOperationException("Should never be called.");
         }

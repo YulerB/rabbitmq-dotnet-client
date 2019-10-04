@@ -43,6 +43,7 @@
 using RabbitMQ.Client.Exceptions;
 namespace RabbitMQ.Client.Framing.Impl
 {
+    using RabbitMQ.Client.Events;
     using RabbitMQ.Client.Framing;
 
     public class Model : RabbitMQ.Client.Impl.ModelBase
@@ -363,14 +364,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 case 3932220:
                     {
                         BasicDeliver __impl = (BasicDeliver)__method;
-                        HandleBasicDeliver(
-                          __impl.ConsumerTag,
-                          __impl.DeliveryTag,
-                          __impl.Redelivered,
-                          __impl.Exchange,
-                          __impl.RoutingKey,
-                          cmd.Header,
-                          cmd.Body.ToByteArray());
+                        HandleBasicDeliver(new BasicDeliverEventArgs(__impl.ConsumerTag,__impl.DeliveryTag,__impl.Redelivered,__impl.Exchange,__impl.RoutingKey,cmd.Header,cmd.Body.ToByteArray()));
                         return true;
                     }
                 case 3932232:

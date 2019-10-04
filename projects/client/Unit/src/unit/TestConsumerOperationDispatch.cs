@@ -93,21 +93,19 @@ namespace RabbitMQ.Client.Unit
                 this.DeliveryTags = new ConcurrentBag<ulong>();
             }
 
-            public override void HandleBasicDeliver(string consumerTag,
-                ulong deliveryTag, bool redelivered, string exchange, string routingKey,
-                IBasicProperties properties, byte[] body)
+            public override void HandleBasicDeliver(BasicDeliverEventArgs args)
             {
                 // we test concurrent dispatch from the moment basic.delivery is returned.
                 // delivery tags have guaranteed ordering and we verify that it is preserved
                 // (per-channel) by the concurrent dispatcher.
-                this.DeliveryTags.Add(deliveryTag);
+                this.DeliveryTags.Add(args.DeliveryTag);
 
                 if (DeliveryTags.Count == n)
                 {
                     counter.Signal();
                 }
 
-                this.Model.BasicAck(deliveryTag: deliveryTag, multiple: false);
+                this.Model.BasicAck(deliveryTag: args.DeliveryTag, multiple: false);
             }
         }
 

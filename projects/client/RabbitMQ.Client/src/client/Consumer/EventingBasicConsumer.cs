@@ -79,28 +79,10 @@ namespace RabbitMQ.Client.Events
         }
 
         ///<summary>Fires the Received event.</summary>
-        public override void HandleBasicDeliver(string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            IBasicProperties properties,
-            byte[] body)
+        public override void HandleBasicDeliver(BasicDeliverEventArgs args)
         {
-            base.HandleBasicDeliver(consumerTag,
-                deliveryTag,
-                redelivered,
-                exchange,
-                routingKey,
-                properties,
-                body);
-            Raise(Received, new BasicDeliverEventArgs(consumerTag,
-                                            deliveryTag,
-                                            redelivered,
-                                            exchange,
-                                            routingKey,
-                                            properties,
-                                            body));
+            base.HandleBasicDeliver(args);
+            Raise(Received, args);
         }
 
         ///<summary>Fires the Shutdown event.</summary>

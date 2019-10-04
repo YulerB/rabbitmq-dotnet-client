@@ -57,8 +57,7 @@ namespace RabbitMQ.Client
     ///</remarks>
     public interface IQueueingBasicConsumer
     {
-        void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered,
-            string exchange, string routingKey, IBasicProperties properties, byte[] body);
+        void HandleBasicDeliver(BasicDeliverEventArgs args);
         void OnCancel();
         SharedQueue<BasicDeliverEventArgs> Queue { get; }
     }

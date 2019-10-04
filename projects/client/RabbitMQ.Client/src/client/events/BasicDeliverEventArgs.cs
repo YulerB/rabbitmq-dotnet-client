@@ -85,7 +85,7 @@ namespace RabbitMQ.Client.Events
 
         ///<summary>The delivery tag for this delivery. See
         ///IModel.BasicAck.</summary>
-        public ulong DeliveryTag { get; private set; }
+        public ulong DeliveryTag { get;  set; }
 
         ///<summary>The exchange the message was originally published
         ///to.</summary>

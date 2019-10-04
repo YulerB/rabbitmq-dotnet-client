@@ -58,25 +58,13 @@ namespace RabbitMQ.Client.Impl
         }
 
         public void HandleBasicDeliver(IBasicConsumer consumer,
-                                       string consumerTag,
-                                       ulong deliveryTag,
-                                       bool redelivered,
-                                       string exchange,
-                                       string routingKey,
-                                       IBasicProperties basicProperties,
-                                       byte[] body)
+                                       BasicDeliverEventArgs args)
         {
             UnlessShuttingDown(() =>
             {
                 try
                 {
-                    consumer.HandleBasicDeliver(consumerTag,
-                                                deliveryTag,
-                                                redelivered,
-                                                exchange,
-                                                routingKey,
-                                                basicProperties,
-                                                body);
+                    consumer.HandleBasicDeliver(args);
                 }
                 catch (Exception e)
                 {

@@ -39,28 +39,10 @@ namespace RabbitMQ.Client.Events
         }
 
         ///<summary>Fires the Received event.</summary>
-        public override async Task HandleBasicDeliver(string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            IBasicProperties properties,
-            byte[] body)
+        public override async Task HandleBasicDeliver(BasicDeliverEventArgs args)
         {
-            await base.HandleBasicDeliver(consumerTag,
-                deliveryTag,
-                redelivered,
-                exchange,
-                routingKey,
-                properties,
-                body).ConfigureAwait(false);
-            await Raise(Received, new BasicDeliverEventArgs(consumerTag,
-                deliveryTag,
-                redelivered,
-                exchange,
-                routingKey,
-                properties,
-                body)).ConfigureAwait(false);
+            await base.HandleBasicDeliver(args).ConfigureAwait(false);
+            await Raise(Received, args).ConfigureAwait(false);
         }
 
         ///<summary>Fires the Shutdown event.</summary>

@@ -51,12 +51,12 @@ namespace RabbitMQ.Client.Impl
     {
         public event EventHandler<BufferUsedEventArgs> BufferUsed;
 
-        private bool addingComplete=false;
-        private ConcurrentQueue<ReadOnlyMemory<byte>> data = new ConcurrentQueue<ReadOnlyMemory<byte>>();
-        private ReadOnlyMemory<byte> top = new ReadOnlyMemory<byte>();
+        private volatile bool addingComplete=false;
+        private ConcurrentQueue<Memory<byte>> data = new ConcurrentQueue<Memory<byte>>();
+        private Memory<byte> top = new Memory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private int originalSize = 0;
-        private readonly List<ReadOnlyMemory<byte>> result = new List<ReadOnlyMemory<byte>>(10);
+        private readonly List<Memory<byte>> result = new List<Memory<byte>>(10);
 
         #region Constructor
         public ArraySegmentSequence(byte[] buffer)
@@ -74,7 +74,7 @@ namespace RabbitMQ.Client.Impl
         public ArraySegmentSequence() { }
         #endregion
 
-        public List<ReadOnlyMemory<byte>> ReadNotExpecting(int count)
+        public List<Memory<byte>> ReadNotExpecting(int count)
         {
             result.Clear();
             while (count > 0)
@@ -110,7 +110,7 @@ namespace RabbitMQ.Client.Impl
             }
             return result;
         }
-        public List<ReadOnlyMemory<byte>> Read(int count)
+        public List<Memory<byte>> Read(int count)
         {
             result.Clear();
             while (count > 0)
@@ -141,7 +141,7 @@ namespace RabbitMQ.Client.Impl
             }
             return result;
         }
-        public void Write(ReadOnlyMemory<byte> buffer)
+        public void Write(Memory<byte> buffer)
         {
             if (buffer.Length > 0)
             {

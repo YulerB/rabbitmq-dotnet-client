@@ -72,8 +72,7 @@ namespace RabbitMQ.Util
             if(data.Count == 1)
             {
                 byte[] bytes = new byte[payloadSize];
-                Memory<byte> memory = new Memory<byte>(bytes);
-                data[0].CopyTo(memory);
+                data[0].CopyTo(bytes.AsMemory());
                 return bytes;
             }
             else

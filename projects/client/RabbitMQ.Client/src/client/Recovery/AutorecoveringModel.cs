@@ -421,16 +421,9 @@ namespace RabbitMQ.Client.Impl
             m_delegate.HandleBasicConsumeOk(consumerTag);
         }
 
-        public void HandleBasicDeliver(string consumerTag,
-            ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public void HandleBasicDeliver(BasicDeliverEventArgs args)
         {
-            m_delegate.HandleBasicDeliver(consumerTag, deliveryTag, redelivered, exchange,
-                routingKey, basicProperties, body);
+            m_delegate.HandleBasicDeliver(args);
         }
 
         public void HandleBasicGetEmpty() => m_delegate.HandleBasicGetEmpty();

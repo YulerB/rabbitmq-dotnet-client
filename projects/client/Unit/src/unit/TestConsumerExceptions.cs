@@ -41,6 +41,7 @@
 using System;
 using System.Threading;
 using NUnit.Framework;
+using RabbitMQ.Client.Events;
 
 namespace RabbitMQ.Client.Unit
 {
@@ -53,13 +54,7 @@ namespace RabbitMQ.Client.Unit
             {
             }
 
-            public override void HandleBasicDeliver(string consumerTag,
-                ulong deliveryTag,
-                bool redelivered,
-                string exchange,
-                string routingKey,
-                IBasicProperties properties,
-                byte[] body)
+            public override void HandleBasicDeliver(BasicDeliverEventArgs args)
             {
                 throw new Exception("oops");
             }
