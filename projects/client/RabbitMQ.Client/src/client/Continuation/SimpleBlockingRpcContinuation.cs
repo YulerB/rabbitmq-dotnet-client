@@ -50,26 +50,6 @@ namespace RabbitMQ.Client.Impl
     {
         public readonly TaskCompletionSource<Either<Command, ShutdownEventArgs>> m_cell = new TaskCompletionSource<Either<Command, ShutdownEventArgs>>();
 
-        public virtual Command GetReply()
-        {
-            m_cell.Task.Wait();
-            switch (m_cell.Task.Result.Alternative)
-            {
-                case EitherAlternative.Left:
-                    return m_cell.Task.Result.LeftValue;
-                case EitherAlternative.Right:
-                    throw new OperationInterruptedException(m_cell.Task.Result.RightValue);
-                default:
-                    string error = "Illegal EitherAlternative " + m_cell.Task.Result.Alternative;
-#if !(NETFX_CORE)
-                    // Trace.Fail(error);
-#else
-                    MetroEventSource.Log.Error(error);
-#endif
-                    return null;
-            }
-        }
-
         public virtual Command GetReply(TimeSpan timeout)
         {
             if (m_cell.Task.Wait(timeout)) {
@@ -90,7 +70,6 @@ namespace RabbitMQ.Client.Impl
                 throw new TimeoutException();
             }
         }
-    
 
         private static void ReportInvalidInvariant(Either<Command,ShutdownEventArgs> result)
         {
