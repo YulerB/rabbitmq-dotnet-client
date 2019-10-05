@@ -100,6 +100,13 @@ namespace RabbitMQ.Client.Impl
                     top = top.Slice(count, top.Length - count);
                     return result;
                 }
+                else if (top.Length == count)
+                {
+                    result.Add(top.Slice(0, top.Length));
+                    top = empty;
+                    BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
+                    return result;
+                }
                 else
                 {
                     result.Add(top.Slice(0, top.Length));

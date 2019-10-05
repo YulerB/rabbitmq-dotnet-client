@@ -862,7 +862,7 @@ namespace RabbitMQ.Client.Impl
 
         public void HandleBasicRecoverOk()
         {
-            var k = (SimpleBlockingRpcContinuation)m_continuationQueue.Next();
+            var k = m_continuationQueue.Next();
             OnBasicRecoverOk(new EventArgs());
             k.HandleCommand(null);
         }
