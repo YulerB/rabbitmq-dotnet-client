@@ -114,4 +114,23 @@ namespace RabbitMQ.Client.Framing.Impl
             sb.Append(")");
         }
     }
+
+    public class BasicPublishFull 
+    {
+        public BasicPublish PublishMethod { get; private set; }
+        public RabbitMQ.Client.Impl.BasicProperties BasicProperties { get; set; }
+        public byte[] Body { get; private set; }
+        public BasicPublishFull() { }
+
+        public BasicPublishFull(
+          BasicPublish publishMethod,
+          RabbitMQ.Client.Impl.BasicProperties basicProperties, 
+          byte[] body)
+        {
+            this.PublishMethod  = publishMethod;
+            this.BasicProperties = basicProperties;
+            this.Body = body;
+        }
+    }
+
 }

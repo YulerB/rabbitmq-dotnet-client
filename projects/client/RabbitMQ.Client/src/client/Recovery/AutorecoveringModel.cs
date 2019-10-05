@@ -513,11 +513,9 @@ namespace RabbitMQ.Client.Impl
                 mechanisms, locales);
         }
 
-        public void HandleConnectionTune(ushort channelMax,
-            uint frameMax,
-            ushort heartbeat)
+        public void HandleConnectionTune(ConnectionTuneDetails args)
         {
-            m_delegate.HandleConnectionTune(channelMax, frameMax, heartbeat);
+            m_delegate.HandleConnectionTune(args);
         }
 
         public void HandleConnectionUnblocked()
@@ -549,14 +547,14 @@ namespace RabbitMQ.Client.Impl
             m_delegate._Private_BasicGet(queue, autoAck);
         }
 
-        public void _Private_BasicPublish(string exchange,
-            string routingKey,
-            bool mandatory,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public void _Private_BasicPublish(BasicPublishFull args)
+            //string exchange,
+            //string routingKey,
+            //bool mandatory,
+            //IBasicProperties basicProperties,
+            //byte[] body)
         {
-            m_delegate._Private_BasicPublish(exchange, routingKey, mandatory,
-                basicProperties, body);
+            m_delegate._Private_BasicPublish(args);// exchange, routingKey, mandatory,basicProperties, body);
         }
 
         public void _Private_BasicRecover(bool requeue)
@@ -746,17 +744,19 @@ namespace RabbitMQ.Client.Impl
             m_delegate.BasicNack(deliveryTag, settings);
         }
 
-        public void BasicPublish(string exchange,
-            string routingKey,
-            bool mandatory,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public void BasicPublish(BasicPublishFull args)
+            //string exchange,
+            //string routingKey,
+            //bool mandatory,
+            //IBasicProperties basicProperties,
+            //byte[] body)
         {
-            m_delegate.BasicPublish(exchange,
-                routingKey,
-                mandatory,
-                basicProperties,
-                body);
+            m_delegate.BasicPublish(args);
+            // exchange,
+                //routingKey,
+                //mandatory,
+                //basicProperties,
+                //body);
         }
 
         public void BasicQos(uint prefetchSize,

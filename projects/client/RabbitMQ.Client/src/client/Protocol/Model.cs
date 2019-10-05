@@ -45,6 +45,7 @@ namespace RabbitMQ.Client.Framing.Impl
 {
     using RabbitMQ.Client.Events;
     using RabbitMQ.Client.Framing;
+    using RabbitMQ.Client.Impl;
 
     public class Model : RabbitMQ.Client.Impl.ModelBase
     {
@@ -75,13 +76,19 @@ namespace RabbitMQ.Client.Framing.Impl
             ModelSend(new BasicGet(0, queue, autoAck));
         }
         public override void _Private_BasicPublish(
-          string @exchange,
-          string @routingKey,
-          bool @mandatory,
-          RabbitMQ.Client.IBasicProperties @basicProperties,
-          byte[] @body)
+            BasicPublishFull args
+
+
+          //  string @exchange,
+          //string @routingKey,
+          //bool @mandatory,
+          //RabbitMQ.Client.IBasicProperties @basicProperties,
+          //byte[] @body
+            
+            )
         {
-            ModelSend(new BasicPublish(0, exchange, routingKey, mandatory ? BasicPublishFlags.Mandatory : BasicPublishFlags.None), (BasicProperties)basicProperties, body);
+            //new BasicPublish(0, exchange, routingKey, mandatory ? BasicPublishFlags.Mandatory : BasicPublishFlags.None), (RabbitMQ.Client.Impl.BasicProperties)basicProperties, body
+            ModelSend(args.PublishMethod, args.BasicProperties , args.Body);
         }
         public override void _Private_BasicRecover(bool @requeue)
         {
@@ -283,7 +290,7 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         public override RabbitMQ.Client.Impl.BasicProperties CreateBasicProperties()
         {
-            return new BasicProperties();
+            return new Framing.BasicProperties();
         }
         public override void QueueUnbind(
           string @queue,
@@ -457,10 +464,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 case 655390:
                     {
                         ConnectionTune __impl = (ConnectionTune)__method;
-                        HandleConnectionTune(
-                          __impl.ChannelMax,
-                          __impl.FrameMax,
-                          __impl.Heartbeat);
+                        HandleConnectionTune(new ConnectionTuneDetails(__impl.ChannelMax, __impl.FrameMax, __impl.Heartbeat));
                         return true;
                     }
                 case 655421:

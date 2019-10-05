@@ -991,12 +991,10 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Handle incoming Connection.Tune
         ///methods.</summary>
-        public void HandleConnectionTune(ushort channelMax,
-            uint frameMax,
-            ushort heartbeat)
+        public void HandleConnectionTune(ConnectionTuneDetails args)
         {
             var k = (ConnectionStartRpcContinuation)m_continuationQueue.Next();
-            k.m_result = new ConnectionSecureOrTune(new ConnectionTuneDetails(channelMax,frameMax,heartbeat));
+            k.m_result = new ConnectionSecureOrTune(args);
             k.HandleCommand(null); // release the continuation.
         }
 
@@ -1024,11 +1022,12 @@ namespace RabbitMQ.Client.Impl
         public abstract void _Private_BasicGet(string queue,
             bool autoAck);
 
-        public abstract void _Private_BasicPublish(string exchange,
-            string routingKey,
-            bool mandatory,
-            IBasicProperties basicProperties,
-            byte[] body);
+        public abstract void _Private_BasicPublish(BasicPublishFull args);
+        //string exchange,
+        //    string routingKey,
+        //    bool mandatory,
+        //    IBasicProperties basicProperties,
+        //    byte[] body);
 
         public abstract void _Private_BasicRecover(bool requeue);
 
@@ -1185,15 +1184,17 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public void BasicPublish(string exchange,
-            string routingKey,
-            bool mandatory,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public void BasicPublish(BasicPublishFull args
+//            string exchange,
+//            string routingKey,
+//            bool mandatory,
+//            IBasicProperties basicProperties,
+//            byte[] body
+            )
         {
-            if (basicProperties == null)
+            if (args.BasicProperties == null)
             {
-                basicProperties = CreateBasicProperties();
+                args.BasicProperties = CreateBasicProperties();
             }
             if (NextPublishSeqNo > 0)
             {
@@ -1206,11 +1207,7 @@ namespace RabbitMQ.Client.Impl
                     NextPublishSeqNo++;
                 }
             }
-            _Private_BasicPublish(exchange,
-                routingKey,
-                mandatory,
-                basicProperties,
-                body);
+            _Private_BasicPublish(args);
         }
 
         public abstract void BasicQos(uint prefetchSize,

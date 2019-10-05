@@ -224,8 +224,7 @@ namespace RabbitMQ.Client
         ///   </para>
         /// </remarks>
         [AmqpMethodDoNotImplement(null)]
-        void BasicPublish(string exchange, string routingKey, bool mandatory,
-            IBasicProperties basicProperties, byte[] body);
+        void BasicPublish(BasicPublishFull args);// string exchange, string routingKey, bool mandatory,IBasicProperties basicProperties, byte[] body);
 
         /// <summary>
         /// Configures QoS parameters of the Basic content-class.

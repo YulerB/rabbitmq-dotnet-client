@@ -160,9 +160,7 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Handle incoming Connection.Tune
         ///methods.</summary>
-        void HandleConnectionTune(ushort channelMax,
-            uint frameMax,
-            ushort heartbeat);
+        void HandleConnectionTune(ConnectionTuneDetails args);
 
         ///<summary>Handle an incominga Connection.Unblocked.</summary>
         void HandleConnectionUnblocked();
@@ -201,11 +199,14 @@ namespace RabbitMQ.Client.Impl
         ///public publish method after potential null-reference issues
         ///have been rectified.</summary>
         [AmqpMethodMapping(null, "basic", "publish")]
-        void _Private_BasicPublish(string exchange,
-            string routingKey,
-            bool mandatory,
-            [AmqpContentHeaderMapping] IBasicProperties basicProperties,
-            [AmqpContentBodyMapping] byte[] body);
+        void _Private_BasicPublish(
+                        BasicPublishFull args
+);
+            //string exchange,
+            //string routingKey,
+            //bool mandatory,
+            //[AmqpContentHeaderMapping] IBasicProperties basicProperties,
+            //[AmqpContentBodyMapping] byte[] body);
 
         [AmqpForceOneWay]
         [AmqpMethodMapping(null, "basic", "recover")]
