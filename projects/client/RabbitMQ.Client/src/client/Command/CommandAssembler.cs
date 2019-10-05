@@ -59,11 +59,11 @@ namespace RabbitMQ.Client.Impl
     {
         private const int MaxArrayOfBytesSize = 2_147_483_591;
         
-        public IMethod m_method;
-        public RabbitMQ.Client.Impl.BasicProperties m_header;
-        public FrameBuilder frameBuilder;
-        public ulong m_remainingBodyBytes;
-        public AssemblyState m_state;
+        private IMethod m_method;
+        private RabbitMQ.Client.Impl.BasicProperties m_header;
+        private FrameBuilder frameBuilder;
+        private ulong m_remainingBodyBytes;
+        private AssemblyState m_state;
       
         public CommandAssembler(ProtocolBase protocol)
         {
@@ -141,25 +141,11 @@ namespace RabbitMQ.Client.Impl
 
         private Command CompletedCommand()
         {
-            if (m_state == AssemblyState.Complete)
-            {
-                if (frameBuilder == null)
-                {
-                    Command result = new Command(m_method, m_header, new FrameBuilder());
-                    Reset();
-                    return result;
-                }
-                else
-                {
-                    Command result = new Command(m_method, m_header, frameBuilder);
-                    Reset();
-                    return result;
-                }
-            }
-            else
-            {
-                return null;
-            }
+            if (m_state != AssemblyState.Complete) return null;
+
+            Command result = new Command(m_method, m_header, frameBuilder ?? new FrameBuilder());
+            Reset();
+            return result;
         }
 
         private void Reset()

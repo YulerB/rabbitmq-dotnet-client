@@ -451,7 +451,7 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        public static int ValidatedTimeout(int timeout)
+        private static int ValidatedTimeout(int timeout)
         {
             return (timeout != Timeout.Infinite) && (timeout < 0) ? 0 : timeout;
         }
@@ -511,10 +511,10 @@ namespace RabbitMQ.Client.Framing.Impl
             return m_sessionManager.Create();
         }
 
-        public ISession CreateSession(ushort channelNumber)
-        {
-            return m_sessionManager.Create(channelNumber);
-        }
+        //public ISession CreateSession(ushort channelNumber)
+        //{
+        //    return m_sessionManager.Create(channelNumber);
+        //}
 
         public void EnsureIsOpen()
         {
@@ -1333,10 +1333,7 @@ namespace RabbitMQ.Client.Framing.Impl
                     ConnectionSecureOrTune res;
                     if (challenge == null)
                     {
-                        res = m_model0.ConnectionStartOk(m_clientProperties,
-                            mechanismFactory.Name,
-                            response,
-                            "en_US");
+                        res = m_model0.ConnectionStartOk(new ConnectionStartOk(m_clientProperties,mechanismFactory.Name,response,"en_US"));
                     }
                     else
                     {
@@ -1377,9 +1374,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 connectionTune.Heartbeat);
             Heartbeat = heartbeat;
 
-            m_model0.ConnectionTuneOk(channelMax,
-                frameMax,
-                heartbeat);
+            m_model0.ConnectionTuneOk(new ConnectionTuneOk (channelMax,frameMax,heartbeat));
 
             // now we can start heartbeat timers
             MaybeStartHeartbeatTimers();

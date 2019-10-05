@@ -300,7 +300,7 @@ namespace RabbitMQ.Client
         ///   </para>
         /// </remarks>        
         [AmqpMethodDoNotImplement(null)]
-        void ExchangeBind(string destination, string source, string routingKey, IDictionary<string, object> arguments);
+        void ExchangeBind(ExchangeBind args);
 
         /// <summary>
         /// Like ExchangeBind but sets nowait to true.
@@ -310,8 +310,7 @@ namespace RabbitMQ.Client
         ///     Routing key must be shorter than 255 bytes.
         ///   </para>
         /// </remarks>        
-        void ExchangeBindNoWait(string destination, string source, string routingKey,
-            IDictionary<string, object> arguments);
+        void ExchangeBindNoWait(ExchangeBind args);
 
         /// <summary>Declare an exchange.</summary>
         /// <remarks>
@@ -359,10 +358,7 @@ namespace RabbitMQ.Client
         /// Routing key must be shorter than 255 bytes.
         /// </remarks>
         [AmqpMethodDoNotImplement(null)]
-        void ExchangeUnbind(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments);
+        void ExchangeUnbind(ExchangeUnbind args);
 
         /// <summary>
         /// Like ExchangeUnbind but sets nowait to true.
@@ -373,8 +369,7 @@ namespace RabbitMQ.Client
         ///   </para>
         /// </remarks>
         [AmqpMethodDoNotImplement(null)]
-        void ExchangeUnbindNoWait(string destination, string source, string routingKey,
-            IDictionary<string, object> arguments);
+        void ExchangeUnbindNoWait(ExchangeUnbind args);
 
         /// <summary>
         /// Bind a queue to an exchange.

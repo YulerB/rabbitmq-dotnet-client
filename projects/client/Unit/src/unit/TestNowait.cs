@@ -105,8 +105,8 @@ namespace RabbitMQ.Client.Unit {
             try
             {
                 Model.ExchangeDeclare(x, ExchangeType.Fanout, false, true, null);
-                Model.ExchangeBind(x, "amq.fanout", "", null);
-                Model.ExchangeUnbindNoWait(x, "amq.fanout", "", null);
+                Model.ExchangeBind(x, "amq.fanout", string.Empty, null);
+                Model.ExchangeUnbindNoWait(new Framing.Impl.ExchangeUnbind(0, x, "amq.fanout", string.Empty, true, null));
             } finally {
                 Model.ExchangeDelete(x);
             }

@@ -69,6 +69,23 @@ namespace RabbitMQ.Client.Impl
         {
             CheckEmptyFrameSize();
         }
+        private static void CheckEmptyFrameSize()
+        {
+            long actualLength = 0;
+            {
+                var x = new EmptyOutboundFrame();
+                actualLength = x.EstimatedSize();
+            }
+
+            if (Constants.EmptyFrameSize != actualLength)
+            {
+                string message =
+                    string.Format("EmptyFrameSize is incorrect - defined as {0} where the computed value is in fact {1}.",
+                        Constants.EmptyFrameSize,
+                        actualLength);
+                throw new ProtocolViolationException(message);
+            }
+        }
 
         public Command(IMethod method) : this(method, null, null)
         {
@@ -87,24 +104,6 @@ namespace RabbitMQ.Client.Impl
 
         public IMethod Method { get; private set; }
 
-        public static void CheckEmptyFrameSize()
-        {
-            long actualLength = 0;
-            {
-                var x = new EmptyOutboundFrame();
-                actualLength = x.EstimatedSize();
-            }
-
-            if (Constants.EmptyFrameSize != actualLength)
-            {
-                string message =
-                    string.Format("EmptyFrameSize is incorrect - defined as {0} where the computed value is in fact {1}.",
-                        Constants.EmptyFrameSize,
-                        actualLength);
-                throw new ProtocolViolationException(message);
-            }
-        }
-
         public void Transmit(ushort channelNumber, Connection connection)
         {
             if (Method.HasContent)
@@ -117,12 +116,12 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public void TransmitAsSingleFrame(ushort channelNumber, Connection connection)
+        private void TransmitAsSingleFrame(ushort channelNumber, Connection connection)
         {
             connection.WriteFrame(new MethodOutboundFrame(channelNumber, Method));
         }
 
-        public void TransmitAsFrameSet(ushort channelNumber, Connection connection)
+        private void TransmitAsFrameSet(ushort channelNumber, Connection connection)
         {
             if (Method.HasContent)
             {
@@ -139,7 +138,6 @@ namespace RabbitMQ.Client.Impl
 
                 using (ArraySegmentSequence sequence = new ArraySegmentSequence(body.ToData()))
                 {
-
                     for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
                     {
                         var remaining = body.Length - offset;

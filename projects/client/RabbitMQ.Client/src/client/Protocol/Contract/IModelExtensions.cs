@@ -125,7 +125,7 @@ namespace RabbitMQ.Client
         /// </summary>
         public static void ExchangeBind(this IModel model, string destination, string source, string routingKey, IDictionary<string, object> arguments = null)
         {
-            model.ExchangeBind(destination, source, routingKey, arguments);
+            model.ExchangeBind(new ExchangeBind(0,destination, source, routingKey, false, arguments));
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace RabbitMQ.Client
         /// </summary>
         public static void ExchangeBindNoWait(this IModel model, string destination, string source, string routingKey, IDictionary<string, object> arguments = null)
         {
-            model.ExchangeBindNoWait(destination, source, routingKey, arguments);
+            model.ExchangeBindNoWait(new ExchangeBind(0, destination, source, routingKey, true, arguments));
         }
 
         /// <summary>
@@ -162,7 +162,7 @@ namespace RabbitMQ.Client
             string routingKey,
             IDictionary<string, object> arguments = null)
             {
-                model.ExchangeUnbind(destination, source, routingKey, arguments);
+                model.ExchangeUnbind(new ExchangeUnbind(0, destination, source, routingKey, false, arguments));
             }
 
         /// <summary>

@@ -65,14 +65,11 @@ namespace RabbitMQ.Client.Impl
     {
         ///<summary>Sends a Connection.TuneOk. Used during connection
         ///initialisation.</summary>
-        void ConnectionTuneOk(ushort channelMax,
-            uint frameMax,
-            ushort heartbeat);
+        void ConnectionTuneOk(ConnectionTuneOk args);
 
         ///<summary>Handle incoming Basic.Ack methods. Signals a
         ///BasicAckEvent.</summary>
-        void HandleBasicAck(ulong deliveryTag,
-            bool multiple);
+        void HandleBasicAck(BasicAckEventArgs args);
 
         void HandleBasicCancel(string consumerTag, bool nowait);
 
@@ -189,10 +186,7 @@ namespace RabbitMQ.Client.Impl
         ///datastructures.</summary>
         [AmqpForceOneWay]
         [AmqpMethodMapping(null, "basic", "consume")]
-        void _Private_BasicConsume(string queue,
-            string consumerTag,
-            BasicConsumeFlags settings,
-            IDictionary<string, object> arguments);
+        void _Private_BasicConsume(BasicConsume args);
 
         ///<summary>Used to send a Basic.Get. Basic.Get is a special
         ///case, since it can result in a Basic.GetOk or a
@@ -279,20 +273,13 @@ namespace RabbitMQ.Client.Impl
         ///special, like Basic.Get.</summary>
         [AmqpForceOneWay]
         [AmqpMethodMapping(null, "connection", "start-ok")]
-        void _Private_ConnectionStartOk(IDictionary<string, object> clientProperties,
-            string mechanism,
-            string response,
-            string locale);
+        void _Private_ConnectionStartOk(ConnectionStartOk args);
 
         ///<summary>Used to send a Exchange.Bind method. Called by the
         ///public bind method.
         ///</summary>
         [AmqpMethodMapping(null, "exchange", "bind")]
-        void _Private_ExchangeBind(string destination,
-            string source,
-            string routingKey,
-            [AmqpNowaitArgument(null)] bool nowait,
-            IDictionary<string, object> arguments);
+        void _Private_ExchangeBind(ExchangeBind args);
 
         ///<summary>Used to send a Exchange.Declare method. Called by the
         ///public declare method.
@@ -314,11 +301,7 @@ namespace RabbitMQ.Client.Impl
         ///public unbind method.
         ///</summary>
         [AmqpMethodMapping(null, "exchange", "unbind")]
-        void _Private_ExchangeUnbind(string destination,
-            string source,
-            string routingKey,
-            [AmqpNowaitArgument(null)] bool nowait,
-            IDictionary<string, object> arguments);
+        void _Private_ExchangeUnbind(ExchangeUnbind args);
 
         ///<summary>Used to send a Queue.Bind method. Called by the
         ///public bind method.</summary>

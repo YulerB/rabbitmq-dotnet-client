@@ -123,7 +123,7 @@ namespace RabbitMQ.Client
         /// Retrieve the <see cref="IModel"/> this consumer is associated with,
         ///  for use in acknowledging received messages, for instance.
         /// </summary>
-        public IModel Model { get; set; }
+        public IModel Model { get;private set; }
 
         /// <summary>
         ///  Called when the consumer is cancelled for reasons other than by a basicCancel:

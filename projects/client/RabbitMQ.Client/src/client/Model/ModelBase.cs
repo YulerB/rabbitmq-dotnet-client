@@ -354,7 +354,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public string ConnectionOpen(string virtualHost,
+        internal string ConnectionOpen(string virtualHost,
             string capabilities,
             bool insist)
         {
@@ -378,7 +378,7 @@ namespace RabbitMQ.Client.Impl
             return k.m_knownHosts;
         }
 
-        public ConnectionSecureOrTune ConnectionSecureOk(string response)
+        internal ConnectionSecureOrTune ConnectionSecureOk(string response)
         {
             var k = new ConnectionStartRpcContinuation();
             lock(_rpcLock)
@@ -399,10 +399,7 @@ namespace RabbitMQ.Client.Impl
             return k.m_result;
         }
 
-        public ConnectionSecureOrTune ConnectionStartOk(IDictionary<string, object> clientProperties,
-            string mechanism,
-            string response,
-            string locale)
+        internal ConnectionSecureOrTune ConnectionStartOk(ConnectionStartOk args)
         {
             var k = new ConnectionStartRpcContinuation();
             lock(_rpcLock)
@@ -410,8 +407,7 @@ namespace RabbitMQ.Client.Impl
                 Enqueue(k);
                 try
                 {
-                    _Private_ConnectionStartOk(clientProperties, mechanism,
-                        response, locale);
+                    _Private_ConnectionStartOk(args);
                 }
                 catch (AlreadyClosedException)
                 {
@@ -488,12 +484,8 @@ namespace RabbitMQ.Client.Impl
             if (method.HasContent)
             {
                 m_flowControlBlock.WaitOne();
-                Session.Transmit(new Command(method, header, new FrameBuilder(body)));
             }
-            else
-            {
-                Session.Transmit(new Command(method, header, new FrameBuilder(body)));
-            }
+            Session.Transmit(new Command(method, header, new FrameBuilder(body)));
         }
 
         public void ModelSend(IMethod method)
@@ -501,12 +493,8 @@ namespace RabbitMQ.Client.Impl
             if (method.HasContent)
             {
                 m_flowControlBlock.WaitOne();
-                Session.Transmit(new Command(method));
             }
-            else
-            {
-                Session.Transmit(new Command(method));
-            }
+            Session.Transmit(new Command(method));
         }
 
         public virtual void OnBasicAck(BasicAckEventArgs args)
@@ -773,14 +761,11 @@ namespace RabbitMQ.Client.Impl
             // dispose unmanaged resources
         }
 
-        public abstract void ConnectionTuneOk(ushort channelMax,
-            uint frameMax,
-            ushort heartbeat);
+        public abstract void ConnectionTuneOk(ConnectionTuneOk args);
 
-        public void HandleBasicAck(ulong deliveryTag,
-            bool multiple)
+        public void HandleBasicAck(BasicAckEventArgs args)
         {
-            OnBasicAck(new BasicAckEventArgs(deliveryTag, multiple));
+            OnBasicAck(args);
         }
 
         public void HandleBasicCancel(string consumerTag, bool nowait)
@@ -1034,10 +1019,7 @@ namespace RabbitMQ.Client.Impl
         public abstract void _Private_BasicCancel(string consumerTag,
             bool nowait);
 
-        public abstract void _Private_BasicConsume(string queue,
-            string consumerTag,
-            BasicConsumeFlags settings,
-            IDictionary<string, object> arguments);
+        public abstract void _Private_BasicConsume(BasicConsume args);
 
         public abstract void _Private_BasicGet(string queue,
             bool autoAck);
@@ -1076,16 +1058,9 @@ namespace RabbitMQ.Client.Impl
 
         public abstract void _Private_ConnectionSecureOk(string response);
 
-        public abstract void _Private_ConnectionStartOk(IDictionary<string, object> clientProperties,
-            string mechanism,
-            string response,
-            string locale);
+        public abstract void _Private_ConnectionStartOk(ConnectionStartOk args);
 
-        public abstract void _Private_ExchangeBind(string destination,
-            string source,
-            string routingKey,
-            bool nowait,
-            IDictionary<string, object> arguments);
+        public abstract void _Private_ExchangeBind(ExchangeBind args);
 
         public abstract void _Private_ExchangeDeclare(string exchange,
             string type,
@@ -1095,11 +1070,7 @@ namespace RabbitMQ.Client.Impl
         public abstract void _Private_ExchangeDelete(string exchange,
             ExchangeDeleteFlags flag);
 
-        public abstract void _Private_ExchangeUnbind(string destination,
-            string source,
-            string routingKey,
-            bool nowait,
-            IDictionary<string, object> arguments);
+        public abstract void _Private_ExchangeUnbind(ExchangeUnbind args);
 
         public abstract void _Private_QueueBind(string queue,
             string exchange,
@@ -1170,7 +1141,7 @@ namespace RabbitMQ.Client.Impl
                 Enqueue(k);
                 // Non-nowait. We have an unconventional means of getting
                 // the RPC response, but a response is still expected.
-                _Private_BasicConsume(queue, consumerTag, settings & ~BasicConsumeFlags.NoWait, arguments);
+                _Private_BasicConsume(new BasicConsume(0,queue, consumerTag, settings & ~BasicConsumeFlags.NoWait, arguments));
                 k.GetReply(this.ContinuationTimeout);
             }
             string actualConsumerTag = k.ConsumerTag;
@@ -1291,20 +1262,15 @@ namespace RabbitMQ.Client.Impl
         }
 
 
-        public void ExchangeBind(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeBind(ExchangeBind args)
         {
-            _Private_ExchangeBind(destination, source, routingKey, false, arguments);
+            _Private_ExchangeBind(args);
         }
 
-        public void ExchangeBindNoWait(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeBindNoWait(ExchangeBind args)
         {
-            _Private_ExchangeBind(destination, source, routingKey, true, arguments);
+            args.Nowait = true;
+            _Private_ExchangeBind(args);
         }
 
         public void ExchangeDeclare(string exchange, string type, bool durable, bool autoDelete, IDictionary<string, object> arguments)
@@ -1346,20 +1312,16 @@ namespace RabbitMQ.Client.Impl
             _Private_ExchangeDelete(exchange, ifUnused ? ExchangeDeleteFlags.IfUnused : ExchangeDeleteFlags.None);
         }
 
-        public void ExchangeUnbind(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeUnbind(ExchangeUnbind args)
         {
-            _Private_ExchangeUnbind(destination, source, routingKey, false, arguments);
+            args.Nowait = false;
+            _Private_ExchangeUnbind(args);
         }
 
-        public void ExchangeUnbindNoWait(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeUnbindNoWait(ExchangeUnbind args)
         {
-            _Private_ExchangeUnbind(destination, source, routingKey, true, arguments);
+            args.Nowait = true;
+            _Private_ExchangeUnbind(args);
         }
 
         public void QueueBind(string queue,

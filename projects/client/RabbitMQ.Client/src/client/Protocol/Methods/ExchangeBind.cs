@@ -64,7 +64,7 @@ namespace RabbitMQ.Client.Framing.Impl
         public string Destination { get { return m_destination; } }
         public string Source { get { return m_source; } }
         public string RoutingKey { get { return m_routingKey; } }
-        public bool Nowait { get { return m_nowait; } }
+        public bool Nowait { get { return m_nowait; } set { m_nowait = value; } }
         public System.Collections.Generic.IDictionary<string, object> Arguments { get { return m_arguments; } }
 
         public ExchangeBind() { }

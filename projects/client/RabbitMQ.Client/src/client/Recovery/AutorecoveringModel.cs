@@ -393,17 +393,14 @@ namespace RabbitMQ.Client.Impl
             // dispose unmanaged resources
         }
 
-        public void ConnectionTuneOk(ushort channelMax,
-            uint frameMax,
-            ushort heartbeat)
+        public void ConnectionTuneOk(ConnectionTuneOk args)
         {
-            m_delegate.ConnectionTuneOk(channelMax, frameMax, heartbeat);
+            m_delegate.ConnectionTuneOk(args);
         }
 
-        public void HandleBasicAck(ulong deliveryTag,
-            bool multiple)
+        public void HandleBasicAck(BasicAckEventArgs args)
         {
-            m_delegate.HandleBasicAck(deliveryTag, multiple);
+            m_delegate.HandleBasicAck(args);
         }
 
         public void HandleBasicCancel(string consumerTag, bool nowait)
@@ -542,15 +539,9 @@ namespace RabbitMQ.Client.Impl
                 nowait);
         }
 
-        public void _Private_BasicConsume(string queue,
-            string consumerTag,
-            BasicConsumeFlags settings,
-            IDictionary<string, object> arguments)
+        public void _Private_BasicConsume(BasicConsume args)
         {
-            m_delegate._Private_BasicConsume(queue,
-                consumerTag,
-                settings,
-                arguments);
+            m_delegate._Private_BasicConsume(args);
         }
 
         public void _Private_BasicGet(string queue, bool autoAck)
@@ -628,21 +619,14 @@ namespace RabbitMQ.Client.Impl
             m_delegate._Private_ConnectionSecureOk(response);
         }
 
-        public void _Private_ConnectionStartOk(IDictionary<string, object> clientProperties,
-            string mechanism, string response, string locale)
+        public void _Private_ConnectionStartOk(ConnectionStartOk args)
         {
-            m_delegate._Private_ConnectionStartOk(clientProperties, mechanism,
-                response, locale);
+            m_delegate._Private_ConnectionStartOk(args);
         }
 
-        public void _Private_ExchangeBind(string destination,
-            string source,
-            string routingKey,
-            bool nowait,
-            IDictionary<string, object> arguments)
+        public void _Private_ExchangeBind(ExchangeBind args)
         {
-            _Private_ExchangeBind(destination, source, routingKey,
-                nowait, arguments);
+            _Private_ExchangeBind(args);
         }
 
         public void _Private_ExchangeDeclare(string exchange,
@@ -659,14 +643,9 @@ namespace RabbitMQ.Client.Impl
             _Private_ExchangeDelete(exchange, flag);
         }
 
-        public void _Private_ExchangeUnbind(string destination,
-            string source,
-            string routingKey,
-            bool nowait,
-            IDictionary<string, object> arguments)
+        public void _Private_ExchangeUnbind(ExchangeUnbind args)
         {
-            m_delegate._Private_ExchangeUnbind(destination, source, routingKey,
-                nowait, arguments);
+            m_delegate._Private_ExchangeUnbind(args);
         }
 
         public void _Private_QueueBind(string queue,
@@ -846,26 +825,20 @@ namespace RabbitMQ.Client.Impl
             return m_delegate.CreateBasicProperties();
         }
 
-        public void ExchangeBind(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeBind(ExchangeBind args)
         {
             RecordedBinding eb = new RecordedExchangeBinding(this).
-                WithSource(source).
-                WithDestination(destination).
-                WithRoutingKey(routingKey).
-                WithArguments(arguments);
+                WithSource(args.Source).
+                WithDestination(args.Destination).
+                WithRoutingKey(args.RoutingKey).
+                WithArguments(args.Arguments);
             m_connection.RecordBinding(eb);
-            m_delegate.ExchangeBind(destination, source, routingKey, arguments);
+            m_delegate.ExchangeBind(args);
         }
 
-        public void ExchangeBindNoWait(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeBindNoWait(ExchangeBind args)
         {
-            m_delegate.ExchangeBindNoWait(destination, source, routingKey, arguments);
+            m_delegate.ExchangeBindNoWait(args);
         }
 
         public void ExchangeDeclare(string exchange, string type, bool durable,
@@ -916,27 +889,21 @@ namespace RabbitMQ.Client.Impl
             m_connection.DeleteRecordedExchange(exchange);
         }
 
-        public void ExchangeUnbind(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeUnbind(ExchangeUnbind args)
         {
             RecordedBinding eb = new RecordedExchangeBinding(this).
-                WithSource(source).
-                WithDestination(destination).
-                WithRoutingKey(routingKey).
-                WithArguments(arguments);
+                WithSource(args.Source).
+                WithDestination(args.Destination).
+                WithRoutingKey(args.RoutingKey).
+                WithArguments(args.Arguments);
             m_connection.DeleteRecordedBinding(eb);
-            m_delegate.ExchangeUnbind(destination, source, routingKey, arguments);
-            m_connection.MaybeDeleteRecordedAutoDeleteExchange(source);
+            m_delegate.ExchangeUnbind(args);
+            m_connection.MaybeDeleteRecordedAutoDeleteExchange(args.Source);
         }
 
-        public void ExchangeUnbindNoWait(string destination,
-            string source,
-            string routingKey,
-            IDictionary<string, object> arguments)
+        public void ExchangeUnbindNoWait(ExchangeUnbind args)
         {
-            m_delegate.ExchangeUnbind(destination, source, routingKey, arguments);
+            m_delegate.ExchangeUnbind(args);
         }
 
         public void QueueBind(string queue,

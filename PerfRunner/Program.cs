@@ -7,16 +7,22 @@ namespace PerfRunner
     {
         static void Main(string[] args)
         {
-            TestEventingConsumer c = new TestEventingConsumer();
-            try
-            {
-                c.Init();
-                c.TestEventingConsumerDeliveryEventsWithAck1Short();
-            }
-            finally
-            {
-                c.Dispose();
-            }
+            TestExtensions e = new TestExtensions();
+            e.Init();
+            e.TestExchangeBinding();
+            e.Dispose();
+
+
+            //TestEventingConsumer c = new TestEventingConsumer();
+            //try
+            //{
+            //    c.Init();
+            //    c.TestEventingConsumerDeliveryEventsWithAck1Short();
+            //}
+            //finally
+            //{
+            //    c.Dispose();
+            //}
         }
     }
 }
