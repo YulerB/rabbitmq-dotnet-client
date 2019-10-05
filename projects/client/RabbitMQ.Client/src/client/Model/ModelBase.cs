@@ -863,33 +863,16 @@ namespace RabbitMQ.Client.Impl
             k.HandleCommand(null); // release the continuation.
         }
 
-        public virtual void HandleBasicGetOk(ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            uint messageCount,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public virtual void HandleBasicGetOk(BasicGetResult args)
         {
             var k = (BasicGetRpcContinuation)m_continuationQueue.Next();
-            k.m_result = new BasicGetResult(deliveryTag,
-                redelivered,
-                exchange,
-                routingKey,
-                messageCount,
-                basicProperties,
-                body);
+            k.m_result = args;
             k.HandleCommand(null); // release the continuation.
         }
 
-        public void HandleBasicNack(ulong deliveryTag,
-            BasicNackFlags settings)
+        public void HandleBasicNack(BasicNackEventArgs args)
         {
-            OnBasicNack(new BasicNackEventArgs
-            {
-                DeliveryTag = deliveryTag,
-                Settings = settings
-            });
+            OnBasicNack(args);
         }
 
         public void HandleBasicRecoverOk()

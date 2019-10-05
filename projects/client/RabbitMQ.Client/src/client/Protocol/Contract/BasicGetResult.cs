@@ -38,6 +38,8 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using System;
+
 namespace RabbitMQ.Client
 {
     /// <summary>Represents Basic.GetOk responses from the server.</summary>
@@ -81,7 +83,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Retrieve the delivery tag for this message. See also <see cref="IModel.BasicAck"/>.
         /// </summary>
-        public ulong DeliveryTag { get; private set; }
+        public ulong DeliveryTag { get;  set; }
 
         /// <summary>
         /// Retrieve the exchange this message was published to.
@@ -106,5 +108,11 @@ namespace RabbitMQ.Client
         /// Retrieve the routing key with which this message was published.
         /// </summary>
         public string RoutingKey { get; private set; }
+
+        internal void OffsetDeliveryTag(ulong activeDeliveryTagOffset)
+        {
+            DeliveryTag += activeDeliveryTagOffset;
+        }
+
     }
 }

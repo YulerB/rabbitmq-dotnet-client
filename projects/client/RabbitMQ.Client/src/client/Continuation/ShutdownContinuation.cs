@@ -68,17 +68,6 @@ namespace RabbitMQ.Client.Impl
             m_cell.SetResult(reason);
         }
 
-        public virtual void OnModelShutdown(IModel sender, ShutdownEventArgs reason)
-        {
-            m_cell.SetResult(reason);
-        }
-
-        public virtual ShutdownEventArgs Wait()
-        {
-            m_cell.Task.Wait();
-            return m_cell.Task.Result;
-        }
-
         public ShutdownEventArgs Wait(TimeSpan timeout)
         {
             if (m_cell.Task.Wait(timeout))

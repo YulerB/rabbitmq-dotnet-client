@@ -375,22 +375,18 @@ namespace RabbitMQ.Client.Framing.Impl
                 case 3932231:
                     {
                         BasicGetOk __impl = (BasicGetOk)__method;
-                        HandleBasicGetOk(
-                          __impl.DeliveryTag,
-                          __impl.Redelivered,
-                          __impl.Exchange,
-                          __impl.RoutingKey,
-                          __impl.MessageCount,
-                          cmd.Header,
-                          cmd.Body.ToByteArray());
+                        HandleBasicGetOk(new BasicGetResult (__impl.DeliveryTag,__impl.Redelivered,__impl.Exchange,__impl.RoutingKey,__impl.MessageCount,cmd.Header,cmd.Body.ToByteArray()));
                         return true;
                     }
                 case 3932280:
                     {
                         BasicNack __impl = (BasicNack)__method;
-                        HandleBasicNack(
-                          __impl.DeliveryTag,
-                          __impl.Settings);
+                        HandleBasicNack(new BasicNackEventArgs
+                        {
+                            DeliveryTag = __impl.DeliveryTag,
+                            Settings = __impl.Settings
+                        }
+                          );
                         return true;
                     }
                 case 3932271:

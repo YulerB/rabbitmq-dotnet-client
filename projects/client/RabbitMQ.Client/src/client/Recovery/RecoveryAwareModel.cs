@@ -61,27 +61,17 @@ namespace RabbitMQ.Client.Impl
             MaxSeenDeliveryTag = 0;
         }
 
-        public override void HandleBasicGetOk(ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            uint messageCount,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public override void HandleBasicGetOk(BasicGetResult args)
         {
-            if (deliveryTag > MaxSeenDeliveryTag)
+            if (args.DeliveryTag > MaxSeenDeliveryTag)
             {
-                MaxSeenDeliveryTag = deliveryTag;
+                MaxSeenDeliveryTag = args.DeliveryTag;
             }
 
+            args.OffsetDeliveryTag(ActiveDeliveryTagOffset);
+
             base.HandleBasicGetOk(
-                OffsetDeliveryTag(deliveryTag),
-                redelivered,
-                exchange,
-                routingKey,
-                messageCount,
-                basicProperties,
-                body);
+                args);
         }
 
         public override void HandleBasicDeliver(BasicDeliverEventArgs args)
@@ -90,7 +80,7 @@ namespace RabbitMQ.Client.Impl
             {
                 MaxSeenDeliveryTag = args.DeliveryTag;
             }
-            args.DeliveryTag = OffsetDeliveryTag(args.DeliveryTag);
+            args.OffsetDeliveryTag(ActiveDeliveryTagOffset);
             base.HandleBasicDeliver(args);
         }
 
@@ -123,9 +113,5 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        protected ulong OffsetDeliveryTag(ulong deliveryTag)
-        {
-            return deliveryTag + ActiveDeliveryTagOffset;
-        }
     }
 }

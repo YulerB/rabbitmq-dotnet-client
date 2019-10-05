@@ -428,22 +428,25 @@ namespace RabbitMQ.Client.Impl
 
         public void HandleBasicGetEmpty() => m_delegate.HandleBasicGetEmpty();
 
-        public void HandleBasicGetOk(ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            uint messageCount,
-            IBasicProperties basicProperties,
-            byte[] body)
+        public void HandleBasicGetOk(
+           BasicGetResult args
+
+
+            //ulong deliveryTag,
+            //bool redelivered,
+            //string exchange,
+            //string routingKey,
+            //uint messageCount,
+            //IBasicProperties basicProperties,
+            //byte[] body
+            )
         {
-            m_delegate.HandleBasicGetOk(deliveryTag, redelivered, exchange, routingKey,
-                messageCount, basicProperties, body);
+            m_delegate.HandleBasicGetOk(args);
         }
 
-        public void HandleBasicNack(ulong deliveryTag,
-            BasicNackFlags settings)
+        public void HandleBasicNack(BasicNackEventArgs args)
         {
-            m_delegate.HandleBasicNack(deliveryTag, settings);
+            m_delegate.HandleBasicNack(args);
         }
 
         public void HandleBasicRecoverOk()

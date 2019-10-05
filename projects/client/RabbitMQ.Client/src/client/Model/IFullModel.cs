@@ -97,17 +97,11 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Handle incoming Basic.GetOk methods. Routes the
         ///information to a waiting Basic.Get continuation.</summary>
-        void HandleBasicGetOk(ulong deliveryTag,
-            bool redelivered,
-            string exchange,
-            string routingKey,
-            uint messageCount,
-            [AmqpContentHeaderMapping] IBasicProperties basicProperties,
-            [AmqpContentBodyMapping] byte[] body);
+        void HandleBasicGetOk(BasicGetResult args);
 
         ///<summary>Handle incoming Basic.Nack methods. Signals a
         ///BasicNackEvent.</summary>
-        void HandleBasicNack(ulong deliveryTag,BasicNackFlags settings);
+        void HandleBasicNack(BasicNackEventArgs args);
 
         ///<summary>Handle incoming Basic.RecoverOk methods
         ///received in reply to Basic.Recover.

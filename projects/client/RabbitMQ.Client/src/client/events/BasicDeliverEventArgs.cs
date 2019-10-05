@@ -76,6 +76,11 @@ namespace RabbitMQ.Client.Events
         ///<summary>The content header of the message.</summary>
         public IBasicProperties BasicProperties { get;private set; }
 
+        internal void OffsetDeliveryTag(ulong activeDeliveryTagOffset)
+        {
+            DeliveryTag += activeDeliveryTagOffset;
+        }
+
         ///<summary>The message body.</summary>
         public byte[] Body { get; private set; }
 
