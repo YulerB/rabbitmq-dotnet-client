@@ -40,6 +40,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Util;
 
@@ -47,21 +48,21 @@ namespace RabbitMQ.Client.Impl
 {
     public class SimpleBlockingRpcContinuation : IRpcContinuation
     {
-        public readonly BlockingCell<Either<Command, ShutdownEventArgs>> m_cell = new BlockingCell<Either<Command, ShutdownEventArgs>>();
+        public readonly TaskCompletionSource<Either<Command, ShutdownEventArgs>> m_cell = new TaskCompletionSource<Either<Command, ShutdownEventArgs>>();
 
         public virtual Command GetReply()
         {
-            var result = m_cell.WaitForValue();
-            switch (result.Alternative)
+            m_cell.Task.Wait();
+            switch (m_cell.Task.Result.Alternative)
             {
                 case EitherAlternative.Left:
-                    return result.LeftValue;
+                    return m_cell.Task.Result.LeftValue;
                 case EitherAlternative.Right:
-                    throw new OperationInterruptedException(result.RightValue);
+                    throw new OperationInterruptedException(m_cell.Task.Result.RightValue);
                 default:
-                    string error = "Illegal EitherAlternative " + result.Alternative;
+                    string error = "Illegal EitherAlternative " + m_cell.Task.Result.Alternative;
 #if !(NETFX_CORE)
-                   // Trace.Fail(error);
+                    // Trace.Fail(error);
 #else
                     MetroEventSource.Log.Error(error);
 #endif
@@ -71,18 +72,25 @@ namespace RabbitMQ.Client.Impl
 
         public virtual Command GetReply(TimeSpan timeout)
         {
-            var result = m_cell.WaitForValue(timeout);
-            switch (result.Alternative)
+            if (m_cell.Task.Wait(timeout)) {
+                var result = m_cell.Task.Result;
+                switch (m_cell.Task.Result.Alternative)
+                {
+                    case EitherAlternative.Left:
+                        return m_cell.Task.Result.LeftValue;
+                    case EitherAlternative.Right:
+                        throw new OperationInterruptedException(m_cell.Task.Result.RightValue);
+                    default:
+                        ReportInvalidInvariant(m_cell.Task.Result);
+                        return null;
+                }
+            }
+            else
             {
-                case EitherAlternative.Left:
-                    return result.LeftValue;
-                case EitherAlternative.Right:
-                    throw new OperationInterruptedException(result.RightValue);
-                default:
-                    ReportInvalidInvariant(result);
-                    return null;
+                throw new TimeoutException();
             }
         }
+    
 
         private static void ReportInvalidInvariant(Either<Command,ShutdownEventArgs> result)
         {
@@ -96,12 +104,12 @@ namespace RabbitMQ.Client.Impl
 
         public virtual void HandleCommand(Command cmd)
         {
-            m_cell.ContinueWithValue(Either<Command,ShutdownEventArgs>.Left(cmd));
+            m_cell.SetResult(Either<Command,ShutdownEventArgs>.Left(cmd));
         }
 
         public virtual void HandleModelShutdown(ShutdownEventArgs reason)
         {
-            m_cell.ContinueWithValue(Either<Command,ShutdownEventArgs>.Right(reason));
+            m_cell.SetResult(Either<Command,ShutdownEventArgs>.Right(reason));
         }
     }
 }

@@ -60,6 +60,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace RabbitMQ.Client.Framing.Impl
 {
@@ -441,17 +442,18 @@ namespace RabbitMQ.Client.Framing.Impl
                     TerminateMainloop();
                 }
             }
-
-#if NETFX_CORE
-            var receivedSignal = m_appContinuation.Wait(BlockingCell<object>.validatedTimeout(timeout));
-#else
-            var receivedSignal = m_appContinuation.Wait(BlockingCell<object>.ValidatedTimeout(timeout));
-#endif
+            
+            var receivedSignal = m_appContinuation.Wait(ValidatedTimeout(timeout));
 
             if (!receivedSignal)
             {
                 m_frameHandler.Close();
             }
+        }
+
+        public static int ValidatedTimeout(int timeout)
+        {
+            return (timeout != Timeout.Infinite) && (timeout < 0) ? 0 : timeout;
         }
 
         ///<remarks>
@@ -1273,15 +1275,15 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void StartAndTune()
         {
-            var connectionStartCell = new BlockingCell<ConnectionStartDetailsEventArgs>();
+            var connectionStartCell = new TaskCompletionSource<ConnectionStartDetailsEventArgs>();
             m_model0.m_connectionStartCell = connectionStartCell;
             m_model0.HandshakeContinuationTimeout = m_factory.HandshakeContinuationTimeout;
             //m_frameHandler.ReadTimeout = (int)m_factory.HandshakeContinuationTimeout.TotalMilliseconds;
             m_frameHandler.SendHeader();
 
-            connectionStartCell.ContinueUsingValue += OnConnectionStarted;
-            connectionStartCell.WaitForValue();
-
+            //connectionStartCell.ContinueUsingValue += OnConnectionStarted;
+            connectionStartCell.Task.Wait();
+            OnConnectionStarted(this, connectionStartCell.Task.Result);
             // unreachable code
             //if (connectionStart == null)
             //{

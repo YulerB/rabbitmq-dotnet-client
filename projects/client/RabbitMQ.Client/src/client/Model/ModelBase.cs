@@ -49,6 +49,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 #if (NETFX_CORE)
 using Trace = System.Diagnostics.Debug;
@@ -62,7 +63,7 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Only used to kick-start a connection open
         ///sequence. See <see cref="Connection.Open"/> </summary>
-        public BlockingCell<ConnectionStartDetailsEventArgs> m_connectionStartCell = null;
+        public TaskCompletionSource<ConnectionStartDetailsEventArgs> m_connectionStartCell = null;
 
         private TimeSpan m_handshakeContinuationTimeout = TimeSpan.FromSeconds(10);
         private TimeSpan m_continuationTimeout = TimeSpan.FromSeconds(20);
@@ -453,7 +454,7 @@ namespace RabbitMQ.Client.Impl
             }
             if (m_connectionStartCell != null)
             {
-                m_connectionStartCell.ContinueWithValue(null);
+                m_connectionStartCell.SetResult(null);
             }
         }
 
@@ -1016,7 +1017,7 @@ namespace RabbitMQ.Client.Impl
                 ((Connection)Session.Connection).Close(reason);
             }
             var details = new ConnectionStartDetailsEventArgs(versionMajor,versionMinor,serverProperties,mechanisms,locales);
-            m_connectionStartCell.ContinueWithValue(details);
+            m_connectionStartCell.SetResult(details);
             m_connectionStartCell = null;
         }
 
