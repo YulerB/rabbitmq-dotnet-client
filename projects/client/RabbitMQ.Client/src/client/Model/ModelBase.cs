@@ -420,7 +420,7 @@ namespace RabbitMQ.Client.Impl
             return k.m_result;
         }
 
-        public abstract bool DispatchAsynchronous(Command cmd);
+        public abstract bool DispatchAsynchronous(Command<FrameBuilder> cmd);
 
         public void Enqueue(IRpcContinuation k)
         {
@@ -454,7 +454,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public void HandleCommand(ISession session, Command cmd)
+        public void HandleCommand(ISession session, Command<FrameBuilder> cmd)
         {
             if (!DispatchAsynchronous(cmd))// Was asynchronous. Already processed. No need to process further.
                 m_continuationQueue.Next().HandleCommand(cmd);

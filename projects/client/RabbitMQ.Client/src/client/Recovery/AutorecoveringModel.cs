@@ -304,7 +304,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public bool DispatchAsynchronous(Command cmd)
+        public bool DispatchAsynchronous(Command<FrameBuilder> cmd)
         {
             return m_delegate.DispatchAsynchronous(cmd);
         }
@@ -314,7 +314,7 @@ namespace RabbitMQ.Client.Impl
             m_delegate.FinishClose();
         }
 
-        public void HandleCommand(ISession session, Command cmd)
+        public void HandleCommand(ISession session, Command<FrameBuilder> cmd)
         {
             m_delegate.HandleCommand(session, cmd);
         }

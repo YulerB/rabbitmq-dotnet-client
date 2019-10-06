@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Impl
 
         public SendCommand(T method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body) : base(method, header, body) { }
     }
-    public abstract class Command 
+    public abstract class Command <T> where T: class
     {
         // EmptyFrameSize, 8 = 1 + 2 + 4 + 1
         // - 1 byte of frame type
@@ -86,59 +86,33 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public Command(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, FrameBuilder body)
+        public Command(IMethod method)
+        {
+            Method = method;
+            Body = default(T);
+        }
+        public Command(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, T body)
         {
             Method = method;
             Header = header;
-            Body = body ?? new FrameBuilder();
+            Body = body ?? default(T);
         }
 
-        public FrameBuilder Body { get; private set; }
+        public T Body { get; private set; }
 
         public RabbitMQ.Client.Impl.BasicProperties Header { get; private set; }
 
         public IMethod Method { get; private set; }
     }
-    public class SendCommand 
+    public class SendCommand : Command<byte[]>
     {
-        public SendCommand(IMethod method) : this(method, null, null)
+        public SendCommand(IMethod method) : base(method)
         {
         }
 
-        static SendCommand()
+        public SendCommand(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body) : base(method, header, body)
         {
-            CheckEmptyFrameSize();
         }
-        private static void CheckEmptyFrameSize()
-        {
-            long actualLength = 0;
-            {
-                var x = new EmptyOutboundFrame();
-                actualLength = x.EstimatedSize();
-            }
-
-            if (Constants.EmptyFrameSize != actualLength)
-            {
-                string message =
-                    string.Format("EmptyFrameSize is incorrect - defined as {0} where the computed value is in fact {1}.",
-                        Constants.EmptyFrameSize,
-                        actualLength);
-                throw new ProtocolViolationException(message);
-            }
-        }
-
-        public SendCommand(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
-        {
-            Method = method;
-            Header = header;
-            Body = body ?? new byte[] { };
-        }
-
-        public byte[] Body { get; private set; }
-
-        public RabbitMQ.Client.Impl.BasicProperties Header { get; private set; }
-
-        public IMethod Method { get; private set; }
 
         public void Transmit(ushort channelNumber, Connection connection)
         {
@@ -201,17 +175,16 @@ namespace RabbitMQ.Client.Impl
                 if (cmd.Method.HasContent)
                 {
                     var body = cmd.Body;
-                    using (ArraySegmentSequence sequence = new ArraySegmentSequence(body))
+
+                    frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header, body.Length));
+                    var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
+                    for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
                     {
-                        frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header, body.Length));
-                        var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
-                        for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
-                        {
-                            var remaining = body.Length - offset;
-                            var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
-                            frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(sequence.ReadBytes((int)count), 0, (int)count)));
-                        }
+                        var remaining = body.Length - offset;
+                        var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
+                        frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(body, (int)offset, (int)count)));
                     }
+
                 }
             }
 
@@ -219,7 +192,7 @@ namespace RabbitMQ.Client.Impl
         }
     }
 
-    public class AssembledCommand: Command
+    public class AssembledCommand: Command<FrameBuilder>
     {
         public AssembledCommand(IMethod method) : this(method, null, null)
         {

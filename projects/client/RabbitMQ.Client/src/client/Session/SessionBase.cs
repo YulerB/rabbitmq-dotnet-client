@@ -93,7 +93,7 @@ namespace RabbitMQ.Client.Impl
 
         public ushort ChannelNumber { get; private set; }
         public ShutdownEventArgs CloseReason { get; set; }
-        public Action<ISession, Command> CommandReceived { get; set; }
+        public Action<ISession, Command<FrameBuilder>> CommandReceived { get; set; }
         public Connection Connection { get; private set; }
 
         public bool IsOpen
@@ -106,7 +106,7 @@ namespace RabbitMQ.Client.Impl
             get { return Connection; }
         }
 
-        public virtual void OnCommandReceived(Command cmd)
+        public virtual void OnCommandReceived(Command<FrameBuilder> cmd)
         {
             CommandReceived?.Invoke(this, cmd);
         }

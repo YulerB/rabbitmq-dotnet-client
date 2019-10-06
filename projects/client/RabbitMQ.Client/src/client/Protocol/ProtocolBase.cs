@@ -85,7 +85,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public void CreateChannelClose(ushort reasonCode,
             string reasonText,
-            out SendCommand request,
+            out SendCommand<Impl.ChannelClose> request,
             out ushort replyClassId,
             out ushort replyMethodId)
         {
@@ -98,7 +98,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public void CreateConnectionClose(ushort reasonCode,
             string reasonText,
-            out SendCommand request,
+            out SendCommand<Impl.ConnectionClose> request,
             out ushort replyClassId,
             out ushort replyMethodId)
         {

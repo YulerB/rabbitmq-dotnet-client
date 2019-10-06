@@ -323,7 +323,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 throw new UnexpectedMethodException(__repBase);
             }
         }
-        public override bool DispatchAsynchronous(RabbitMQ.Client.Impl.Command cmd)
+        public override bool DispatchAsynchronous(RabbitMQ.Client.Impl.Command<FrameBuilder> cmd)
         {
             IMethod __method = (IMethod)cmd.Method;
             switch ((__method.ProtocolClassId << 16) | __method.ProtocolMethodId)
@@ -355,7 +355,10 @@ namespace RabbitMQ.Client.Framing.Impl
                 case 3932220:
                     {
                         BasicDeliver __impl = (BasicDeliver)__method;
-                        HandleBasicDeliver(new BasicDeliverEventArgs(__impl.ConsumerTag,__impl.DeliveryTag,__impl.Redelivered,__impl.Exchange,__impl.RoutingKey,cmd.Header,cmd.Body.ToByteArray()));
+                        HandleBasicDeliver(new BasicDeliverEventArgs(
+                            __impl.ConsumerTag,__impl.DeliveryTag,__impl.Redelivered,
+                            __impl.Exchange,__impl.RoutingKey,cmd.Header,
+                            cmd.Body.ToByteArray()));
                         return true;
                     }
                 case 3932232:
@@ -366,7 +369,9 @@ namespace RabbitMQ.Client.Framing.Impl
                 case 3932231:
                     {
                         BasicGetOk __impl = (BasicGetOk)__method;
-                        HandleBasicGetOk(new BasicGetResult (__impl.DeliveryTag,__impl.Redelivered,__impl.Exchange,__impl.RoutingKey,__impl.MessageCount,cmd.Header,cmd.Body.ToByteArray()));
+                        HandleBasicGetOk(new BasicGetResult (
+                            __impl.DeliveryTag,__impl.Redelivered,__impl.Exchange,__impl.RoutingKey,
+                            __impl.MessageCount,cmd.Header,cmd.Body.ToByteArray()));
                         return true;
                     }
                 case 3932280:

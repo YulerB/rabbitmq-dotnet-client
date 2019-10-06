@@ -86,7 +86,7 @@ namespace RabbitMQ.Client.Impl
             // for. Ignore it - we're quiescing.
         }
 
-        protected SendCommand CreateChannelCloseOk()
+        protected SendCommand<ConnectionCloseOk> CreateChannelCloseOk()
         {
             return new SendCommand<ConnectionCloseOk>(new ConnectionCloseOk());
         }

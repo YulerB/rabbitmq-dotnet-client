@@ -58,7 +58,7 @@ namespace RabbitMQ.Client.Impl
         ///<summary>
         /// Single recipient - no need for multiple handlers to be informed of arriving commands.
         ///</summary>
-        Action<ISession, Command> CommandReceived { get; set; }
+        Action<ISession, Command<FrameBuilder>> CommandReceived { get; set; }
 
         /// <summary>
         /// Gets the connection.

@@ -70,7 +70,7 @@ namespace RabbitMQ.Client.Impl
             Reset();
         }
 
-        public bool HandleFrame(InboundFrame f, out Command result)
+        public bool HandleFrame(InboundFrame f, out Command<FrameBuilder> result)
         {
             switch (m_state)
             {
@@ -139,7 +139,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        private Command CompletedCommand()
+        private Command<FrameBuilder> CompletedCommand()
         {
             if (m_state != AssemblyState.Complete) return null;
 

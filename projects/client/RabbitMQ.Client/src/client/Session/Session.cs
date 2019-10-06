@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Impl
 
         public override void HandleFrame(InboundFrame frame)
         {
-            if (m_assembler.HandleFrame(frame, out Command cmd)) OnCommandReceived(cmd);
+            if (m_assembler.HandleFrame(frame, out Command<FrameBuilder> cmd)) OnCommandReceived(cmd);
         }
     }
 }
