@@ -496,11 +496,11 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        private Command ConnectionCloseWrapper(ushort reasonCode, string reasonText)
+        private SendCommand ConnectionCloseWrapper(ushort reasonCode, string reasonText)
         {
             Protocol.CreateConnectionClose(reasonCode,
                 reasonText,
-                out Command request,
+                out SendCommand request,
                 out ushort replyClassId,
                 out ushort replyMethodId);
             return request;
@@ -1148,6 +1148,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_frameHandler.WriteFrame(f);
         }
 
+
         internal void WriteFrameSet(IList<OutboundFrame> f)
         {
             m_frameHandler.WriteFrameSet(f);
@@ -1263,11 +1264,11 @@ namespace RabbitMQ.Client.Framing.Impl
             // dispose unmanaged resources
         }
 
-        private Command ChannelCloseWrapper(ushort reasonCode, string reasonText)
+        private SendCommand ChannelCloseWrapper(ushort reasonCode, string reasonText)
         {
             Protocol.CreateChannelClose(reasonCode,
                 reasonText,
-                out Command request,
+                out SendCommand request,
                 out ushort replyClassId,
                 out ushort replyMethodId);
             return request;

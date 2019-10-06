@@ -143,7 +143,7 @@ namespace RabbitMQ.Client.Impl
         {
             if (m_state != AssemblyState.Complete) return null;
 
-            Command result = new Command(m_method, m_header, frameBuilder ?? new FrameBuilder());
+            AssembledCommand result = new AssembledCommand(m_method, m_header, frameBuilder ?? new FrameBuilder());
             Reset();
             return result;
         }

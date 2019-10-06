@@ -47,7 +47,7 @@ namespace RabbitMQ.Client.Impl
         void HandleCommand(Command cmd);
         void HandleModelShutdown(ShutdownEventArgs reason);
     }
-    public interface IRpcContinuation<R>
+    public interface IRpcContinuation<R> where R: Command
     {
         void HandleCommand(R cmd);
         void HandleModelShutdown(ShutdownEventArgs reason);

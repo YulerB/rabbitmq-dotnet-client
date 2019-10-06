@@ -474,7 +474,7 @@ namespace RabbitMQ.Client.Impl
             var k = new SimpleBlockingRpcContinuation();
             lock (_rpcLock)
             {
-                TransmitAndEnqueue(new Command(method), k);
+                TransmitAndEnqueue(new SendCommand(method), k);
                 return k.GetReply(this.ContinuationTimeout).Method;
             }
         }
@@ -485,7 +485,7 @@ namespace RabbitMQ.Client.Impl
             {
                 m_flowControlBlock.WaitOne();
             }
-            Session.Transmit(new Command(method, header, new FrameBuilder(body)));
+            Session.Transmit(new SendCommand(method, header, body));
         }
 
         public void ModelSend(IMethod method)
@@ -494,7 +494,7 @@ namespace RabbitMQ.Client.Impl
             {
                 m_flowControlBlock.WaitOne();
             }
-            Session.Transmit(new Command(method));
+            Session.Transmit(new SendCommand(method));
         }
 
         public virtual void OnBasicAck(BasicAckEventArgs args)
@@ -725,7 +725,7 @@ namespace RabbitMQ.Client.Impl
             return Session.ToString();
         }
 
-        public void TransmitAndEnqueue(Command cmd, IRpcContinuation k)
+        public void TransmitAndEnqueue(SendCommand cmd, IRpcContinuation k)
         {
             Enqueue(k);
             Session.Transmit(cmd);
@@ -1486,7 +1486,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        internal void SendCommands(IList<Command> commands)
+        internal void SendCommands(IList<SendCommand> commands)
         {
             m_flowControlBlock.WaitOne();
             AllocatatePublishSeqNos(commands.Count);

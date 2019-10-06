@@ -175,7 +175,7 @@ namespace RabbitMQ.Client.Impl
             OnSessionShutdown(CloseReason);
         }
 
-        public virtual void Transmit(Command cmd)
+        public virtual void Transmit(SendCommand cmd)
         {
             if (CloseReason != null)
             {
@@ -194,9 +194,9 @@ namespace RabbitMQ.Client.Impl
             // of frames within a channel.  But that is fixed in socket frame handler instead, so no need to lock.
             cmd.Transmit(ChannelNumber, Connection);
         }
-        public virtual void Transmit(IList<Command> commands)
+        public virtual void Transmit(IList<SendCommand> commands)
         {
-            Connection.WriteFrameSet(Command.CalculateFrames(ChannelNumber, Connection, commands));
+            Connection.WriteFrameSet(CommandHelpers.CalculateFrames(ChannelNumber, Connection, commands));
         }
     }
 }

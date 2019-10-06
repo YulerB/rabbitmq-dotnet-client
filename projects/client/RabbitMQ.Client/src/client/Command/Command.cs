@@ -48,16 +48,15 @@ using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Impl
 {
-    public class Command<T> : Command where T: IMethod
+    public class SendCommand<T> : SendCommand where T : IMethod
     {
-
-        public Command(T method) : this(method, null, null)
+        public SendCommand(T method) : this(method, null, null)
         {
         }
 
-        public Command(T method, RabbitMQ.Client.Impl.BasicProperties header, FrameBuilder body) : base(method, header, body) { }
+        public SendCommand(T method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body) : base(method, header, body) { }
     }
-    public class Command
+    public abstract class Command 
     {
         // EmptyFrameSize, 8 = 1 + 2 + 4 + 1
         // - 1 byte of frame type
@@ -87,10 +86,6 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public Command(IMethod method) : this(method, null, null)
-        {
-        }
-
         public Command(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, FrameBuilder body)
         {
             Method = method;
@@ -99,6 +94,47 @@ namespace RabbitMQ.Client.Impl
         }
 
         public FrameBuilder Body { get; private set; }
+
+        public RabbitMQ.Client.Impl.BasicProperties Header { get; private set; }
+
+        public IMethod Method { get; private set; }
+    }
+    public class SendCommand 
+    {
+        public SendCommand(IMethod method) : this(method, null, null)
+        {
+        }
+
+        static SendCommand()
+        {
+            CheckEmptyFrameSize();
+        }
+        private static void CheckEmptyFrameSize()
+        {
+            long actualLength = 0;
+            {
+                var x = new EmptyOutboundFrame();
+                actualLength = x.EstimatedSize();
+            }
+
+            if (Constants.EmptyFrameSize != actualLength)
+            {
+                string message =
+                    string.Format("EmptyFrameSize is incorrect - defined as {0} where the computed value is in fact {1}.",
+                        Constants.EmptyFrameSize,
+                        actualLength);
+                throw new ProtocolViolationException(message);
+            }
+        }
+
+        public SendCommand(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
+        {
+            Method = method;
+            Header = header;
+            Body = body ?? new byte[] { };
+        }
+
+        public byte[] Body { get; private set; }
 
         public RabbitMQ.Client.Impl.BasicProperties Header { get; private set; }
 
@@ -130,37 +166,34 @@ namespace RabbitMQ.Client.Impl
                 var frameMaxEqualsZero = frameMax == 0;
                 var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
 
-                var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax) )
+                var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax))
                 {
                     new MethodOutboundFrame(channelNumber, Method),
                     new HeaderOutboundFrame(channelNumber, Header, body.Length)
                 };
 
-                using (ArraySegmentSequence sequence = new ArraySegmentSequence(body.ToData()))
+                for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
                 {
-                    for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
-                    {
-                        var remaining = body.Length - offset;
-                        var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
+                    var remaining = body.Length - offset;
+                    var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
 
-                        frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(sequence.ReadBytes((int)count), 0, (int)count)));
-                    }
+                    frames.Add(new BodySegmentOutboundFrame(channelNumber, new ArraySegment<byte>(body, Convert.ToInt32(offset), Convert.ToInt32(count))));
                 }
+
                 connection.WriteFrameSet(frames);
             }
             else
             {
-                connection.WriteFrameSet(new List<OutboundFrame>
-                {
-                    new MethodOutboundFrame(channelNumber, Method)
-                });
+                connection.WriteFrame(new MethodOutboundFrame(channelNumber, Method));
             }
         }
+    }
 
-        public static List<OutboundFrame> CalculateFrames(ushort channelNumber, Connection connection, IList<Command> commands)
+    public static class CommandHelpers{
+        public static List<OutboundFrame> CalculateFrames(ushort channelNumber, Connection connection, IList<SendCommand> commands)
         {
             var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
-            var frames = new List<OutboundFrame>(commands.Count*3);
+            var frames = new List<OutboundFrame>(commands.Count * 3);
             var frameMaxEqualsZero = frameMax == 0;
             foreach (var cmd in commands)
             {
@@ -168,7 +201,7 @@ namespace RabbitMQ.Client.Impl
                 if (cmd.Method.HasContent)
                 {
                     var body = cmd.Body;
-                    using (ArraySegmentSequence sequence = new ArraySegmentSequence(body.ToData()))
+                    using (ArraySegmentSequence sequence = new ArraySegmentSequence(body))
                     {
                         frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header, body.Length));
                         var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
@@ -185,4 +218,15 @@ namespace RabbitMQ.Client.Impl
             return frames;
         }
     }
+
+    public class AssembledCommand: Command
+    {
+        public AssembledCommand(IMethod method) : this(method, null, null)
+        {
+        }
+        public AssembledCommand(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, FrameBuilder body) : base(method, header, body)
+        {
+        }
+    }
+
 }

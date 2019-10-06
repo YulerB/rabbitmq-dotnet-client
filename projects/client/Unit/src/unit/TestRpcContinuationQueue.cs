@@ -53,7 +53,7 @@ namespace RabbitMQ.Client.Unit
         {
             RpcContinuationQueue queue = new RpcContinuationQueue();
             var outputContinuation = queue.Next();
-            outputContinuation.HandleCommand(new Command(new ConnectionCloseOk()));
+            outputContinuation.HandleCommand(new AssembledCommand(new ConnectionCloseOk()));
             outputContinuation.HandleModelShutdown(new ShutdownEventArgs(ShutdownInitiator.Application, 0, ""));
         }
 

@@ -78,18 +78,18 @@ namespace RabbitMQ.Client.Framing.Impl
             get { return new AmqpVersion(MajorVersion, MinorVersion); }
         }
 
-        public bool CanSendWhileClosed(Command cmd)
+        public bool CanSendWhileClosed(SendCommand cmd)
         {
             return cmd.Method is Impl.ChannelCloseOk;
         }
 
         public void CreateChannelClose(ushort reasonCode,
             string reasonText,
-            out Command request,
+            out SendCommand request,
             out ushort replyClassId,
             out ushort replyMethodId)
         {
-            request = new Command<Impl.ChannelClose>(new Impl.ChannelClose(reasonCode,
+            request = new SendCommand<Impl.ChannelClose>(new Impl.ChannelClose(reasonCode,
                 reasonText,
                 0, 0));
             replyClassId = Impl.ChannelCloseOk.ClassId;
@@ -98,11 +98,11 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public void CreateConnectionClose(ushort reasonCode,
             string reasonText,
-            out Command request,
+            out SendCommand request,
             out ushort replyClassId,
             out ushort replyMethodId)
         {
-            request = new Command<Impl.ConnectionClose>(new Impl.ConnectionClose(reasonCode,
+            request = new SendCommand<Impl.ConnectionClose>(new Impl.ConnectionClose(reasonCode,
                 reasonText,
                 0, 0));
             replyClassId = Impl.ConnectionCloseOk.ClassId;
