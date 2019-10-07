@@ -47,8 +47,8 @@ namespace RabbitMQ.Client.Impl
 
     public class BasicPublishBatch : IBasicPublishBatch
     {
-        private List<SendCommand> commands = new List<SendCommand>();
-        private ModelBase model;
+        private readonly List<SendCommand> commands = new List<SendCommand>();
+        private readonly ModelBase model;
         internal BasicPublishBatch (ModelBase model)
         {
             this.model = model;

@@ -76,10 +76,11 @@ namespace RabbitMQ.Client.Impl
 
         public List<Memory<byte>> ReadNotExpecting(int count)
         {
+            const int ZERO = 0;
             result.Clear();
-            while (count > 0)
+            while (count > ZERO)
             {
-                if (top.Length == 0)
+                if (top.Length == ZERO)
                 {
                     lock (data)
                     {
@@ -89,27 +90,27 @@ namespace RabbitMQ.Client.Impl
                         }
                     }
 
-                    if (top.Length == 0 && addingComplete) throw new EndOfStreamException();
+                    if (top.Length == ZERO && addingComplete) throw new EndOfStreamException();
 
                     originalSize = top.Length;
                 }
 
                 if (top.Length > count)
                 {
-                    result.Add(top.Slice(0, count));
+                    result.Add(top.Slice(ZERO, count));
                     top = top.Slice(count, top.Length - count);
                     return result;
                 }
                 else if (top.Length == count)
                 {
-                    result.Add(top.Slice(0, top.Length));
+                    result.Add(top.Slice(ZERO, top.Length));
                     top = empty;
                     BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
                     return result;
                 }
                 else
                 {
-                    result.Add(top.Slice(0, top.Length));
+                    result.Add(top.Slice(ZERO, top.Length));
                     count -= top.Length;
                     top = empty;
                     BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
@@ -119,13 +120,14 @@ namespace RabbitMQ.Client.Impl
         }
         public List<Memory<byte>> Read(int count)
         {
+            const int ZERO = 0;
             result.Clear();
-            while (count > 0)
+            while (count > ZERO)
             {
-                if (top.Length == 0)
+                if (top.Length == ZERO)
                 {
                     if (data.Count == 0 && addingComplete == false)
-                        SpinWait.SpinUntil(() => addingComplete || data.Count > 0);
+                        SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
 
                     if (!data.TryDequeue(out top) && addingComplete) throw new EndOfStreamException();
 
@@ -134,20 +136,20 @@ namespace RabbitMQ.Client.Impl
 
                 if (top.Length > count)
                 {
-                    result.Add(top.Slice(0, count));
+                    result.Add(top.Slice(ZERO, count));
                     top = top.Slice(count, top.Length - count);
                     return result;
                 }
                 else if (top.Length == count)
                 {
-                    result.Add(top.Slice(0, top.Length));
+                    result.Add(top.Slice(ZERO, top.Length));
                     top = empty;
                     BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
                     return result;
                 }
                 else
                 {
-                    result.Add(top.Slice(0, top.Length));
+                    result.Add(top.Slice(ZERO, top.Length));
                     count -= top.Length;
                     top = empty;
                     BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));

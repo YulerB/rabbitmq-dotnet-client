@@ -143,7 +143,7 @@ namespace RabbitMQ.Client.Impl
                 var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax))
                 {
                     new MethodOutboundFrame(channelNumber, Method),
-                    new HeaderOutboundFrame(channelNumber, Header, body.Length)
+                    new HeaderOutboundFrame(channelNumber, Header,(ulong)  body.Length)
                 };
 
                 for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
@@ -176,7 +176,7 @@ namespace RabbitMQ.Client.Impl
                 {
                     var body = cmd.Body;
 
-                    frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header, body.Length));
+                    frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header,(ulong) body.Length));
                     var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
                     for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
                     {
@@ -194,7 +194,7 @@ namespace RabbitMQ.Client.Impl
 
     public class AssembledCommand: Command<FrameBuilder>
     {
-        public AssembledCommand(IMethod method) : this(method, null, null)
+        public AssembledCommand(IMethod method) : base(method)
         {
         }
         public AssembledCommand(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, FrameBuilder body) : base(method, header, body)

@@ -295,12 +295,14 @@ namespace RabbitMQ.Util
         {
             int size = Convert.ToInt32(ReadUInt32(input));
             read = size + 4;
+            if (size == 0) return string.Empty;
             return System.Text.Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadLongString(this ArraySegmentSequence input)
         {
             int size = Convert.ToInt32(ReadUInt32(input));
+            if (size == 0) return string.Empty;
             return System.Text.Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -308,12 +310,14 @@ namespace RabbitMQ.Util
         {
             int size = (int)ReadByte(input);
             read = size + 1;
+            if (size == 0) return string.Empty;
             return Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadShortString(this ArraySegmentSequence input)
         {
             int size = (int)ReadByte(input);
+            if (size == 0) return string.Empty;
             return Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

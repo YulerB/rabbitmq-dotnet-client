@@ -86,7 +86,7 @@ namespace RabbitMQ.Client.Impl
         public void WriteByte(byte buffer)
         {
             data.Add(new ArraySegment<byte>(new byte[] { buffer }, 0, 1));
-            len += 1;
+            len += 1L;
         }
         internal void WriteSegments(IList<ArraySegment<byte>> content, uint written1)
         {

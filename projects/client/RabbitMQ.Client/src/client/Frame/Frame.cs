@@ -58,9 +58,9 @@ namespace RabbitMQ.Client.Impl
     public class HeaderOutboundFrame : OutboundFrame
     {
         private readonly RabbitMQ.Client.Impl.BasicProperties header;
-        private readonly long bodyLength;
+        private readonly ulong bodyLength;
 
-        public HeaderOutboundFrame(ushort channel, RabbitMQ.Client.Impl.BasicProperties header, long bodyLength) : base(FrameType.FrameHeader, channel)
+        public HeaderOutboundFrame(ushort channel, RabbitMQ.Client.Impl.BasicProperties header, ulong bodyLength) : base(FrameType.FrameHeader, channel)
         {
             this.header = header;
             this.bodyLength = bodyLength;
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Impl
             var total = 2 + header.EstimateSize();
             NetworkBinaryWriter1.WriteUInt32(writer, (uint)total, out int written1);
             NetworkBinaryWriter1.WriteUInt16(writer.Slice(written1), header.ProtocolClassId, out int written2);
-            header.WriteTo(writer.Slice(written1 + written2), (ulong)bodyLength, out int written3);
+            header.WriteTo(writer.Slice(written1 + written2),bodyLength, out int written3);
             written = written1 + written2 + written3;
         }
         internal override int EstimatePayloadSize()
@@ -83,7 +83,7 @@ namespace RabbitMQ.Client.Impl
     {
         private readonly ArraySegment<byte> data;
 
-        public BodySegmentOutboundFrame(ushort channel,ArraySegment<byte> data) : base(FrameType.FrameBody, channel)
+        public BodySegmentOutboundFrame(ushort channel, ArraySegment<byte> data) : base(FrameType.FrameBody, channel)
         {
             this.data = data;
         }
@@ -115,13 +115,13 @@ namespace RabbitMQ.Client.Impl
             var total = 4 + method.EstimateSize();
             NetworkBinaryWriter1.WriteUInt32(writer, (uint)total, out int written1);
             NetworkBinaryWriter1.WriteUInt16(writer.Slice(written1), method.ProtocolClassId, out int written2);
-            NetworkBinaryWriter1.WriteUInt16(writer.Slice(written1+ written2), method.ProtocolMethodId, out int written3);
+            NetworkBinaryWriter1.WriteUInt16(writer.Slice(written1 + written2), method.ProtocolMethodId, out int written3);
             method.WriteArgumentsTo(writer.Slice(written1 + written2 + written3), out int written4);
             written = written1 + written2 + written3 + written4;
         }
         internal override int EstimatePayloadSize()
         {
-            return 8+method.EstimateSize();
+            return 8 + method.EstimateSize();
         }
     }
 
@@ -154,7 +154,7 @@ namespace RabbitMQ.Client.Impl
         {
             NetworkBinaryWriter1.WriteByte(writer, (byte)Type, out int written1);
             NetworkBinaryWriter1.WriteUInt16(writer.Slice(written1), Channel, out int written2);
-            WritePayload(writer.Slice(written1+ written2), out int written3);
+            WritePayload(writer.Slice(written1 + written2), out int written3);
             NetworkBinaryWriter1.WriteByte(writer.Slice(written1 + written2 + written3), Constants.FrameEnd, out int written4);
             written = written1 + written2 + written3 + written4;
         }
@@ -169,13 +169,14 @@ namespace RabbitMQ.Client.Impl
 
     public class InboundFrame : Frame
     {
-        internal InboundFrame(FrameType type, ushort channel, byte[] payload, IMethod method, RabbitMQ.Client.Impl.BasicProperties header, ulong totalBodyBytes) : base(type, channel, payload)
+        internal InboundFrame(FrameType type, ushort channel, byte[] payload, IMethod method, RabbitMQ.Client.Impl.BasicProperties header, ulong totalBodyBytes)
+            : base(type, channel, payload)
         {
             this.Method = method;
             this.Header = header;
             this.TotalBodyBytes = totalBodyBytes;
         }
-        
+
         public IMethod Method
         {
             get;
@@ -267,9 +268,9 @@ namespace RabbitMQ.Client.Impl
             uint payloadSize = reader.ReadUInt32(); // FIXME - throw exn on unreasonable value
 
             RabbitMQ.Client.Impl.BasicProperties m_content = null;
-            byte[] payload = new byte[] { };
+            byte[] payload = EmptyByteArray;
             IMethod m_method = null;
-            ulong totalBodyBytes = 0;
+            ulong totalBodyBytes = 0UL;
 
             if (type == (int)FrameType.FrameMethod)
             {
@@ -294,13 +295,14 @@ namespace RabbitMQ.Client.Impl
             }
 
             byte frameEndMarker = reader.ReadByte();
-            if (frameEndMarker != 206)
+            if (frameEndMarker != Constants.FrameEnd)
             {
                 throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker);
             }
 
             return new InboundFrame((FrameType)type, channel, payload, m_method, m_content, totalBodyBytes);
         }
+        private static readonly byte[] EmptyByteArray = new byte[] { };
     }
     public class Frame
     {
@@ -308,7 +310,6 @@ namespace RabbitMQ.Client.Impl
         {
             Type = type;
             Channel = channel;
-            Payload = null;
         }
 
         public Frame(FrameType type, ushort channel, byte[] payload)

@@ -1208,7 +1208,7 @@ namespace RabbitMQ.Client.Framing.Impl
             ISession session = CreateSession();
             var model = (IFullModel)Protocol.CreateModel(session, this.ConsumerWorkService);
             model.ContinuationTimeout = m_factory.ContinuationTimeout;
-            model._Private_ChannelOpen("");
+            model._Private_ChannelOpen(string.Empty);
             return model;
         }
 
@@ -1279,17 +1279,9 @@ namespace RabbitMQ.Client.Framing.Impl
             var connectionStartCell = new TaskCompletionSource<ConnectionStartDetailsEventArgs>();
             m_model0.m_connectionStartCell = connectionStartCell;
             m_model0.HandshakeContinuationTimeout = m_factory.HandshakeContinuationTimeout;
-            //m_frameHandler.ReadTimeout = (int)m_factory.HandshakeContinuationTimeout.TotalMilliseconds;
             m_frameHandler.SendHeader();
-
-            //connectionStartCell.ContinueUsingValue += OnConnectionStarted;
             connectionStartCell.Task.Wait();
             OnConnectionStarted(this, connectionStartCell.Task.Result);
-            // unreachable code
-            //if (connectionStart == null)
-            //{
-            //    throw new IOException("connection.start was never received, likely due to a network timeout");
-            //}
         }
 
         private void OnConnectionStarted(object sender, ConnectionStartDetailsEventArgs connectionStart)
@@ -1383,7 +1375,7 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         private static uint NegotiatedMaxValue(uint clientValue, uint serverValue)
         {
-            return (clientValue == 0 || serverValue == 0) ?
+            return (clientValue == 0U || serverValue == 0U) ?
                 Math.Max(clientValue, serverValue) :
                 Math.Min(clientValue, serverValue);
         }

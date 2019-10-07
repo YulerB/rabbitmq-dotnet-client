@@ -1171,7 +1171,7 @@ namespace RabbitMQ.Client.Impl
             {
                 while(c < count)
                 {
-                    if (NextPublishSeqNo > 0)
+                    if (NextPublishSeqNo > 0UL)
                     {
                         if (!m_unconfirmedSet.Contains(NextPublishSeqNo))
                         {
@@ -1196,7 +1196,7 @@ namespace RabbitMQ.Client.Impl
             {
                 args.BasicProperties = CreateBasicProperties();
             }
-            if (NextPublishSeqNo > 0)
+            if (NextPublishSeqNo > 0UL)
             {
                 lock (m_unconfirmedSet.SyncRoot)
                 {

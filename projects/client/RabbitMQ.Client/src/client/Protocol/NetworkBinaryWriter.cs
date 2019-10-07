@@ -157,11 +157,15 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteShortString(Span<byte> output, string val, out int written)
         {
-            byte[] bytes = Encoding.UTF8.GetBytes(val);
-            if (bytes.Length > 255)
+            if (string.IsNullOrEmpty(val))
             {
-                throw new WireFormattingException($"Short string too long; UTF-8 encoded length={bytes.Length}, max=255");
+                output[0] = bZero;
+                written = 1;
+                return;
             }
+
+            byte[] bytes = Encoding.UTF8.GetBytes(val);
+            if (bytes.Length > 255) throw new WireFormattingException($"Short string too long; UTF-8 encoded length={bytes.Length}, max=255");
             output[0] = Convert.ToByte(bytes.Length);
             bytes.AsSpan().CopyTo(output.Slice(1));
             written = bytes.Length + 1;
@@ -198,15 +202,21 @@ namespace RabbitMQ.Util
         public static void WriteLongString(Span<byte> output, byte[] val, out int written)
         {
             BinaryPrimitives.WriteUInt32BigEndian(output, (uint)val.Length);
-            val.AsSpan().CopyTo(output.Slice(4));
+            if (val.Length > 0) val.AsSpan().CopyTo(output.Slice(4));
             written = val.Length + 4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteLongString(Span<byte> output, string val, out int written)
         {
+            if (string.IsNullOrEmpty(val))
+            {
+                BinaryPrimitives.WriteUInt32BigEndian(output, 0U);
+                written = 4;
+                return;
+            }
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             BinaryPrimitives.WriteUInt32BigEndian(output, (uint)bytes.Length);
-            bytes.AsSpan().CopyTo(output.Slice(4));
+            if (bytes.Length > 0) bytes.AsSpan().CopyTo(output.Slice(4));
             written = bytes.Length + 4;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

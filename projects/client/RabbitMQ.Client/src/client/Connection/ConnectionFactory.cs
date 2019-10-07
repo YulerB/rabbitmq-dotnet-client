@@ -123,7 +123,7 @@ namespace RabbitMQ.Client
         /// Default value for the desired maximum frame size, with zero meaning unlimited (value: 0).
         /// </summary>
         /// <remarks>PLEASE KEEP THIS MATCHING THE DOC ABOVE.</remarks>
-        public const uint DefaultFrameMax = 0;
+        public const uint DefaultFrameMax = 0U;
 
         /// <summary>
         /// Default value for desired heartbeat interval, in seconds, with zero meaning none (value: 60).
@@ -503,13 +503,15 @@ namespace RabbitMQ.Client
 
         public void SetUri(Uri uri)
         {
+            const string amqp = "amqp";
+            const string amqps = "amqp";
             Endpoint = new AmqpTcpEndpoint();
 
-            if (string.Equals("amqp", uri.Scheme, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(amqp, uri.Scheme, StringComparison.OrdinalIgnoreCase))
             {
                 // nothing special to do
             }
-            else if (string.Equals("amqps", uri.Scheme, StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(amqps, uri.Scheme, StringComparison.OrdinalIgnoreCase))
             {
                 Ssl.Enabled = true;
                 Ssl.Version = AmqpUriSslProtocols;
