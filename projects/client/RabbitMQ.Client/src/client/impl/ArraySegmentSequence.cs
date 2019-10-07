@@ -49,9 +49,9 @@ namespace RabbitMQ.Client.Impl
 {
     public class ArraySegmentSequence : IDisposable
     {
-        public event EventHandler<BufferUsedEventArgs> BufferUsed;
+        public event EventHandler<int> BufferUsed;
 
-        private volatile bool addingComplete=false;
+        private bool addingComplete=false;
         private ConcurrentQueue<Memory<byte>> data = new ConcurrentQueue<Memory<byte>>();
         private Memory<byte> top = new Memory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
@@ -105,7 +105,7 @@ namespace RabbitMQ.Client.Impl
                 {
                     result.Add(top.Slice(ZERO, top.Length));
                     top = empty;
-                    BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
+                    BufferUsed?.Invoke(this, originalSize);
                     return result;
                 }
                 else
@@ -113,7 +113,7 @@ namespace RabbitMQ.Client.Impl
                     result.Add(top.Slice(ZERO, top.Length));
                     count -= top.Length;
                     top = empty;
-                    BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
+                    BufferUsed?.Invoke(this, originalSize);
                 }
             }
             return result;
@@ -144,7 +144,7 @@ namespace RabbitMQ.Client.Impl
                 {
                     result.Add(top.Slice(ZERO, top.Length));
                     top = empty;
-                    BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
+                    BufferUsed?.Invoke(this, originalSize);
                     return result;
                 }
                 else
@@ -152,7 +152,7 @@ namespace RabbitMQ.Client.Impl
                     result.Add(top.Slice(ZERO, top.Length));
                     count -= top.Length;
                     top = empty;
-                    BufferUsed?.Invoke(this, new BufferUsedEventArgs(originalSize));
+                    BufferUsed?.Invoke(this, originalSize);
                 }
             }
             return result;

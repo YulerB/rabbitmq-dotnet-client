@@ -87,9 +87,9 @@ namespace RabbitMQ.Client.Impl
             m_socket.Receive += M_socket_Receive;
         }
 
-        private void M_stream_BufferUsed(object sender, BufferUsedEventArgs e)
+        private void M_stream_BufferUsed(object sender, int e)
         {
-            m_socket.BufferUsed(e.Size);
+            m_socket.BufferUsed(e);
         }
 
         private void M_socket_Closed(object sender, EventArgs e)
