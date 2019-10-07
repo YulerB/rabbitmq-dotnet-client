@@ -83,7 +83,7 @@ namespace RabbitMQ.Client
 
             void Loop()
             {
-                while (tokenSource.IsCancellationRequested == false)
+                while (!tokenSource.IsCancellationRequested)
                 {
                     while (actions.TryDequeue(out Action action))
                     {

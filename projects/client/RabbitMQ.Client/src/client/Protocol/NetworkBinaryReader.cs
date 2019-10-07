@@ -56,12 +56,12 @@ namespace RabbitMQ.Util
         public static byte ReadByte(this ArraySegmentSequence input)
         {
             var data = input.Read(1);
-            return data[0].Span[0];
+            return data[ZERO].Span[ZERO];
         }
         public static byte ReadFirstByte(this ArraySegmentSequence input)
         {
             var data = input.ReadNotExpecting(1);
-            return data[0].Span[0];
+            return data[ZERO].Span[ZERO];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ReadBytes(this ArraySegmentSequence input,int payloadSize)
@@ -72,17 +72,17 @@ namespace RabbitMQ.Util
             if(data.Count == 1)
             {
                 byte[] bytes = new byte[payloadSize];
-                data[0].CopyTo(bytes.AsMemory());
+                data[ZERO].CopyTo(bytes.AsMemory());
                 return bytes;
             }
             else
             {
                 byte[] bytes = new byte[payloadSize];
-                int offset = 0;
+                int offset = ZERO;
                 foreach (var segment in data)
                 {
                     var arr = segment.ToArray();
-                    Buffer.BlockCopy(arr, 0, bytes, offset, segment.Length);
+                    Buffer.BlockCopy(arr, ZERO, bytes, offset, segment.Length);
                     offset += segment.Length;
                 }
                 return bytes;
@@ -94,18 +94,18 @@ namespace RabbitMQ.Util
             var data = input.Read(payloadSize);
             if (data.Count == 1)
             {
-                return data[0];
+                return data[ZERO];
             }
             else
             {
                 //Think of ways to remove memory copying
 
                 byte[] bytes = new byte[payloadSize];
-                int offset = 0;
+                int offset = ZERO;
                 foreach (var segment in data)
                 {
                     var arr = segment.ToArray();
-                    Buffer.BlockCopy(arr, 0, bytes, offset, segment.Length);
+                    Buffer.BlockCopy(arr, ZERO, bytes, offset, segment.Length);
                     offset += segment.Length;
                 }
                 return new ReadOnlyMemory<byte>(bytes);
@@ -117,17 +117,17 @@ namespace RabbitMQ.Util
             var data = input.Read(payloadSize);
             if (data.Count == 1)
             {
-                return data[0].ToArray();
+                return data[ZERO].ToArray();
             }
             else
             {
                 //Think of ways to remove memory copying
                 byte[] bytes = new byte[payloadSize];
-                int offset = 0;
+                int offset = ZERO;
                 foreach (var segment in data)
                 {
                     var arr = segment.ToArray();
-                    Buffer.BlockCopy(arr, 0, bytes, offset, segment.Length);
+                    Buffer.BlockCopy(arr, ZERO, bytes, offset, segment.Length);
                     offset += segment.Length;
                 }
                 return bytes;
@@ -140,12 +140,12 @@ namespace RabbitMQ.Util
 
             if (data.Count == 1)
             {
-                return BinaryPrimitives.ReadUInt16BigEndian(data[0].Span);
+                return BinaryPrimitives.ReadUInt16BigEndian(data[ZERO].Span);
             }
             
             byte[] bytes = new byte[2]{
-                data[0].Span[0],
-                data[1].Span[0]
+                data[ZERO].Span[ZERO],
+                data[1].Span[ZERO]
             };
 
             return BinaryPrimitives.ReadUInt16BigEndian(bytes);
@@ -156,14 +156,14 @@ namespace RabbitMQ.Util
             var data = input.Read(4);
             if (data.Count == 1)
             {
-                return BinaryPrimitives.ReadUInt32BigEndian(data[0].Span);
+                return BinaryPrimitives.ReadUInt32BigEndian(data[ZERO].Span);
             }
 
             byte[] bytes = new byte[4];
-            int index = 0;
+            int index = ZERO;
             foreach(var item in data)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int i = ZERO; i < item.Length; i++)
                 {
                     bytes[index++] = item.Span[i];
                 }
@@ -177,14 +177,14 @@ namespace RabbitMQ.Util
             var data = input.Read(8);
             if (data.Count == 1)
             {
-                return BinaryPrimitives.ReadUInt64BigEndian(data[0].Span);
+                return BinaryPrimitives.ReadUInt64BigEndian(data[ZERO].Span);
             }
 
             byte[] bytes = new byte[8];
-            int index = 0;
+            int index = ZERO;
             foreach (var item in data)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int i = ZERO; i < item.Length; i++)
                 {
                     bytes[index++] = item.Span[i];
                 }
@@ -198,12 +198,12 @@ namespace RabbitMQ.Util
 
             if (data.Count == 1)
             {
-                return BinaryPrimitives.ReadInt16BigEndian(data[0].Span);
+                return BinaryPrimitives.ReadInt16BigEndian(data[ZERO].Span);
             }
 
             byte[] bytes = new byte[2]{
-                data[0].Span[0],
-                data[1].Span[0]
+                data[ZERO].Span[ZERO],
+                data[1].Span[ZERO]
             };
             return BinaryPrimitives.ReadInt16BigEndian(bytes);
         }
@@ -213,15 +213,15 @@ namespace RabbitMQ.Util
             var data = input.Read(4);
             if (data.Count == 1)
             {
-                return BinaryPrimitives.ReadInt32BigEndian(data[0].Span);
+                return BinaryPrimitives.ReadInt32BigEndian(data[ZERO].Span);
             }
 
 
             byte[] bytes = new byte[4];
-            int index = 0;
+            int index = ZERO;
             foreach (var item in data)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int i = ZERO; i < item.Length; i++)
                 {
                     bytes[index++] = item.Span[i];
                 }
@@ -234,14 +234,14 @@ namespace RabbitMQ.Util
             var data = input.Read(8);
             if (data.Count == 1)
             {
-                return BinaryPrimitives.ReadInt64BigEndian(data[0].Span);
+                return BinaryPrimitives.ReadInt64BigEndian(data[ZERO].Span);
             }
 
             byte[] bytes = new byte[8];
-            int index = 0;
+            int index = ZERO;
             foreach (var item in data)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int i = ZERO; i < item.Length; i++)
                 {
                     bytes[index++] = item.Span[i];
                 }
@@ -254,20 +254,20 @@ namespace RabbitMQ.Util
             var data = input.Read(4);
             if (data.Count == 1)
             {
-                return (float) BinaryPrimitives.ReadUInt32BigEndian(data[0].Span);
+                return (float) BinaryPrimitives.ReadUInt32BigEndian(data[ZERO].Span);
             }
 
             byte[] bytes = new byte[4];
-            int index = 0;
+            int index = ZERO;
             foreach (var item in data)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int i = ZERO; i < item.Length; i++)
                 {
                     bytes[index++] = item.Span[i];
                 }
             }
             Array.Reverse(bytes);
-            return BitConverter.ToSingle(bytes, 0);
+            return BitConverter.ToSingle(bytes, ZERO);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ReadDouble(this ArraySegmentSequence input)
@@ -275,34 +275,34 @@ namespace RabbitMQ.Util
             var data = input.Read(8);
             if (data.Count == 1)
             {
-                return (double)BinaryPrimitives.ReadUInt64BigEndian(data[0].Span);
+                return (double)BinaryPrimitives.ReadUInt64BigEndian(data[ZERO].Span);
             }
 
             byte[] bytes = new byte[8];
-            int index = 0;
+            int index = ZERO;
             foreach (var item in data)
             {
-                for (int i = 0; i < item.Length; i++)
+                for (int i = ZERO; i < item.Length; i++)
                 {
                     bytes[index++] = item.Span[i];
                 }
             }
             Array.Reverse(bytes);
-            return BitConverter.ToDouble(bytes, 0);
+            return BitConverter.ToDouble(bytes, ZERO);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadLongString(this ArraySegmentSequence input, out long read)
         {
             int size = Convert.ToInt32(ReadUInt32(input));
             read = size + 4;
-            if (size == 0) return string.Empty;
+            if (size == ZERO) return string.Empty;
             return System.Text.Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadLongString(this ArraySegmentSequence input)
         {
             int size = Convert.ToInt32(ReadUInt32(input));
-            if (size == 0) return string.Empty;
+            if (size == ZERO) return string.Empty;
             return System.Text.Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -310,14 +310,14 @@ namespace RabbitMQ.Util
         {
             int size = (int)ReadByte(input);
             read = size + 1;
-            if (size == 0) return string.Empty;
+            if (size == ZERO) return string.Empty;
             return Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadShortString(this ArraySegmentSequence input)
         {
             int size = (int)ReadByte(input);
-            if (size == 0) return string.Empty;
+            if (size == ZERO) return string.Empty;
             return Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -332,9 +332,9 @@ namespace RabbitMQ.Util
             read = 5;
 
             return new decimal((int)(unsignedMantissa & 0x7FFFFFFF),
-                0,
-                0,
-                ((unsignedMantissa & 0x80000000) == 0) ? false : true,
+                ZERO,
+                ZERO,
+                ((unsignedMantissa & 0x80000000) != UZERO),
                 scale);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -347,7 +347,7 @@ namespace RabbitMQ.Util
         {
             uint tableLength = ReadUInt32(input);
 
-            if(tableLength == 0)
+            if(tableLength == UZERO)
             {
                 read = 4;
                 return null;
@@ -377,8 +377,8 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IList<object> ReadArray(this ArraySegmentSequence input, out long read)
         {
-            long arrayLength = ReadUInt32(input);
-            if (arrayLength == 0)
+            uint arrayLength = ReadUInt32(input);
+            if (arrayLength == UZERO)
             {
                 read = 4;
                 return null;
@@ -386,15 +386,17 @@ namespace RabbitMQ.Util
 
             IList<object> array = new List<object>(Convert.ToInt32(arrayLength/3));
             long left = arrayLength;
-            while (left > 0)
+            while (left > UZERO)
             {
                 array.Add(ReadFieldValue(input,out long read1));
                 left -= read1;
             }
-            read = arrayLength + 4;
+            read = arrayLength + 4U;
             return array;
         }
 
+        private const uint UZERO = 0U;
+        private const int ZERO = 0;
         private const byte S = 83;
         private const byte T = 84;
         private const byte I = 73;

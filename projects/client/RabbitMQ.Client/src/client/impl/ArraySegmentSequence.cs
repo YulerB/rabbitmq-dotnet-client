@@ -126,7 +126,7 @@ namespace RabbitMQ.Client.Impl
             {
                 if (top.Length == ZERO)
                 {
-                    if (data.Count == 0 && addingComplete == false)
+                    if (data.Count == 0 && !addingComplete)
                         SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
 
                     if (!data.TryDequeue(out top) && addingComplete) throw new EndOfStreamException();
