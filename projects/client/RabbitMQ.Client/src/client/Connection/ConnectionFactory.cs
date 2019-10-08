@@ -504,7 +504,7 @@ namespace RabbitMQ.Client
         public void SetUri(Uri uri)
         {
             const string amqp = "amqp";
-            const string amqps = "amqp";
+            const string amqps = "amqps";
             Endpoint = new AmqpTcpEndpoint();
 
             if (string.Equals(amqp, uri.Scheme, StringComparison.OrdinalIgnoreCase))
