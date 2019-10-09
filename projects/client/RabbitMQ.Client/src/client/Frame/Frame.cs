@@ -194,6 +194,11 @@ namespace RabbitMQ.Client.Impl
             return Method != null && Method.ProtocolClassId == ChannelClose.ClassId && Method.ProtocolMethodId == ChannelClose.MethodId;
         }
 
+        public bool IsMethodClassAndMethodSame(ushort m_closeOkClassId, ushort m_closeOkMethodId)
+        {
+            return Method != null && Method.ProtocolClassId == m_closeOkClassId && Method.ProtocolMethodId == m_closeOkMethodId;
+        }
+
         public RabbitMQ.Client.Impl.BasicProperties Header
         {
             get;
