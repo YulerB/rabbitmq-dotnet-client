@@ -66,6 +66,7 @@ namespace RabbitMQ.Client.Framing.Impl
 {
     public class Connection : IConnection
     {
+        private const ushort USZERO = default(ushort);
         private readonly object m_eventLock = new object();
 
         ///<summary>Heartbeat frame for transmission. Reusable across connections.</summary>
@@ -93,7 +94,6 @@ namespace RabbitMQ.Client.Framing.Impl
         private SessionManager m_sessionManager;
         private const int ZERO = 0;
         private const uint UZERO = 0U;
-        private const ushort USZERO = default(ushort);
         private IList<ShutdownReportEntry> m_shutdownReport = new SynchronizedList<ShutdownReportEntry>(new List<ShutdownReportEntry>());
 
         //
@@ -150,7 +150,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 ConsumerWorkService = new ConsumerWorkService();
             }
 
-            m_sessionManager = new SessionManager(this, USZERO);
+            m_sessionManager = new SessionManager(this);
             m_session0 = new MainSession(this) { Handler = NotifyReceivedCloseOk };
             m_model0 = (ModelBase)Protocol.CreateModel(m_session0);
 
@@ -426,7 +426,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 }
                 catch (IOException ioe)
                 {
-                    if (m_model0.CloseReason == null)
+                    if (!m_model0.HasCloseReason())
                     {
                         if (!abort)
                         {
@@ -481,7 +481,7 @@ namespace RabbitMQ.Client.Framing.Impl
             }
             catch (EndOfStreamException eose)
             {
-                if (m_model0.CloseReason == null)
+                if (!m_model0.HasCloseReason())
                 {
                     LogCloseError("Connection didn't close cleanly. "
                                   + "Socket closed unexpectedly", eose);
@@ -717,7 +717,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 return;
             }
 
-            if (frame.Channel == USZERO)
+            if (frame.IsMainChannel())
             {
                 // In theory, we could get non-connection.close-ok
                 // frames here while we're quiescing (m_closeReason !=
@@ -1322,20 +1322,21 @@ namespace RabbitMQ.Client.Framing.Impl
                 }
                 IAuthMechanism mechanism = mechanismFactory.GetInstance();
                 string challenge = null;
+                const string locale = "en_US";
+                ConnectionSecureOrTune res;
                 do
                 {
                     string response = mechanism.HandleChallenge(challenge, m_factory);
-                    ConnectionSecureOrTune res;
                     if (challenge == null)
                     {
-                        res = m_model0.ConnectionStartOk(new ConnectionStartOk(m_clientProperties,mechanismFactory.Name,response,"en_US"));
+                        res = m_model0.ConnectionStartOk(new ConnectionStartOk(m_clientProperties,mechanismFactory.Name,response, locale));
                     }
                     else
                     {
                         res = m_model0.ConnectionSecureOk(response);
                     }
 
-                    if (res.Challenge == null)
+                    if (!res.HasChallenge())
                     {
                         connectionTune = res.TuneDetails;
                         tuned = true;
@@ -1349,7 +1350,7 @@ namespace RabbitMQ.Client.Framing.Impl
             }
             catch (OperationInterruptedException e)
             {
-                if (e.ShutdownReason != null && e.ShutdownReason.ReplyCode == Constants.AccessRefused)
+                if (e.ShutdownReason != null && e.ShutdownReason.IsAccessRefused())
                 {
                     throw new AuthenticationFailureException(e.ShutdownReason.ReplyText);
                 }
@@ -1357,19 +1358,14 @@ namespace RabbitMQ.Client.Framing.Impl
                     "Possibly caused by authentication failure", e);
             }
 
-            var channelMax = NegotiatedMaxValue(m_factory.RequestedChannelMax,
-                connectionTune.ChannelMax);
+            var channelMax = NegotiatedMaxValue(m_factory.RequestedChannelMax, connectionTune.ChannelMax);
             m_sessionManager = new SessionManager(this, channelMax);
 
-            uint frameMax = NegotiatedMaxValue(m_factory.RequestedFrameMax,
-                connectionTune.FrameMax);
-            FrameMax = frameMax;
+            FrameMax = NegotiatedMaxValue(m_factory.RequestedFrameMax, connectionTune.FrameMax);
 
-            var heartbeat = NegotiatedMaxValue(m_factory.RequestedHeartbeat,
-                connectionTune.Heartbeat);
-            Heartbeat = heartbeat;
+            Heartbeat = NegotiatedMaxValue(m_factory.RequestedHeartbeat, connectionTune.Heartbeat);
 
-            m_model0.ConnectionTuneOk(new ConnectionTuneOk (channelMax,frameMax,heartbeat));
+            m_model0.ConnectionTuneOk(new ConnectionTuneOk (channelMax,FrameMax,Heartbeat));
 
             // now we can start heartbeat timers
             MaybeStartHeartbeatTimers();

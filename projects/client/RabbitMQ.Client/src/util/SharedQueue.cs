@@ -117,7 +117,7 @@ namespace RabbitMQ.Util
         {
             lock (m_queue)
             {
-                while (m_queue.Count == 0)
+                while (m_queue.Count == ZERO)
                 {
                     EnsureIsOpen();
                     Monitor.Wait(m_queue);
@@ -240,7 +240,7 @@ namespace RabbitMQ.Util
         {
             lock (m_queue)
             {
-                if (m_queue.Count == 0)
+                if (m_queue.Count == ZERO)
                 {
                     EnsureIsOpen();
                     return defaultValue;

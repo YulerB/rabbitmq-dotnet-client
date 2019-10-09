@@ -122,6 +122,10 @@ namespace RabbitMQ.Client.Framing.Impl
         public byte[] Body { get; private set; }
         public BasicPublishFull() { }
 
+        public bool HasBasicProperties()
+        {
+            return BasicProperties != null;
+        }
         public BasicPublishFull(
           BasicPublish publishMethod,
           RabbitMQ.Client.Impl.BasicProperties basicProperties, 

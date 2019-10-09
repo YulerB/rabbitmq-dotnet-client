@@ -46,6 +46,7 @@ namespace RabbitMQ.Util
 {
     internal class SynchronizedList<T> : IList<T>
     {
+        private const int ZERO = 0;
         private readonly IList<T> list;
         private readonly object root;
 
@@ -69,6 +70,11 @@ namespace RabbitMQ.Util
             }
         }
 
+        public bool IsEmpty()
+        {
+            lock (root)
+                return list.Count== ZERO;
+        }
         public bool IsReadOnly
         {
             get { return list.IsReadOnly; }

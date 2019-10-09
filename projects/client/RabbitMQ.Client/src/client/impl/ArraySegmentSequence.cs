@@ -80,7 +80,7 @@ namespace RabbitMQ.Client.Impl
             result.Clear();
             while (count > ZERO)
             {
-                if (top.Length == ZERO)
+                if (top.IsEmpty)
                 {
                     lock (data)
                     {
@@ -90,7 +90,7 @@ namespace RabbitMQ.Client.Impl
                         }
                     }
 
-                    if (top.Length == ZERO && addingComplete) throw new EndOfStreamException();
+                    if (top.IsEmpty && addingComplete) throw new EndOfStreamException();
 
                     originalSize = top.Length;
                 }
@@ -123,9 +123,9 @@ namespace RabbitMQ.Client.Impl
             result.Clear();
             while (count > ZERO)
             {
-                if (top.Length == ZERO)
+                if (top.IsEmpty)
                 {
-                    if (data.Count == 0 && !addingComplete)
+                    if (data.IsEmpty && !addingComplete)
                         SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
 
                     if (!data.TryDequeue(out top) && addingComplete) throw new EndOfStreamException();

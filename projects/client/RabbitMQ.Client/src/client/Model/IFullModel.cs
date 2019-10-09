@@ -369,6 +369,11 @@ namespace RabbitMQ.Client.Impl
         }
         public string Challenge { get; private set; }
         public ConnectionTuneDetails TuneDetails { get; private set; }
+
+        public bool HasChallenge()
+        {
+            return Challenge != null;
+        }
     }
 }
 

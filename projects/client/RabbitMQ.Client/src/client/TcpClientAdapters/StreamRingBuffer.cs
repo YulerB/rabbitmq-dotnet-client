@@ -9,9 +9,10 @@ namespace RabbitMQ.Client
         private readonly ArraySegment<byte> Memory;
         private readonly Memory<byte> Mem;
         private readonly byte[] bigBuffer = null;
-        private int position = 0;
-        private int available = 0;
-        private readonly int capacity = 0;
+        private const int ZERO = 0;
+        private int position = ZERO;
+        private int available = ZERO;
+        private readonly int capacity = ZERO;
         public StreamRingBuffer(int capacity)
         {
             this.capacity = capacity;
@@ -43,7 +44,7 @@ namespace RabbitMQ.Client
             var pos = position;
             Memory<byte> mem = Mem.Slice(pos, usedSize);
             pos += usedSize;
-            if (pos == capacity) pos = 0;
+            if (pos == capacity) pos = ZERO;
             position = pos;
             return mem;
         }

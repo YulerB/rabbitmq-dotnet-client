@@ -55,6 +55,7 @@ namespace RabbitMQ.Client.Impl
 {
     public class SessionManager
     {
+        private const ushort ZERO = 0;
         private const ushort USZERO = default(ushort);
         public readonly ushort ChannelMax;
         private readonly UIntAllocator UInts;
@@ -66,6 +67,12 @@ namespace RabbitMQ.Client.Impl
         {
             m_connection = connection;
             ChannelMax = (channelMax == USZERO) ? ushort.MaxValue : channelMax;
+            UInts = new UIntAllocator(1, ChannelMax);
+        }
+        public SessionManager(Connection connection)
+        {
+            m_connection = connection;
+            ChannelMax =  ushort.MaxValue;
             UInts = new UIntAllocator(1, ChannelMax);
         }
 
@@ -107,7 +114,7 @@ namespace RabbitMQ.Client.Impl
             {
                 lock (m_sessionMap)
                 {
-                    if (m_sessionMap.Count == 0)
+                    if (m_sessionMap.Count == ZERO)
                     {
                         // Run this in a background thread, because
                         // usually CheckAutoClose will be called from

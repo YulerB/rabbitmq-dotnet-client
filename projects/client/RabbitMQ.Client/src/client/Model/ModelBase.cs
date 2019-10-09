@@ -296,6 +296,11 @@ namespace RabbitMQ.Client.Impl
 
         public ShutdownEventArgs CloseReason { get; private set; }
 
+        public bool HasCloseReason()
+        {
+            return CloseReason != null;
+        }
+
         public IBasicConsumer DefaultConsumer { get; set; }
 
         public bool IsClosed
@@ -1195,7 +1200,7 @@ namespace RabbitMQ.Client.Impl
 //            byte[] body
             )
         {
-            if (args.BasicProperties == null)
+            if (!args.HasBasicProperties())
             {
                 args.BasicProperties = CreateBasicProperties();
             }
@@ -1427,7 +1432,7 @@ namespace RabbitMQ.Client.Impl
                         throw new AlreadyClosedException(CloseReason);
                     }
 
-                    if (m_unconfirmedSet.Count == ZERO)
+                    if (m_unconfirmedSet.IsEmpty())
                     {
                         bool aux = m_onlyAcksReceived;
                         m_onlyAcksReceived = true;
@@ -1518,7 +1523,7 @@ namespace RabbitMQ.Client.Impl
                     }
                 }
                 m_onlyAcksReceived = m_onlyAcksReceived && !isNack;
-                if (m_unconfirmedSet.Count == ZERO)
+                if (m_unconfirmedSet.IsEmpty())
                 {
                     Monitor.Pulse(m_unconfirmedSet.SyncRoot);
                 }

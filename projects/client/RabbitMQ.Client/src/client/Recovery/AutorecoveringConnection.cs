@@ -1037,10 +1037,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         protected bool ShouldTriggerConnectionRecovery(ShutdownEventArgs args)
         {
-            return (args.Initiator == ShutdownInitiator.Peer ||
-                    // happens when EOF is reached, e.g. due to RabbitMQ node
-                    // connectivity loss or abrupt shutdown
-                    args.Initiator == ShutdownInitiator.Library);
+            return args.IsShutdownByPeerOrLibrary();
         }
     }
 }

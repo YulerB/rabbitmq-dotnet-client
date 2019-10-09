@@ -160,7 +160,7 @@ namespace RabbitMQ.Client.Impl
 
         private void UpdateContentBodyState()
         {
-            m_state = (m_remainingBodyBytes > 0)
+            m_state = (m_remainingBodyBytes > ULZERO)
                 ? AssemblyState.ExpectingContentBody
                 : AssemblyState.Complete;
         }

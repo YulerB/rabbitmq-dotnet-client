@@ -40,6 +40,7 @@
 
 using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.Framing;
+using RabbitMQ.Client.Framing.Impl;
 using RabbitMQ.Util;
 using System;
 using System.Buffers;
@@ -182,6 +183,17 @@ namespace RabbitMQ.Client.Impl
             get;
             private set;
         }
+
+        public bool IsChannelCloseOkMethod()
+        {
+            return Method!=null && Method.ProtocolClassId == ChannelCloseOk.ClassId && Method.ProtocolMethodId == ChannelCloseOk.MethodId;
+        }
+
+        public bool IsChannelCloseMethod()
+        {
+            return Method != null && Method.ProtocolClassId == ChannelClose.ClassId && Method.ProtocolMethodId == ChannelClose.MethodId;
+        }
+
         public RabbitMQ.Client.Impl.BasicProperties Header
         {
             get;
@@ -307,6 +319,7 @@ namespace RabbitMQ.Client.Impl
     }
     public class Frame
     {
+        private const ushort USZERO = default(ushort);
         public Frame(FrameType type, ushort channel)
         {
             Type = type;
@@ -322,6 +335,11 @@ namespace RabbitMQ.Client.Impl
 
         public ushort Channel { get; private set; }
 
+
+        public bool IsMainChannel()
+        {
+            return Channel == USZERO;
+        }
         public byte[] Payload { get; private set; }
 
         public FrameType Type { get; private set; }

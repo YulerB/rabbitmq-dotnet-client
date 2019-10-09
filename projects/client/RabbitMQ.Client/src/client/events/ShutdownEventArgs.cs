@@ -38,6 +38,7 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using RabbitMQ.Client.Framing;
 using System;
 
 namespace RabbitMQ.Client
@@ -88,6 +89,14 @@ namespace RabbitMQ.Client
         /// </summary>
         public ShutdownInitiator Initiator { get; private set; }
 
+        public bool IsShutdownByPeerOrLibrary()
+        {
+            return Initiator == ShutdownInitiator.Peer ||
+                // happens when EOF is reached, e.g. due to RabbitMQ node
+                // connectivity loss or abrupt shutdown
+                Initiator == ShutdownInitiator.Library;
+        }
+
         /// <summary>
         /// AMQP method ID within a content-class, or 0 if none.
         /// </summary>
@@ -97,6 +106,11 @@ namespace RabbitMQ.Client
         /// One of the standardised AMQP reason codes. See RabbitMQ.Client.Framing.*.Constants.
         /// </summary>
         public ushort ReplyCode { get; private set; }
+
+        public bool IsAccessRefused()
+        {
+            return ReplyCode == Constants.AccessRefused;
+        }
 
         /// <summary>
         /// Informative human-readable reason text.
