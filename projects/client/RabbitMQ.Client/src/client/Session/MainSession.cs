@@ -86,13 +86,10 @@ namespace RabbitMQ.Client.Impl
             {
                 if (frame.IsMethodClassAndMethodSame(m_closeClassId, m_closeMethodId))	
                 {
-                    {
-                        base.HandleFrame(frame);
-                        return; 
-                    }
+                    base.HandleFrame(frame);
+                    return; 
                 }
-
-
+                
                 if (frame.IsMethodClassAndMethodSame( m_closeOkClassId, m_closeOkMethodId))	
                 {
                     // This is the reply (CloseOk) we were looking for
