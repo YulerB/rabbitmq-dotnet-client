@@ -92,14 +92,15 @@ namespace RabbitMQ.Client.Framing.Impl
         private MainSession m_session0;
         private SessionManager m_sessionManager;
         private const int ZERO = 0;
-
+        private const uint UZERO = 0U;
+        private const ushort USZERO = default(ushort);
         private IList<ShutdownReportEntry> m_shutdownReport = new SynchronizedList<ShutdownReportEntry>(new List<ShutdownReportEntry>());
 
         //
         // Heartbeats
         //
 
-        private ushort m_heartbeat = default(ushort);
+        private ushort m_heartbeat = USZERO;
         private TimeSpan m_heartbeatTimeSpan = TimeSpan.FromSeconds(default(double));
         private int m_missedHeartbeats = ZERO;
 
@@ -136,7 +137,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             ClientProvidedName = clientProvidedName;
             KnownHosts = null;
-            FrameMax = default(uint);
+            FrameMax = UZERO;
             m_factory = factory;
             m_frameHandler = frameHandler;
 
@@ -149,7 +150,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 ConsumerWorkService = new ConsumerWorkService();
             }
 
-            m_sessionManager = new SessionManager(this, default(ushort));
+            m_sessionManager = new SessionManager(this, USZERO);
             m_session0 = new MainSession(this) { Handler = NotifyReceivedCloseOk };
             m_model0 = (ModelBase)Protocol.CreateModel(m_session0);
 
@@ -716,7 +717,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 return;
             }
 
-            if (frame.Channel == default(ushort))
+            if (frame.Channel == USZERO)
             {
                 // In theory, we could get non-connection.close-ok
                 // frames here while we're quiescing (m_closeReason !=
@@ -758,7 +759,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void NotifyHeartbeatListener()
         {
-            if (m_heartbeat != default(ushort))
+            if (m_heartbeat != USZERO)
             {
                 m_heartbeatRead.Set();
             }
@@ -955,7 +956,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void MaybeStartHeartbeatTimers()
         {
-            if (Heartbeat != default(ushort))
+            if (Heartbeat != USZERO)
             {
                 m_hasDisposedHeartBeatReadTimer = false;
                 m_hasDisposedHeartBeatWriteTimer = false;
@@ -1022,7 +1023,7 @@ namespace RabbitMQ.Client.Framing.Impl
                             ESLog.Error(description, eose);
                             m_shutdownReport.Add(new ShutdownReportEntry(description, eose));
                             HandleMainLoopException(
-                                new ShutdownEventArgs(ShutdownInitiator.Library, default(ushort), "End of stream", eose));
+                                new ShutdownEventArgs(ShutdownInitiator.Library, USZERO, "End of stream", eose));
                             shouldTerminate = true;
                         }
                     }
@@ -1072,7 +1073,7 @@ namespace RabbitMQ.Client.Framing.Impl
                     {
                         HandleMainLoopException(new ShutdownEventArgs(
                             ShutdownInitiator.Library,
-                            default(ushort),
+                            USZERO,
                             "End of stream",
                             e));
                         shouldTerminate = true;
@@ -1376,13 +1377,13 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         private static uint NegotiatedMaxValue(uint clientValue, uint serverValue)
         {
-            return (clientValue == default(uint) || serverValue == default(uint)) ?
+            return (clientValue == UZERO || serverValue == UZERO) ?
                 Math.Max(clientValue, serverValue) :
                 Math.Min(clientValue, serverValue);
         }
         private static ushort NegotiatedMaxValue(ushort clientValue, ushort serverValue)
         {
-            return (clientValue == default(ushort) || serverValue == default(ushort)) ?
+            return (clientValue == USZERO || serverValue == USZERO) ?
                 Math.Max(clientValue, serverValue) :
                 Math.Min(clientValue, serverValue);
         }

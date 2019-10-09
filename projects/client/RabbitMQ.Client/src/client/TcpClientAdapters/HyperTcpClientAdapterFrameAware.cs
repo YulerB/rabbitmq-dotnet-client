@@ -20,12 +20,13 @@ namespace RabbitMQ.Client
     {
         public event EventHandler Closed;
         private Socket sock;
-        public event EventHandler<ArraySegment<byte>> Receive;
+        public event EventHandler<Memory<byte>> Receive;
         private readonly HyperTcpClientSettings settings;
         private SocketAsyncEventArgs sEvent;
         private Memory<byte> top = Memory<byte>.Empty;
         private ConcurrentQueue<Memory<byte>> receivedSegments = new ConcurrentQueue<Memory<byte>>();
         private volatile bool closed;
+        private const uint UZERO = 0U;
 
         public HyperTcpClientAdapterFrameAware(HyperTcpClientSettings settings)
         {
@@ -118,7 +119,7 @@ namespace RabbitMQ.Client
         private void Process()
         {
             byte[] header = new byte[8];
-            uint payloadSize = default(uint);
+            uint payloadSize = UZERO;
 
             while (!closed)
             {
@@ -126,7 +127,7 @@ namespace RabbitMQ.Client
                 payloadSize = BinaryPrimitives.ReadUInt32BigEndian(header.AsSpan().Slice(3));
                 byte[] frameData = new byte[payloadSize + 8];
                 header.AsSpan().CopyTo(frameData.AsSpan());
-                if (payloadSize > default(uint)) Fill(frameData, 8);
+                if (payloadSize > UZERO) Fill(frameData, 8);
                 this.Receive?.Invoke(this, new ArraySegment<byte>(frameData, 0, frameData.Length));
             }
         }

@@ -191,7 +191,8 @@ namespace RabbitMQ.Client.Impl
     }
     public static class FrameReader
     {
-        private static readonly Protocol m_protocol = new Protocol();
+             private const ulong ULZERO = 0UL;
+   private static readonly Protocol m_protocol = new Protocol();
          
         private static void ProcessProtocolHeader(ArraySegmentSequence reader)
         {
@@ -270,7 +271,7 @@ namespace RabbitMQ.Client.Impl
             RabbitMQ.Client.Impl.BasicProperties m_content = null;
             byte[] payload = EmptyByteArray;
             IMethod m_method = null;
-            ulong totalBodyBytes = default(ulong);
+            ulong totalBodyBytes = ULZERO;
 
             if (type == Constants.FrameMethod)
             {

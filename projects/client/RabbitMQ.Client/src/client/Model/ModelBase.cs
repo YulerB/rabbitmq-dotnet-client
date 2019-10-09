@@ -60,7 +60,8 @@ namespace RabbitMQ.Client.Impl
     public abstract partial class ModelBase : IFullModel, IRecoverable
     {
         private const int ZERO = 0;
-        public readonly IDictionary<string, IBasicConsumer> m_consumers = new Dictionary<string, IBasicConsumer>();
+         private const ulong ULZERO = 0UL;
+       public readonly IDictionary<string, IBasicConsumer> m_consumers = new Dictionary<string, IBasicConsumer>();
 
         ///<summary>Only used to kick-start a connection open
         ///sequence. See <see cref="Connection.Open"/> </summary>
@@ -110,10 +111,11 @@ namespace RabbitMQ.Client.Impl
             Initialise(session);
         }
 
+
         protected void Initialise(ISession session)
         {
             CloseReason = null;
-            NextPublishSeqNo = default(ulong);
+            NextPublishSeqNo = ULZERO;
             Session = session;
             Session.CommandReceived = HandleCommand;
             Session.SessionShutdown += OnSessionShutdown;
@@ -1244,7 +1246,7 @@ namespace RabbitMQ.Client.Impl
 
         public void ConfirmSelect()
         {
-            if (NextPublishSeqNo == default(ulong))
+            if (NextPublishSeqNo == ULZERO)
             {
                 NextPublishSeqNo = 1;
             }
@@ -1410,7 +1412,7 @@ namespace RabbitMQ.Client.Impl
 
         public bool WaitForConfirms(TimeSpan timeout, out bool timedOut)
         {
-            if (NextPublishSeqNo == default(ulong))
+            if (NextPublishSeqNo == ULZERO)
             {
                 throw new InvalidOperationException("Confirms not selected");
             }

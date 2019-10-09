@@ -52,7 +52,7 @@ namespace RabbitMQ.Client.Unit {
         {
             Random r = new Random();
             const int capacity = 2;
-            ArraySegment<byte> taken=default;
+            Memory<byte> taken=default;
             ArraySegment<byte> peek= default;
             StreamRingBuffer ringBuffer = new StreamRingBuffer(capacity);
             for (int i = 0; i < 2; i++)
@@ -60,13 +60,13 @@ namespace RabbitMQ.Client.Unit {
                 peek = ringBuffer.Peek();
                 Assert.IsTrue(peek.Count > 0);
                 taken =  ringBuffer.Take(1);
-                Assert.IsTrue(taken.Count == 1);
+                Assert.IsTrue(taken.Length == 1);
             }
-            ringBuffer.Release(taken.Count);
+            ringBuffer.Release(taken.Length);
             peek = ringBuffer.Peek();
             Assert.IsTrue(peek.Count > 0);
             taken = ringBuffer.Take(1);
-            Assert.IsTrue(taken.Count == 1);
+            Assert.IsTrue(taken.Length == 1);
             peek = ringBuffer.Peek();
             Assert.IsTrue(peek.Count == 0);
             ringBuffer.Release(2);
@@ -75,13 +75,13 @@ namespace RabbitMQ.Client.Unit {
                 peek = ringBuffer.Peek();
                 Assert.IsTrue(peek.Count > 0);
                 taken = ringBuffer.Take(1);
-                Assert.IsTrue(taken.Count == 1);
+                Assert.IsTrue(taken.Length == 1);
             }
-            ringBuffer.Release(taken.Count);
+            ringBuffer.Release(taken.Length);
             peek = ringBuffer.Peek();
             Assert.IsTrue(peek.Count > 0);
             taken = ringBuffer.Take(1);
-            Assert.IsTrue(taken.Count == 1);
+            Assert.IsTrue(taken.Length == 1);
             peek = ringBuffer.Peek();
             Assert.IsTrue(peek.Count == 0);
 

@@ -46,10 +46,12 @@ namespace RabbitMQ.Client.Impl
 {
     public class RecoveryAwareModel : Model, IFullModel, IRecoverable
     {
+          private const ulong ULZERO = 0UL;
+        private const ushort USZERO = default(ushort);
         public RecoveryAwareModel(ISession session) : base(session)
         {
-            ActiveDeliveryTagOffset = default(ulong);
-            MaxSeenDeliveryTag = default(ulong);
+            ActiveDeliveryTagOffset = ULZERO;
+            MaxSeenDeliveryTag = ULZERO;
         }
 
         public ulong ActiveDeliveryTagOffset { get; private set; }
@@ -58,7 +60,7 @@ namespace RabbitMQ.Client.Impl
         public void InheritOffsetFrom(RecoveryAwareModel other)
         {
             ActiveDeliveryTagOffset = other.ActiveDeliveryTagOffset + other.MaxSeenDeliveryTag;
-            MaxSeenDeliveryTag = default(ulong);
+            MaxSeenDeliveryTag = ULZERO;
         }
 
         public override void HandleBasicGetOk(BasicGetResult args)
@@ -88,7 +90,7 @@ namespace RabbitMQ.Client.Impl
             bool multiple)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
-            if (realTag > default(ushort) && realTag <= deliveryTag)
+            if (realTag > USZERO && realTag <= deliveryTag)
             {
                 base.BasicAck(realTag, multiple);
             }
@@ -97,7 +99,7 @@ namespace RabbitMQ.Client.Impl
         public override void BasicNack(ulong deliveryTag, BasicNackFlags settings)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
-            if (realTag > default(ushort) && realTag <= deliveryTag)
+            if (realTag > USZERO && realTag <= deliveryTag)
             {
                 base.BasicNack(realTag, settings);
             }
@@ -107,7 +109,7 @@ namespace RabbitMQ.Client.Impl
             bool requeue)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
-            if (realTag > default(ushort) && realTag <= deliveryTag)
+            if (realTag > USZERO && realTag <= deliveryTag)
             {
                 base.BasicReject(realTag, requeue);
             }

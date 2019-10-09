@@ -47,6 +47,7 @@ namespace RabbitMQ.Client.Impl
 {
     public abstract class SessionBase : ISession
     {
+        private const ushort USZERO = default(ushort);
         private readonly object _shutdownLock = new object();
         private EventHandler<ShutdownEventArgs> _sessionShutdown;
 
@@ -55,7 +56,7 @@ namespace RabbitMQ.Client.Impl
             CloseReason = null;
             Connection = connection;
             ChannelNumber = channelNumber;
-            if (channelNumber != default(ushort))
+            if (channelNumber != USZERO)
             {
                 connection.ConnectionShutdown += OnConnectionShutdown;
             }

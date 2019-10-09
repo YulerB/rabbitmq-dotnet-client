@@ -16,7 +16,7 @@ namespace RabbitMQ.Client
     {
         public event EventHandler Closed;
         private Socket sock;
-        public event EventHandler<ArraySegment<byte>> Receive;
+        public event EventHandler<Memory<byte>> Receive;
         private readonly HyperTcpClientSettings settings;
         private StreamRingBuffer ringBuffer;
         private SocketAsyncEventArgs sEvent;
@@ -51,10 +51,10 @@ namespace RabbitMQ.Client
                 sock.Dispose();
                 sEvent.Dispose();
             }
-            ringBuffer = null;
             Receive = null;
             sock = null;
             sEvent = null;
+            ringBuffer = null;
             Closed = null;
         }
         #endregion
@@ -102,6 +102,9 @@ namespace RabbitMQ.Client
             catch (SocketException)
             {
                 // Ignore, we need to stop reading when the socket is disposed.
+            }
+            catch (NullReferenceException) {
+                // Ignore, we need to stop reading when the any related disposable is set to null.
             }
         }
 

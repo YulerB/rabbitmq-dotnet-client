@@ -58,6 +58,7 @@ namespace RabbitMQ.Client.Impl
     public class CommandAssembler
     {
         private const int MaxArrayOfBytesSize = 2_147_483_591;
+        private const ulong ULZERO = 0UL;
         
         private IMethod m_method;
         private RabbitMQ.Client.Impl.BasicProperties m_header;
@@ -154,7 +155,7 @@ namespace RabbitMQ.Client.Impl
             m_method = null;
             m_header = null;
             frameBuilder = null;
-            m_remainingBodyBytes = default(ulong);
+            m_remainingBodyBytes = ULZERO;
         }
 
         private void UpdateContentBodyState()

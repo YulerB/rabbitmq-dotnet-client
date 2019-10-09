@@ -8,6 +8,9 @@ using BenchmarkDotNet.Configs;
 using System;
 using rcu;
 using RabbitMQ.Client.Unit;
+using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Diagnostics.Windows.Configs;
+using BenchmarkDotNet.Order;
 
 namespace Unit.src.benches
 {
@@ -22,11 +25,12 @@ namespace Unit.src.benches
 
         [CoreJob]
         [MemoryDiagnoser]
-        [BenchmarkDotNet.Attributes.HardwareCounters]
+        //[InliningDiagnoser]
         [RankColumn]
+        //[TailCallDiagnoser]
+        [Orderer(SummaryOrderPolicy.FastestToSlowest, MethodOrderPolicy.Declared)]
         public class Benches
         {
-            readonly int processors = Environment.ProcessorCount;
             TestEventingConsumer ec;
             TestEventingConsumer1 ec1; 
 

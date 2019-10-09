@@ -55,6 +55,7 @@ namespace RabbitMQ.Client.Impl
 {
     public class SessionManager
     {
+        private const ushort USZERO = default(ushort);
         public readonly ushort ChannelMax;
         private readonly UIntAllocator UInts;
         private readonly Connection m_connection;
@@ -64,7 +65,7 @@ namespace RabbitMQ.Client.Impl
         public SessionManager(Connection connection, ushort channelMax)
         {
             m_connection = connection;
-            ChannelMax = (channelMax == default(ushort)) ? ushort.MaxValue : channelMax;
+            ChannelMax = (channelMax == USZERO) ? ushort.MaxValue : channelMax;
             UInts = new UIntAllocator(1, ChannelMax);
         }
 

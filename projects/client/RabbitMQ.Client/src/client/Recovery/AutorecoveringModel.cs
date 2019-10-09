@@ -57,6 +57,7 @@ namespace RabbitMQ.Client.Impl
         private EventHandler<CallbackExceptionEventArgs> m_recordedCallbackExceptionEventHandlers;
         private EventHandler<ShutdownEventArgs> m_recordedShutdownEventHandlers;
 
+        private const ushort USZERO = default(ushort);
         private ushort prefetchCountConsumer = 0;
         private ushort prefetchCountGlobal = 0;
         private bool usesPublisherConfirms = false;
@@ -1094,12 +1095,12 @@ namespace RabbitMQ.Client.Impl
 
         private void RecoverState()
         {
-            if (prefetchCountConsumer != default(ushort))
+            if (prefetchCountConsumer != USZERO)
             {
                 BasicQos(prefetchCountConsumer, false);
             }
 
-            if (prefetchCountGlobal != default(ushort))
+            if (prefetchCountGlobal != USZERO)
             {
                 BasicQos(prefetchCountGlobal, true);
             }

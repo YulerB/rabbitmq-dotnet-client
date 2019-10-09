@@ -54,6 +54,7 @@ namespace RabbitMQ.Util
     public static class NetworkBinaryWriter1
     {
         private const int ZERO = 0;
+        private const uint UZERO = 0U;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteByte(Span<byte> output, byte buffer, out int written)
@@ -255,7 +256,7 @@ namespace RabbitMQ.Util
         {
             if (val == null)
             {
-                BinaryPrimitives.WriteUInt32BigEndian(output, default(uint));
+                BinaryPrimitives.WriteUInt32BigEndian(output, UZERO);
                 written = 4;
             }
             else
@@ -276,7 +277,7 @@ namespace RabbitMQ.Util
         {
             if (val == null)
             {
-                BinaryPrimitives.WriteUInt32BigEndian(output, default(uint));
+                BinaryPrimitives.WriteUInt32BigEndian(output, UZERO);
                 written = 4;
             }
             else
@@ -320,7 +321,7 @@ namespace RabbitMQ.Util
         {
             if (val == null)
             {
-                BinaryPrimitives.WriteUInt32BigEndian(output, default(uint));
+                BinaryPrimitives.WriteUInt32BigEndian(output, UZERO);
                 written = 4;
             }
             else

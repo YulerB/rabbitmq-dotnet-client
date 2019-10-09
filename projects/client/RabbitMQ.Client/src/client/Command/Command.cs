@@ -130,6 +130,7 @@ namespace RabbitMQ.Client.Impl
         {
             connection.WriteFrame(new MethodOutboundFrame(channelNumber, Method));
         }
+        private const uint UZERO = 0U;
 
         private void TransmitAsFrameSet(ushort channelNumber, Connection connection)
         {
@@ -137,7 +138,7 @@ namespace RabbitMQ.Client.Impl
             {
                 var body = Body;
                 var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
-                var frameMaxEqualsZero = frameMax == default(uint);
+                var frameMaxEqualsZero = frameMax == UZERO;
                 var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
 
                 var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax))
@@ -164,11 +165,12 @@ namespace RabbitMQ.Client.Impl
     }
 
     public static class CommandHelpers{
+        private const uint UZERO = 0U;
         public static List<OutboundFrame> CalculateFrames(ushort channelNumber, Connection connection, IList<SendCommand> commands)
         {
             var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
             var frames = new List<OutboundFrame>(commands.Count * 3);
-            var frameMaxEqualsZero = frameMax == default(uint);
+            var frameMaxEqualsZero = frameMax == UZERO;
             foreach (var cmd in commands)
             {
                 frames.Add(new MethodOutboundFrame(channelNumber, cmd.Method));

@@ -16,7 +16,7 @@ namespace RabbitMQ.Client
         public event EventHandler Closed;
         private Socket sock;
         private SslStream baseSSLStream;
-        public event EventHandler<ArraySegment<byte>> Receive;
+        public event EventHandler<Memory<byte>> Receive;
         private readonly object _syncLock = new object();
         private AsyncCallback asyncCallback;
         private StreamRingBuffer ringBuffer;
