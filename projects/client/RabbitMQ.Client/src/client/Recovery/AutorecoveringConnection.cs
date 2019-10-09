@@ -445,7 +445,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             ISession session = m_delegate.CreateSession();
             var result = new RecoveryAwareModel(session);
-            result._Private_ChannelOpen("");
+            result._Private_ChannelOpen(string.Empty);
             return result;
         }
 

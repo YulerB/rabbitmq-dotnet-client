@@ -91,6 +91,7 @@ namespace RabbitMQ.Client.Framing.Impl
         private volatile bool m_running = true;
         private MainSession m_session0;
         private SessionManager m_sessionManager;
+        private const int ZERO = 0;
 
         private IList<ShutdownReportEntry> m_shutdownReport = new SynchronizedList<ShutdownReportEntry>(new List<ShutdownReportEntry>());
 
@@ -98,9 +99,9 @@ namespace RabbitMQ.Client.Framing.Impl
         // Heartbeats
         //
 
-        private ushort m_heartbeat = 0;
-        private TimeSpan m_heartbeatTimeSpan = TimeSpan.FromSeconds(0);
-        private int m_missedHeartbeats = 0;
+        private ushort m_heartbeat = default(ushort);
+        private TimeSpan m_heartbeatTimeSpan = TimeSpan.FromSeconds(default(double));
+        private int m_missedHeartbeats = ZERO;
 
         private Timer _heartbeatWriteTimer;
         private Timer _heartbeatReadTimer;
@@ -135,7 +136,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             ClientProvidedName = clientProvidedName;
             KnownHosts = null;
-            FrameMax = 0;
+            FrameMax = default(uint);
             m_factory = factory;
             m_frameHandler = frameHandler;
 
@@ -148,7 +149,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 ConsumerWorkService = new ConsumerWorkService();
             }
 
-            m_sessionManager = new SessionManager(this, 0);
+            m_sessionManager = new SessionManager(this, default(ushort));
             m_session0 = new MainSession(this) { Handler = NotifyReceivedCloseOk };
             m_model0 = (ModelBase)Protocol.CreateModel(m_session0);
 
@@ -715,7 +716,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 return;
             }
 
-            if (frame.Channel == 0)
+            if (frame.Channel == default(ushort))
             {
                 // In theory, we could get non-connection.close-ok
                 // frames here while we're quiescing (m_closeReason !=
@@ -757,7 +758,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void NotifyHeartbeatListener()
         {
-            if (m_heartbeat != 0)
+            if (m_heartbeat != default(ushort))
             {
                 m_heartbeatRead.Set();
             }
@@ -954,7 +955,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void MaybeStartHeartbeatTimers()
         {
-            if (Heartbeat != 0)
+            if (Heartbeat != default(ushort))
             {
                 m_hasDisposedHeartBeatReadTimer = false;
                 m_hasDisposedHeartBeatWriteTimer = false;
@@ -1001,13 +1002,13 @@ namespace RabbitMQ.Client.Framing.Impl
                 {
                     if (!m_closed)
                     {
-                        if (!m_heartbeatRead.WaitOne(0))
+                        if (!m_heartbeatRead.WaitOne(ZERO))
                         {
                             m_missedHeartbeats++;
                         }
                         else
                         {
-                            m_missedHeartbeats = 0;
+                            m_missedHeartbeats = ZERO;
                         }
 
                         // We check against 8 = 2 * 4 because we need to wait for at
@@ -1021,7 +1022,7 @@ namespace RabbitMQ.Client.Framing.Impl
                             ESLog.Error(description, eose);
                             m_shutdownReport.Add(new ShutdownReportEntry(description, eose));
                             HandleMainLoopException(
-                                new ShutdownEventArgs(ShutdownInitiator.Library, 0, "End of stream", eose));
+                                new ShutdownEventArgs(ShutdownInitiator.Library, default(ushort), "End of stream", eose));
                             shouldTerminate = true;
                         }
                     }
@@ -1071,7 +1072,7 @@ namespace RabbitMQ.Client.Framing.Impl
                     {
                         HandleMainLoopException(new ShutdownEventArgs(
                             ShutdownInitiator.Library,
-                            0,
+                            default(ushort),
                             "End of stream",
                             e));
                         shouldTerminate = true;
@@ -1375,13 +1376,13 @@ namespace RabbitMQ.Client.Framing.Impl
         }
         private static uint NegotiatedMaxValue(uint clientValue, uint serverValue)
         {
-            return (clientValue == 0U || serverValue == 0U) ?
+            return (clientValue == default(uint) || serverValue == default(uint)) ?
                 Math.Max(clientValue, serverValue) :
                 Math.Min(clientValue, serverValue);
         }
         private static ushort NegotiatedMaxValue(ushort clientValue, ushort serverValue)
         {
-            return (clientValue == 0 || serverValue == 0) ?
+            return (clientValue == default(ushort) || serverValue == default(ushort)) ?
                 Math.Max(clientValue, serverValue) :
                 Math.Min(clientValue, serverValue);
         }

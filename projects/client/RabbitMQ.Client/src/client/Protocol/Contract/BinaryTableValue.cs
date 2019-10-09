@@ -67,7 +67,7 @@ namespace RabbitMQ.Client
     /// of this class must be used.
     /// </para>
     /// </remarks>
-    public struct BinaryTableValue
+    public class BinaryTableValue
     {
         /// <summary>
         /// Creates a new instance of the <see cref="BinaryTableValue"/>.

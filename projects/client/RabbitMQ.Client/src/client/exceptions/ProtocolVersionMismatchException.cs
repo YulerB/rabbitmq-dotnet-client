@@ -48,6 +48,8 @@ namespace RabbitMQ.Client.Exceptions
     ///the TCP socket.</summary>
     public class ProtocolVersionMismatchException : ProtocolViolationException
     {
+        private const int ZERO = 0;
+
         ///<summary>Fills the new instance's properties with the values passed in.</summary>
         public ProtocolVersionMismatchException(int clientMajor,
             int clientMinor,
@@ -75,7 +77,7 @@ namespace RabbitMQ.Client.Exceptions
 
         private static String positiveOrUnknown(int version)
         {
-            return version >= 0 ? version.ToString() : "unknown";
+            return version >= ZERO ? version.ToString() : "unknown";
         }
     }
 }

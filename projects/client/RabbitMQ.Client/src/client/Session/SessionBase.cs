@@ -55,7 +55,7 @@ namespace RabbitMQ.Client.Impl
             CloseReason = null;
             Connection = connection;
             ChannelNumber = channelNumber;
-            if (channelNumber != 0)
+            if (channelNumber != default(ushort))
             {
                 connection.ConnectionShutdown += OnConnectionShutdown;
             }

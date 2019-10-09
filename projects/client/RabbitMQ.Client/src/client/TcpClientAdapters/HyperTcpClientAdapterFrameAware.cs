@@ -118,7 +118,7 @@ namespace RabbitMQ.Client
         private void Process()
         {
             byte[] header = new byte[8];
-            uint payloadSize = 0;
+            uint payloadSize = default(uint);
 
             while (!closed)
             {
@@ -126,7 +126,7 @@ namespace RabbitMQ.Client
                 payloadSize = BinaryPrimitives.ReadUInt32BigEndian(header.AsSpan().Slice(3));
                 byte[] frameData = new byte[payloadSize + 8];
                 header.AsSpan().CopyTo(frameData.AsSpan());
-                if (payloadSize > 0) Fill(frameData, 8);
+                if (payloadSize > default(uint)) Fill(frameData, 8);
                 this.Receive?.Invoke(this, new ArraySegment<byte>(frameData, 0, frameData.Length));
             }
         }

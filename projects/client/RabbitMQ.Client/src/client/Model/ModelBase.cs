@@ -59,6 +59,7 @@ namespace RabbitMQ.Client.Impl
 {
     public abstract partial class ModelBase : IFullModel, IRecoverable
     {
+        private const int ZERO = 0;
         public readonly IDictionary<string, IBasicConsumer> m_consumers = new Dictionary<string, IBasicConsumer>();
 
         ///<summary>Only used to kick-start a connection open
@@ -112,7 +113,7 @@ namespace RabbitMQ.Client.Impl
         protected void Initialise(ISession session)
         {
             CloseReason = null;
-            NextPublishSeqNo = 0;
+            NextPublishSeqNo = default(ulong);
             Session = session;
             Session.CommandReceived = HandleCommand;
             Session.SessionShutdown += OnSessionShutdown;
@@ -1166,7 +1167,7 @@ namespace RabbitMQ.Client.Impl
 
         internal void AllocatatePublishSeqNos(int count)
         {
-            var c = 0;
+            var c = ZERO;
             lock (m_unconfirmedSet.SyncRoot)
             {
                 while(c < count)
@@ -1243,7 +1244,7 @@ namespace RabbitMQ.Client.Impl
 
         public void ConfirmSelect()
         {
-            if (NextPublishSeqNo == 0UL)
+            if (NextPublishSeqNo == default(ulong))
             {
                 NextPublishSeqNo = 1;
             }
@@ -1409,7 +1410,7 @@ namespace RabbitMQ.Client.Impl
 
         public bool WaitForConfirms(TimeSpan timeout, out bool timedOut)
         {
-            if (NextPublishSeqNo == 0UL)
+            if (NextPublishSeqNo == default(ulong))
             {
                 throw new InvalidOperationException("Confirms not selected");
             }
@@ -1424,7 +1425,7 @@ namespace RabbitMQ.Client.Impl
                         throw new AlreadyClosedException(CloseReason);
                     }
 
-                    if (m_unconfirmedSet.Count == 0)
+                    if (m_unconfirmedSet.Count == ZERO)
                     {
                         bool aux = m_onlyAcksReceived;
                         m_onlyAcksReceived = true;
@@ -1500,7 +1501,7 @@ namespace RabbitMQ.Client.Impl
                 if (multiple)
                 {
                     
-                    for (ulong i = m_unconfirmedSet[0]; i <= deliveryTag; i++)
+                    for (ulong i = m_unconfirmedSet[ZERO]; i <= deliveryTag; i++)
                     {
                         // removes potential duplicates
                         while (m_unconfirmedSet.Remove(i))
@@ -1515,7 +1516,7 @@ namespace RabbitMQ.Client.Impl
                     }
                 }
                 m_onlyAcksReceived = m_onlyAcksReceived && !isNack;
-                if (m_unconfirmedSet.Count == 0)
+                if (m_unconfirmedSet.Count == ZERO)
                 {
                     Monitor.Pulse(m_unconfirmedSet.SyncRoot);
                 }

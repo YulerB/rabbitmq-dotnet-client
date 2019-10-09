@@ -55,7 +55,8 @@ namespace RabbitMQ.Client.Impl
         private ConcurrentQueue<Memory<byte>> data = new ConcurrentQueue<Memory<byte>>();
         private Memory<byte> top = new Memory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
-        private int originalSize = 0;
+        private const int ZERO = 0;
+        private int originalSize = ZERO;
         private readonly List<Memory<byte>> result = new List<Memory<byte>>(10);
 
         #region Constructor
@@ -76,7 +77,6 @@ namespace RabbitMQ.Client.Impl
 
         public List<Memory<byte>> ReadNotExpecting(int count)
         {
-            const int ZERO = 0;
             result.Clear();
             while (count > ZERO)
             {
@@ -120,7 +120,6 @@ namespace RabbitMQ.Client.Impl
         }
         public List<Memory<byte>> Read(int count)
         {
-            const int ZERO = 0;
             result.Clear();
             while (count > ZERO)
             {
@@ -159,7 +158,7 @@ namespace RabbitMQ.Client.Impl
         }
         public void Write(Memory<byte> buffer)
         {
-            if (buffer.Length > 0)
+            if (buffer.Length > ZERO)
             {
                 lock (data)
                 {

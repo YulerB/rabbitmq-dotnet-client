@@ -59,6 +59,8 @@ namespace RabbitMQ.Util
     ///<summary>A thread-safe shared queue implementation.</summary>
     public class SharedQueue<T> : IEnumerable<T>
     {
+        private const int ZERO = 0;
+
         ///<summary>Flag holding our current status.</summary>
         protected bool m_isOpen = true;
 
@@ -194,12 +196,12 @@ namespace RabbitMQ.Util
             DateTime startTime = DateTime.Now;
             lock (m_queue)
             {
-                while (m_queue.Count == 0)
+                while (m_queue.Count == ZERO)
                 {
                     EnsureIsOpen();
                     var elapsedTime = (int)((DateTime.Now - startTime).TotalMilliseconds);
                     int remainingTime = millisecondsTimeout - elapsedTime;
-                    if (remainingTime <= 0)
+                    if (remainingTime <= ZERO)
                     {
                         result = default(T);
                         return false;

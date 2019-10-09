@@ -70,7 +70,7 @@ namespace RabbitMQ.Client.Impl
         }
         private static void CheckEmptyFrameSize()
         {
-            long actualLength = 0;
+            long actualLength = default(long);
             {
                 var x = new EmptyOutboundFrame();
                 actualLength = x.EstimatedSize();
@@ -137,7 +137,7 @@ namespace RabbitMQ.Client.Impl
             {
                 var body = Body;
                 var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
-                var frameMaxEqualsZero = frameMax == 0;
+                var frameMaxEqualsZero = frameMax == default(uint);
                 var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
 
                 var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax))
@@ -146,7 +146,7 @@ namespace RabbitMQ.Client.Impl
                     new HeaderOutboundFrame(channelNumber, Header,(ulong)  body.Length)
                 };
 
-                for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
+                for (long offset = default(long); offset < body.Length; offset += bodyPayloadMax)
                 {
                     var remaining = body.Length - offset;
                     var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;
@@ -168,7 +168,7 @@ namespace RabbitMQ.Client.Impl
         {
             var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
             var frames = new List<OutboundFrame>(commands.Count * 3);
-            var frameMaxEqualsZero = frameMax == 0;
+            var frameMaxEqualsZero = frameMax == default(uint);
             foreach (var cmd in commands)
             {
                 frames.Add(new MethodOutboundFrame(channelNumber, cmd.Method));
@@ -178,7 +178,7 @@ namespace RabbitMQ.Client.Impl
 
                     frames.Add(new HeaderOutboundFrame(channelNumber, cmd.Header,(ulong) body.Length));
                     var bodyPayloadMax = frameMaxEqualsZero ? body.Length : frameMax - Constants.EmptyFrameSize;
-                    for (long offset = 0; offset < body.Length; offset += bodyPayloadMax)
+                    for (long offset = default(long); offset < body.Length; offset += bodyPayloadMax)
                     {
                         var remaining = body.Length - offset;
                         var count = (remaining < bodyPayloadMax) ? remaining : bodyPayloadMax;

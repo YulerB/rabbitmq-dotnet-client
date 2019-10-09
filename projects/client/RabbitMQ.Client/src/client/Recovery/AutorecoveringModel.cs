@@ -1094,12 +1094,12 @@ namespace RabbitMQ.Client.Impl
 
         private void RecoverState()
         {
-            if (prefetchCountConsumer != 0)
+            if (prefetchCountConsumer != default(ushort))
             {
                 BasicQos(prefetchCountConsumer, false);
             }
 
-            if (prefetchCountGlobal != 0)
+            if (prefetchCountGlobal != default(ushort))
             {
                 BasicQos(prefetchCountGlobal, true);
             }

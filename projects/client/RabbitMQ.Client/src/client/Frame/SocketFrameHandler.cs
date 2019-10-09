@@ -56,6 +56,7 @@ namespace RabbitMQ.Client.Impl
 {
     public class HyperSocketFrameHandler : IFrameHandler, IDisposable
     {
+        private const int ZERO = 0;
         private readonly HyperSocketFrameSettings settings;
         private ArraySegmentSequence m_stream = new ArraySegmentSequence();
         private IHyperTcpClient m_socket;
@@ -164,12 +165,12 @@ namespace RabbitMQ.Client.Impl
         }
         public void WriteFrameSet(IList<OutboundFrame> frames)
         {
-            var size = 0;
+            var size = ZERO;
             foreach (var frame in frames) size += frame.EstimatedSize();
             using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
             {
                 Span<byte> buffer = byteBuffer.Memory.Span;
-                var total = 0;
+                var total = ZERO;
                 foreach (var f in frames)
                 {
                     f.WriteTo(buffer.Slice(total), out int written);

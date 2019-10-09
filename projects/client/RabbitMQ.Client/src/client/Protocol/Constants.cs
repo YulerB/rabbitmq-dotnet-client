@@ -46,6 +46,7 @@ namespace RabbitMQ.Client.Framing
 {
     public class Constants
     {
+        public const int ZERO = 0;
         public const long EmptyFrameSize = 8;
         public static readonly byte[] m_emptyByteArray = new byte[0];
 
@@ -89,5 +90,13 @@ namespace RabbitMQ.Client.Framing
         public const ushort NotImplemented = 540;
         ///<summary>(= 541)</summary>
         public const ushort InternalError = 541;
+
+        public const byte AMQPFrameBegin = 65;
+
+        public const byte FrameMethod = 1;
+        public const byte FrameHeader = 2;
+        public const byte FrameBody = 3;
+        public const byte FrameHeartbeat = 8;
+
     }
 }

@@ -423,15 +423,15 @@ namespace RabbitMQ.Util
                     break;
                 case I:
                     value = ReadInt32(input);
-                    read = 4;
+                    read = 4L;
                     break;
                 case D:
                     value = ReadDecimal(input, out read);
-                    read = 5;
+                    read = 5L;
                     break;
                 case T:
                     value = ReadTimestamp(input);
-                    read = 8;
+                    read = 8L;
                     break;
                 case F:
                     value = ReadTable(input, out read);
@@ -441,36 +441,36 @@ namespace RabbitMQ.Util
                     break;
                 case b:
                     value = (sbyte)ReadByte(input);
-                    read = 1;
+                    read = 1L;
                     break;
                 case d:
                     value = ReadDouble(input);
-                    read = 8;
+                    read = 8L;
                     break;
                 case f:
                     value = ReadSingle(input);
-                    read = 4;
+                    read = 4L;
                     break;
                 case l:
                     value = ReadInt64(input);
-                    read = 8;
+                    read = 8L;
                     break;
                 case s:
                     value = ReadInt16(input);
-                    read = 2;
+                    read = 2L;
                     break;
                 case t:
-                    value = (ReadByte(input) != 0);
-                    read = 1;
+                    value = (ReadByte(input) != default(byte));
+                    read = 1L;
                     break;
                 case x:
                     int size = Convert.ToInt32(ReadUInt32(input));
                     value = new BinaryTableValue(ReadMemory(input, size).ToArray());
-                    read = 4 + size;
+                    read = 4L + size;
                     break;
                 case V:
                     value = null;
-                    read = 0;
+                    read = default(long);
                     break;
                 default:
                     throw new SyntaxError("Unrecognised type in table: " + (char)discriminator);

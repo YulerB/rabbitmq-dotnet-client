@@ -49,7 +49,8 @@ namespace RabbitMQ.Client.Impl
 {
     public class FrameBuilder  
     {
-        private long len = 0;
+        private const int ZERO = 0;
+        private long len = default(long);
         private List<ArraySegment<byte>> data;
 
         public FrameBuilder() {
@@ -63,7 +64,7 @@ namespace RabbitMQ.Client.Impl
 
             data = new List<ArraySegment<byte>>
             {
-                new ArraySegment<byte>(bytes, 0, bytes.Length)
+                new ArraySegment<byte>(bytes, ZERO, bytes.Length)
             };
             len += bytes.Length;
         }
@@ -85,7 +86,7 @@ namespace RabbitMQ.Client.Impl
         }
         public void WriteByte(byte buffer)
         {
-            data.Add(new ArraySegment<byte>(new byte[] { buffer }, 0, 1));
+            data.Add(new ArraySegment<byte>(new byte[] { buffer }, ZERO, 1));
             len += 1L;
         }
         internal void WriteSegments(IList<ArraySegment<byte>> content, uint written1)

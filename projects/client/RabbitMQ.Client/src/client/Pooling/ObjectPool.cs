@@ -52,8 +52,8 @@ namespace RabbitMQ.Client.Impl
         {
             return  new DisposableMemoryStreamWrapper(_objects.TryPop(out MemoryStream item) ? item : new MemoryStream(256), e =>
             {
-                e.Position = 0;
-                e.SetLength(0);
+                e.Position = default(long);
+                e.SetLength(default(long));
                 _objects.Push(e);
             });
         }

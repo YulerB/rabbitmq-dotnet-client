@@ -56,6 +56,7 @@ namespace RabbitMQ.Client
     /// </remarks>
     public class AmqpVersion
     {
+        private const int ZERO = 0;
         /// <summary>
         /// Construct an <see cref="AmqpVersion"/> from major and minor version numbers.
         /// </summary>
@@ -64,12 +65,12 @@ namespace RabbitMQ.Client
         /// </remarks>
         public AmqpVersion(int major, int minor)
         {
-            if (major == 8 && minor == 0)
+            if (major == 8 && minor == ZERO)
             {
                 // The AMQP 0-8 spec confusingly defines the version
                 // as 8-0. This maps the latter to the former, for
                 // cases where our peer might be confused.
-                major = 0;
+                major = ZERO;
                 minor = 8;
             }
             Major = major;

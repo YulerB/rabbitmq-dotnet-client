@@ -57,6 +57,7 @@ namespace RabbitMQ.Client
     /// </para>
     public class AmqpTcpEndpoint// : ICloneable
     {
+        private const int ZERO = 0;
         /// <summary>
         /// Default Amqp ssl port.
         /// </summary>
@@ -204,7 +205,7 @@ namespace RabbitMQ.Client
                 if (groups[2].Success)
                 {
                     port = groups[3].Value;
-                    portNumber = (port.Length == 0) ? -1 : int.Parse(port);
+                    portNumber = (port.Length == ZERO) ? -1 : int.Parse(port);
                 }
                 return new AmqpTcpEndpoint(match.Groups[1].Value, portNumber);
             }
@@ -214,7 +215,7 @@ namespace RabbitMQ.Client
                 return new AmqpTcpEndpoint(address);
             }
             port = address.Substring(index + 1).Trim();
-            if (port.Length == 0 )
+            if (port.Length == ZERO)
                 portNumber = -1;
             else
                 if(!int.TryParse(port, out portNumber))
@@ -239,7 +240,7 @@ namespace RabbitMQ.Client
             foreach (string partRaw in partsArr)
             {
                 string part = partRaw.Trim();
-                if (part.Length > 0)
+                if (part.Length > ZERO)
                 {
                     results.Add(Parse(part));
                 }
@@ -284,7 +285,7 @@ namespace RabbitMQ.Client
         /// </remarks>
         public override string ToString()
         {
-            return "amqp://" + HostName + ":" + Port;
+            return Ssl!=null && Ssl.Enabled ? "amqps://" : "amqp://" + HostName + ":" + Port;
         }
     }
 }

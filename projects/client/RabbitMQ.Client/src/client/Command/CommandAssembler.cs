@@ -154,7 +154,7 @@ namespace RabbitMQ.Client.Impl
             m_method = null;
             m_header = null;
             frameBuilder = null;
-            m_remainingBodyBytes = 0;
+            m_remainingBodyBytes = default(ulong);
         }
 
         private void UpdateContentBodyState()

@@ -64,7 +64,7 @@ namespace RabbitMQ.Client.Impl
         public SessionManager(Connection connection, ushort channelMax)
         {
             m_connection = connection;
-            ChannelMax = (channelMax == 0) ? ushort.MaxValue : channelMax;
+            ChannelMax = (channelMax == default(ushort)) ? ushort.MaxValue : channelMax;
             UInts = new UIntAllocator(1, ChannelMax);
         }
 

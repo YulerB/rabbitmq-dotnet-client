@@ -47,6 +47,7 @@ namespace RabbitMQ.Client.Impl
 {
     public static class ExtensionMethods
     {
+        private const int ZERO = 0;
         /// <summary>
         /// Returns a random item from the list.
         /// </summary>
@@ -56,7 +57,7 @@ namespace RabbitMQ.Client.Impl
         public static T RandomItem<T>(this IList<T> list)
         {
             var n = list.Count;
-            if (n == 0)
+            if (n == ZERO)
             {
                 return default(T);
             }
@@ -69,10 +70,10 @@ namespace RabbitMQ.Client.Impl
         {
 #if CORECLR15
             var payload = ms.ToArray();
-            return new ArraySegment<byte>(payload, 0, payload.Length);
+            return new ArraySegment<byte>(payload, ZERO, payload.Length);
 #else
             var buffer = ms.GetBuffer();
-            return new ArraySegment<byte>(buffer, 0, (int)ms.Position);
+            return new ArraySegment<byte>(buffer, ZERO, (int)ms.Position);
 #endif
         }
     }

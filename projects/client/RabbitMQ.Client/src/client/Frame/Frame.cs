@@ -192,7 +192,7 @@ namespace RabbitMQ.Client.Impl
     public static class FrameReader
     {
         private static readonly Protocol m_protocol = new Protocol();
-
+         
         private static void ProcessProtocolHeader(ArraySegmentSequence reader)
         {
             try
@@ -258,7 +258,7 @@ namespace RabbitMQ.Client.Impl
 #endif
             }
 
-            if (type == 'A')
+            if (type == Constants.AMQPFrameBegin )
             {
                 // Probably an AMQP protocol header, otherwise meaningless
                 ProcessProtocolHeader(reader);
@@ -270,18 +270,18 @@ namespace RabbitMQ.Client.Impl
             RabbitMQ.Client.Impl.BasicProperties m_content = null;
             byte[] payload = EmptyByteArray;
             IMethod m_method = null;
-            ulong totalBodyBytes = 0UL;
+            ulong totalBodyBytes = default(ulong);
 
-            if (type == (int)FrameType.FrameMethod)
+            if (type == Constants.FrameMethod)
             {
                 m_method = m_protocol.DecodeMethodFrom(reader);
             }
-            else if (type == (int)FrameType.FrameHeader)
+            else if (type == Constants.FrameHeader)
             {
                 m_content = m_protocol.DecodeContentHeaderFrom(reader);
                 totalBodyBytes = m_content.ReadFrom(reader);
             }
-            else if (type == (int)FrameType.FrameBody)
+            else if (type == Constants.FrameBody)
             {
                 payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
 
@@ -353,7 +353,7 @@ namespace RabbitMQ.Client.Impl
         }
     }
 
-    public enum FrameType : int
+    public enum FrameType : byte
     {
         FrameMethod = 1,
         FrameHeader = 2,

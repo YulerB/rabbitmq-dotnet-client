@@ -43,7 +43,7 @@ using System.IO;
 
 namespace RabbitMQ.Client.Impl
 {
-    public struct DisposableMemoryStreamWrapper : IDisposable
+    public class DisposableMemoryStreamWrapper : IDisposable
     {
         public DisposableMemoryStreamWrapper(MemoryStream instance, Action<MemoryStream> @event)
         {

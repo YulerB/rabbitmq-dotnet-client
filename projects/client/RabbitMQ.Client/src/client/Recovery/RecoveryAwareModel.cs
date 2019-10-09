@@ -48,8 +48,8 @@ namespace RabbitMQ.Client.Impl
     {
         public RecoveryAwareModel(ISession session) : base(session)
         {
-            ActiveDeliveryTagOffset = 0;
-            MaxSeenDeliveryTag = 0;
+            ActiveDeliveryTagOffset = default(ulong);
+            MaxSeenDeliveryTag = default(ulong);
         }
 
         public ulong ActiveDeliveryTagOffset { get; private set; }
@@ -58,7 +58,7 @@ namespace RabbitMQ.Client.Impl
         public void InheritOffsetFrom(RecoveryAwareModel other)
         {
             ActiveDeliveryTagOffset = other.ActiveDeliveryTagOffset + other.MaxSeenDeliveryTag;
-            MaxSeenDeliveryTag = 0;
+            MaxSeenDeliveryTag = default(ulong);
         }
 
         public override void HandleBasicGetOk(BasicGetResult args)
@@ -88,7 +88,7 @@ namespace RabbitMQ.Client.Impl
             bool multiple)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
-            if (realTag > 0 && realTag <= deliveryTag)
+            if (realTag > default(ushort) && realTag <= deliveryTag)
             {
                 base.BasicAck(realTag, multiple);
             }
@@ -97,7 +97,7 @@ namespace RabbitMQ.Client.Impl
         public override void BasicNack(ulong deliveryTag, BasicNackFlags settings)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
-            if (realTag > 0 && realTag <= deliveryTag)
+            if (realTag > default(ushort) && realTag <= deliveryTag)
             {
                 base.BasicNack(realTag, settings);
             }
@@ -107,7 +107,7 @@ namespace RabbitMQ.Client.Impl
             bool requeue)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
-            if (realTag > 0 && realTag <= deliveryTag)
+            if (realTag > default(ushort) && realTag <= deliveryTag)
             {
                 base.BasicReject(realTag, requeue);
             }
