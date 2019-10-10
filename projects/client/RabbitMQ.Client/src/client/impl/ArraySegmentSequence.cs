@@ -50,7 +50,8 @@ namespace RabbitMQ.Client.Impl
     public class ArraySegmentSequence : IDisposable
     {
         public event EventHandler<int> BufferUsed;
-        
+        public event EventHandler<EventArgs> EndOfStreamEvent;
+
         private bool addingComplete=false;
         private ConcurrentQueue<Memory<byte>> data = new ConcurrentQueue<Memory<byte>>();
         private Memory<byte> top = new Memory<byte>();
@@ -149,8 +150,11 @@ namespace RabbitMQ.Client.Impl
                         }
                     }
 
-                    if (top.IsEmpty && addingComplete) throw new EndOfStreamException();
-
+                    if (top.IsEmpty && addingComplete)
+                    {
+                        EndOfStreamEvent?.Invoke(this, EventArgs.Empty);
+                        throw new EndOfStreamException();
+                    }
                     originalSize = top.Length;
                 }
 
@@ -190,7 +194,11 @@ namespace RabbitMQ.Client.Impl
                     if (data.IsEmpty && !addingComplete)
                         SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
 
-                    if (!data.TryDequeue(out top) && addingComplete) throw new EndOfStreamException();
+                    if (!data.TryDequeue(out top) && addingComplete)
+                    {
+                        EndOfStreamEvent?.Invoke(this, EventArgs.Empty);
+                        throw new EndOfStreamException();
+                    }
 
                     originalSize = top.Length;
                 }
@@ -230,7 +238,11 @@ namespace RabbitMQ.Client.Impl
                     if (data.IsEmpty && !addingComplete)
                         SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
 
-                    if (!data.TryDequeue(out top) && addingComplete) throw new EndOfStreamException();
+                    if (!data.TryDequeue(out top) && addingComplete)
+                    {
+                        EndOfStreamEvent?.Invoke(this, EventArgs.Empty);
+                        throw new EndOfStreamException();
+                    }
 
                     originalSize = top.Length;
                 }

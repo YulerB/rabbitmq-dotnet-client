@@ -63,41 +63,6 @@ namespace RabbitMQ.Util
             written = 1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteBits(Span<byte> output, bool[] bits, out int written)
-        {
-            int totalBits = Convert.ToInt32(16D * Math.Ceiling(bits.Length == ZERO ? 1 : bits.Length / 15D));
-            BitArray arr = new BitArray(totalBits);
-            int kick = ZERO;
-            for (int i = ZERO; i < bits.Length; i++)
-            {
-                arr.Set(kick++, bits[i]);
-                if (kick > ZERO && kick % 15 == 0)
-                {
-                    arr.Set(kick++, true);
-                }
-            }
-
-            byte[] bytes = new byte[arr.Count / 8];
-
-            arr.CopyTo(bytes, ZERO);
-
-            for (int i = ZERO; i < bytes.Length; i++)
-            {
-                bytes[i] = Reverse(bytes[i]);
-            }
-
-            bytes.AsSpan().CopyTo(output);
-            written = bytes.Length;
-        }
-        private static byte Reverse(byte b)
-        {
-            int a = ZERO;
-            for (int i = ZERO; i < 8; i++)
-                if ((b & (1 << i)) != ZERO)
-                    a |= 1 << (7 - i);
-            return (byte)a;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(Span<byte> output, byte[] buffer, out int written)
         {
             buffer.AsSpan().CopyTo(output);

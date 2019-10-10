@@ -57,6 +57,7 @@ namespace RabbitMQ.Client.Impl
     public class HyperSocketFrameHandler : IFrameHandler, IDisposable
     {
         private const int ZERO = 0;
+        public event EventHandler<EventArgs> EndOfStreamEvent;
         private readonly HyperSocketFrameSettings settings;
         private ArraySegmentSequence m_stream = new ArraySegmentSequence();
         private IHyperTcpClient m_socket;
@@ -86,6 +87,12 @@ namespace RabbitMQ.Client.Impl
             m_socket.Closed += M_socket_Closed;
             m_stream.BufferUsed += M_stream_BufferUsed;
             m_socket.Receive += M_socket_Receive;
+            m_stream.EndOfStreamEvent += M_stream_EndOfStreamEvent;
+        }
+
+        private void M_stream_EndOfStreamEvent(object sender, EventArgs e)
+        {
+            EndOfStreamEvent?.Invoke(sender, e);
         }
 
         private void M_stream_BufferUsed(object sender, int e)

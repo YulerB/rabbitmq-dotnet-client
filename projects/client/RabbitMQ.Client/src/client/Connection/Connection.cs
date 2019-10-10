@@ -140,7 +140,7 @@ namespace RabbitMQ.Client.Framing.Impl
             FrameMax = UZERO;
             m_factory = factory;
             m_frameHandler = frameHandler;
-
+            m_frameHandler.EndOfStreamEvent += M_frameHandler_EndOfStreamEvent;
             if (factory is IAsyncConnectionFactory asyncConnectionFactory && asyncConnectionFactory.DispatchConsumersAsync)
             {
                 ConsumerWorkService = new AsyncConsumerWorkService();
@@ -156,6 +156,11 @@ namespace RabbitMQ.Client.Framing.Impl
 
             StartMainLoop(factory.UseBackgroundThreadsForIO);
             Open(insist);
+        }
+
+        private void M_frameHandler_EndOfStreamEvent(object sender, EventArgs e)
+        {
+
         }
 
         public Guid Id { get { return m_id; } }
@@ -620,15 +625,13 @@ namespace RabbitMQ.Client.Framing.Impl
                 {
                     while (m_running)
                     {
-                        try
-                        {
-                            MainLoopIteration();
-                        }
-                        catch (SoftProtocolException spe)
-                        {
-                            QuiesceChannel(spe);
-                        }
+                        MainLoopIteration();
                     }
+                    shutdownCleanly = true;
+                }
+                catch (SoftProtocolException spe)
+                {
+                    QuiesceChannel(spe);
                     shutdownCleanly = true;
                 }
                 catch (EndOfStreamException eose)
