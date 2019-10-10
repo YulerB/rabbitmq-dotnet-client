@@ -48,9 +48,9 @@ namespace RabbitMQ.Client.Impl
 {
     public class SimpleBlockingRpcContinuation : IRpcContinuation
     {
-        public readonly TaskCompletionSource<Either<Command<FrameBuilder>, ShutdownEventArgs>> m_cell = new TaskCompletionSource<Either<Command<FrameBuilder>, ShutdownEventArgs>>();
+        public readonly TaskCompletionSource<Either<AssembledCommandBase<FrameBuilder>, ShutdownEventArgs>> m_cell = new TaskCompletionSource<Either<AssembledCommandBase<FrameBuilder>, ShutdownEventArgs>>();
 
-        public virtual Command<FrameBuilder> GetReply(TimeSpan timeout)
+        public virtual AssembledCommandBase<FrameBuilder> GetReply(TimeSpan timeout)
         {
             if (m_cell.Task.Wait(timeout)) {
                 var result = m_cell.Task.Result;
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        private static void ReportInvalidInvariant(Either<Command<FrameBuilder>, ShutdownEventArgs> result)
+        private static void ReportInvalidInvariant(Either<AssembledCommandBase<FrameBuilder>, ShutdownEventArgs> result)
         {
             string error = "Illegal EitherAlternative " + result.Alternative;
 #if !(NETFX_CORE)
@@ -81,14 +81,14 @@ namespace RabbitMQ.Client.Impl
 #endif
         }
 
-        public virtual void HandleCommand(Command<FrameBuilder> cmd)
+        public virtual void HandleCommand(AssembledCommandBase<FrameBuilder> cmd)
         {
-            m_cell.SetResult(Either<Command<FrameBuilder>, ShutdownEventArgs>.Left(cmd));
+            m_cell.SetResult(Either<AssembledCommandBase<FrameBuilder>, ShutdownEventArgs>.Left(cmd));
         }
 
         public virtual void HandleModelShutdown(ShutdownEventArgs reason)
         {
-            m_cell.SetResult(Either<Command<FrameBuilder>, ShutdownEventArgs>.Right(reason));
+            m_cell.SetResult(Either<AssembledCommandBase<FrameBuilder>, ShutdownEventArgs>.Right(reason));
         }
     }
 }

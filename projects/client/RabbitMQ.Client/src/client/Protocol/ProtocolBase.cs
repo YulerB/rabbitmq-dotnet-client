@@ -78,35 +78,21 @@ namespace RabbitMQ.Client.Framing.Impl
             get { return new AmqpVersion(MajorVersion, MinorVersion); }
         }
 
-        public bool CanSendWhileClosed(SendCommand cmd)
+        public bool CanSendWhileClosed<T>(SendCommand<T> cmd) where T: IMethod
         {
             return cmd.Method is Impl.ChannelCloseOk;
         }
 
         public void CreateChannelClose(ushort reasonCode,
             string reasonText,
-            out SendCommand<Impl.ChannelClose> request,
-            out ushort replyClassId,
-            out ushort replyMethodId)
+            out SendCommand<Impl.ChannelClose> request)
         {
-            request = new SendCommand<Impl.ChannelClose>(new Impl.ChannelClose(reasonCode,
-                reasonText,
-                0, 0));
-            replyClassId = Impl.ChannelCloseOk.ClassId;
-            replyMethodId = Impl.ChannelCloseOk.MethodId;
+            request = new SendCommand<Impl.ChannelClose>(new Impl.ChannelClose(reasonCode, reasonText));
         }
 
-        public void CreateConnectionClose(ushort reasonCode,
-            string reasonText,
-            out SendCommand<Impl.ConnectionClose> request,
-            out ushort replyClassId,
-            out ushort replyMethodId)
+        public void CreateConnectionClose(ushort reasonCode, string reasonText, out SendCommand<Impl.ConnectionClose> request)
         {
-            request = new SendCommand<Impl.ConnectionClose>(new Impl.ConnectionClose(reasonCode,
-                reasonText,
-                0, 0));
-            replyClassId = Impl.ConnectionCloseOk.ClassId;
-            replyMethodId = Impl.ConnectionCloseOk.MethodId;
+            request = new SendCommand<Impl.ConnectionClose>(new Impl.ConnectionClose(reasonCode, reasonText));
         }
 
         public abstract RabbitMQ.Client.Impl.BasicProperties DecodeContentHeaderFrom(ArraySegmentSequence reader);

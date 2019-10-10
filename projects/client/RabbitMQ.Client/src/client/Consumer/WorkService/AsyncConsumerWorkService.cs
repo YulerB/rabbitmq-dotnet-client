@@ -83,14 +83,14 @@ namespace RabbitMQ.Client
         #endregion
 
     }
-    public class WorkPool : IDisposable
+    public class TestWorkPool : IDisposable
     {
         private BlockingCollection<Work> workQueue = new BlockingCollection<Work>();
         private CancellationTokenSource tokenSource;
         private ModelBase model;
         private Task task;
 
-        public WorkPool(ModelBase model)
+        public TestWorkPool(ModelBase model)
         {
             this.model = model;
         }
@@ -155,16 +155,16 @@ namespace RabbitMQ.Client
         }
         #endregion
     }
-    public class OldWorkPool
+    public class WorkPool : IDisposable
     {
-        readonly ConcurrentQueue<Work> workQueue;
+        ConcurrentQueue<Work> workQueue;
         readonly TimeSpan waitTime;
-        readonly CancellationTokenSource tokenSource;
-        readonly ModelBase model;
+        CancellationTokenSource tokenSource;
+        ModelBase model;
         TaskCompletionSource<bool> messageArrived;
         private Task task;
 
-        public OldWorkPool(ModelBase model)
+        public WorkPool(ModelBase model)
         {
             this.model = model;
             workQueue = new ConcurrentQueue<Work>();
@@ -204,5 +204,46 @@ namespace RabbitMQ.Client
             tokenSource.Cancel();
             return task;
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.tokenSource.Dispose(); 
+                    // TODO: dispose managed state (managed objects).
+                }
+
+                this.tokenSource = null;
+                this.messageArrived = null;
+                this.task = null;
+                this.model = null;
+                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: set large fields to null.
+
+                disposedValue = true;
+            }
+
+        }
+
+        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // ~WorkPool() {
+        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+        //   Dispose(false);
+        // }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            // GC.SuppressFinalize(this);
+        }
+        #endregion
     }
 }

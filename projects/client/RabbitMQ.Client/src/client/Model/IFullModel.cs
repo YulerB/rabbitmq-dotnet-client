@@ -152,11 +152,7 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Handle an incoming Connection.Start. Used during
         ///connection initialisation.</summary>
-        void HandleConnectionStart(byte versionMajor,
-            byte versionMinor,
-            IDictionary<string, object> serverProperties,
-            string mechanisms,
-            string locales);
+        void HandleConnectionStart(ConnectionStart connectionStart );
 
         ///<summary>Handle incoming Connection.Tune
         ///methods.</summary>

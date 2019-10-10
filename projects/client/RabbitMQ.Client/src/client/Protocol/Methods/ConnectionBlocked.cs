@@ -86,7 +86,7 @@ namespace RabbitMQ.Client.Framing.Impl
             return 7 +
                 System.Text.Encoding.UTF8.GetByteCount(m_reason);
         }
-        public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
+        public bool CompareClassAndMethod(int classId, int methodId){return ClassId == classId && MethodId == methodId;}  public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             sb.Append(m_reason);

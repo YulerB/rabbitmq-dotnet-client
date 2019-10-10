@@ -76,6 +76,12 @@ namespace RabbitMQ.Client.Framing.Impl
             m_methodId = initMethodId;
         }
 
+        public ConnectionClose(ushort initReplyCode, string initReplyText)
+        {
+            m_replyCode = initReplyCode;
+            m_replyText = initReplyText;
+        }
+
         public ushort ProtocolClassId { get { return 10; } }
         public ushort ProtocolMethodId { get { return 50; } }
         public string ProtocolMethodName { get { return "connection.close"; } }
@@ -104,7 +110,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 System.Text.Encoding.UTF8.GetByteCount(m_replyText );
         }
 
-        public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
+        public bool CompareClassAndMethod(int classId, int methodId){return ClassId == classId && MethodId == methodId;}  public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             sb.Append(m_replyCode); sb.Append(",");

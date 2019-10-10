@@ -53,20 +53,11 @@ namespace RabbitMQ.Client.Impl
     public class MainSession : Session
     {
         private readonly object _closingLock = new object();
-
-        private readonly ushort m_closeClassId;
-        private readonly ushort m_closeMethodId;
-        private readonly ushort m_closeOkClassId;
-        private readonly ushort m_closeOkMethodId;
-
         private bool m_closeServerInitiated;
         private bool m_closing;
 
         public MainSession(Connection connection) : base(connection, 0)
         {
-            connection.Protocol.CreateConnectionClose(0, string.Empty, out SendCommand<ConnectionClose> request, out m_closeOkClassId, out m_closeOkMethodId);
-            m_closeClassId = request.Method.ProtocolClassId;
-            m_closeMethodId = request.Method.ProtocolMethodId;
         }
 
         public Action Handler { get; set; }
@@ -84,13 +75,13 @@ namespace RabbitMQ.Client.Impl
 
             if (!m_closeServerInitiated && frame.IsMethod())
             {
-                if (frame.IsMethodClassAndMethodSame(m_closeClassId, m_closeMethodId))	
+                if (frame.Method is ConnectionClose)	
                 {
                     base.HandleFrame(frame);
-                    return; 
+                    return;
                 }
-                
-                if (frame.IsMethodClassAndMethodSame( m_closeOkClassId, m_closeOkMethodId))	
+
+                if (frame.Method is ConnectionCloseOk)
                 {
                     // This is the reply (CloseOk) we were looking for
                     // Call any listener attached to this session
@@ -120,7 +111,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public override void Transmit(SendCommand cmd)
+        public override void Transmit<T>(SendCommand<T> cmd)
         {
             lock (_closingLock)
             {
@@ -134,12 +125,7 @@ namespace RabbitMQ.Client.Impl
             // Allow always for sending close ok
             // Or if application initiated, allow also for sending close
             IMethod method = cmd.Method;
-            if (((method.ProtocolClassId == m_closeOkClassId)
-                 && (method.ProtocolMethodId == m_closeOkMethodId))
-                || (!m_closeServerInitiated && (
-                    (method.ProtocolClassId == m_closeClassId) &&
-                    (method.ProtocolMethodId == m_closeMethodId))
-                    ))
+            if ((!m_closeServerInitiated && method is ConnectionClose) || method is ConnectionCloseOk)
             {
                 base.Transmit(cmd);
             }

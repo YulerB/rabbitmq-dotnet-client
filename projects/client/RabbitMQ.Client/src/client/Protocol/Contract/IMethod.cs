@@ -83,5 +83,7 @@ namespace RabbitMQ.Client
         void ReadArgumentsFrom(ArraySegmentSequence reader);
         void WriteArgumentsTo(Span<byte> writer, out int written);
         int EstimateSize();
+
+        bool CompareClassAndMethod(int classId, int methodId);
     }
 }

@@ -52,10 +52,7 @@ namespace RabbitMQ.Client.Impl
     {
         public ShutdownEventArgs m_reason;
 
-        public QuiescingSession(Connection connection,
-            ushort channelNumber,
-            ShutdownEventArgs reason)
-            : base(connection, channelNumber)
+        public QuiescingSession(Connection connection, ushort channelNumber, ShutdownEventArgs reason) : base(connection, channelNumber)
         {
             m_reason = reason;
         }
@@ -64,18 +61,17 @@ namespace RabbitMQ.Client.Impl
         {
             if (frame.IsMethod())
             {
-                //IMethod method = Connection.Protocol.DecodeMethodFrom(frame.GetReader());
-                if (frame.IsChannelCloseOkMethod())	
+                var method = frame.Method;
+                if (method is ChannelClose)
                 {
-                    {
-                        // This is the reply we were looking for. Release	                    // This is the reply we were looking for. Release
-                        // the channel with the reason we were passed in	                    // the channel with the reason we were passed in
-                        // our constructor.	                    // our constructor.
-                        Close(m_reason); Close(m_reason);
-                    }
+                    // This is the reply we were looking for. Release	                    // This is the reply we were looking for. Release
+                    // the channel with the reason we were passed in	                    // the channel with the reason we were passed in
+                    // our constructor.	                    
+                    Close(m_reason);
                 }
-                else if (frame.IsChannelCloseMethod())	
-                {                    // We're already shutting down the channel, so
+                else if (method is ChannelCloseOk)
+                {                   
+                    // We're already shutting down the channel, so
                     // just send back an ok.
                     Transmit(CreateChannelCloseOk());
                 }

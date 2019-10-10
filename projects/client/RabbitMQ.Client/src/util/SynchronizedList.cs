@@ -73,7 +73,7 @@ namespace RabbitMQ.Util
         public bool IsEmpty()
         {
             lock (root)
-                return list.Count== ZERO;
+                return list.Count == ZERO;
         }
         public bool IsReadOnly
         {

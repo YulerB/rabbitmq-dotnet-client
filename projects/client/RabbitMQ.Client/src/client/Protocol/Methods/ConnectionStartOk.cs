@@ -106,7 +106,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 System.Text.Encoding.UTF8.GetByteCount(m_locale) +
                 NetworkBinaryWriter1.EstimateTableSize(m_clientProperties);
         }
-        public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
+        public bool CompareClassAndMethod(int classId, int methodId){return ClassId == classId && MethodId == methodId;}  public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             sb.Append(m_clientProperties); sb.Append(",");

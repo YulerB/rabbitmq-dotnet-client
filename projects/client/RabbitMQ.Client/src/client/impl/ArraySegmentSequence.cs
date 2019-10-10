@@ -50,12 +50,14 @@ namespace RabbitMQ.Client.Impl
     public class ArraySegmentSequence : IDisposable
     {
         public event EventHandler<int> BufferUsed;
-
+        
         private bool addingComplete=false;
         private ConcurrentQueue<Memory<byte>> data = new ConcurrentQueue<Memory<byte>>();
         private Memory<byte> top = new Memory<byte>();
         private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private const int ZERO = 0;
+        private const long LZERO = 0L;
+        private long length = LZERO;
         private int originalSize = ZERO;
         private readonly List<Memory<byte>> result = new List<Memory<byte>>(10);
 
@@ -74,6 +76,63 @@ namespace RabbitMQ.Client.Impl
         }
         public ArraySegmentSequence() { }
         #endregion
+
+        public bool Peek(int count, out byte[] peeked)
+        {
+            if (count == ZERO)
+            {
+                peeked = new byte[ZERO];
+                return true;
+            }
+            if (count > length)
+            {
+                peeked = new byte[ZERO];
+                return false;
+            }
+
+            peeked = new byte[count];
+            int i = ZERO;
+            if (top.Length > ZERO)
+            {
+                int diff = Math.Min(top.Length, count);
+                top.Slice(ZERO, diff).CopyTo(peeked);
+                count -= diff;
+                i += diff;
+
+                if (count == ZERO) return true;
+            }
+
+            if (data.TryPeek(out Memory<byte> p))
+            {
+                int diff = Math.Min(p.Length, count);
+                p.Slice(ZERO, diff).CopyTo(peeked.AsMemory().Slice(i));
+                count -= diff;
+                i += diff;
+
+                if (count == ZERO) return true;
+            }
+            else
+            {
+                return false;
+            }
+
+            var contents = data.ToArray();
+            if (contents.Length > 1)
+            {
+                for (int j = 1; j < data.Count; j++)
+                {
+                    int diff = Math.Min(contents[j].Length, count);
+                    contents[j].Slice(ZERO, diff).CopyTo(peeked.AsMemory().Slice(i));
+                    count -= diff;
+                    i += diff;
+
+                    if (count == ZERO) return true;
+                }
+            }
+
+            return false;
+        }
+        public long Length => length;
 
         public List<Memory<byte>> ReadNotExpecting(int count)
         {
@@ -99,6 +158,7 @@ namespace RabbitMQ.Client.Impl
                 {
                     result.Add(top.Slice(ZERO, count));
                     top = top.Slice(count, top.Length - count);
+                    Interlocked.Add(ref length, -count);
                     return result;
                 }
                 else if (top.Length == count)
@@ -106,6 +166,7 @@ namespace RabbitMQ.Client.Impl
                     result.Add(top.Slice(ZERO, top.Length));
                     top = empty;
                     BufferUsed?.Invoke(this, originalSize);
+                    Interlocked.Add(ref length, -count);
                     return result;
                 }
                 else
@@ -113,6 +174,7 @@ namespace RabbitMQ.Client.Impl
                     result.Add(top.Slice(ZERO, top.Length));
                     count -= top.Length;
                     top = empty;
+                    Interlocked.Add(ref length, -top.Length);
                     BufferUsed?.Invoke(this, originalSize);
                 }
             }
@@ -137,6 +199,7 @@ namespace RabbitMQ.Client.Impl
                 {
                     result.Add(top.Slice(ZERO, count));
                     top = top.Slice(count, top.Length - count);
+                    Interlocked.Add(ref length, -count);
                     return result;
                 }
                 else if (top.Length == count)
@@ -144,6 +207,7 @@ namespace RabbitMQ.Client.Impl
                     result.Add(top.Slice(ZERO, top.Length));
                     top = empty;
                     BufferUsed?.Invoke(this, originalSize);
+                    Interlocked.Add(ref length, -count);
                     return result;
                 }
                 else
@@ -152,9 +216,46 @@ namespace RabbitMQ.Client.Impl
                     count -= top.Length;
                     top = empty;
                     BufferUsed?.Invoke(this, originalSize);
+                    Interlocked.Add(ref length, -top.Length);
                 }
             }
             return result;
+        }
+        public void Skip(int count)
+        {
+            while (count > ZERO)
+            {
+                if (top.IsEmpty)
+                {
+                    if (data.IsEmpty && !addingComplete)
+                        SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
+
+                    if (!data.TryDequeue(out top) && addingComplete) throw new EndOfStreamException();
+
+                    originalSize = top.Length;
+                }
+
+                if (top.Length > count)
+                {
+                    top = top.Slice(count, top.Length - count);
+                    Interlocked.Add(ref length, -count);
+                    return;
+                }
+                else if (top.Length == count)
+                {
+                    top = empty;
+                    BufferUsed?.Invoke(this, originalSize);
+                    Interlocked.Add(ref length, -count);
+                    return;
+                }
+                else
+                {
+                    count -= top.Length;
+                    top = empty;
+                    BufferUsed?.Invoke(this, originalSize);
+                    Interlocked.Add(ref length, -top.Length);
+                }
+            }
         }
         public void Write(Memory<byte> buffer)
         {
@@ -163,6 +264,7 @@ namespace RabbitMQ.Client.Impl
                 lock (data)
                 {
                     data.Enqueue(buffer);
+                    Interlocked.Add(ref length , buffer.Length);
                     // If the consumer thread is waiting for an item
                     // to be added to the queue, this will move it
                     // to a waiting list, to resume execution

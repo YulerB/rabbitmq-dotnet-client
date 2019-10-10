@@ -55,10 +55,9 @@ namespace RabbitMQ.Client.Events
         private Task Raise<TEvent>(AsyncEventHandler<TEvent> eventHandler, TEvent evt) 
             where TEvent : EventArgs
         {
-            var handler = eventHandler;
-            if (handler != null)
+            if (eventHandler != null)
             {
-                return handler(this, evt);
+                return eventHandler(this, evt);
             }
             return TaskExtensions.CompletedTask;
         }

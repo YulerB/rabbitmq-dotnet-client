@@ -141,9 +141,9 @@ namespace RabbitMQ.Client.Impl
         }
 
 
-        private static readonly byte[] amqp = Encoding.ASCII.GetBytes("AMQP");
         public void SendHeader()
         {
+            byte[] amqp = Encoding.ASCII.GetBytes("AMQP");
             var prot = settings.Endpoint.Protocol;
             byte[] header = prot.Revision != 0 ?
                     new byte[8] { amqp[0], amqp[1], amqp[2], amqp[3], (byte)0, (byte)prot.MajorVersion, (byte)prot.MinorVersion, (byte)prot.Revision }
@@ -158,9 +158,10 @@ namespace RabbitMQ.Client.Impl
             var size = frame.EstimatedSize();
             using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
             {
-                Span<byte> buffer = byteBuffer.Memory.Span;
+                var mem = byteBuffer.Memory;
+                Span<byte> buffer = mem.Span;
                 frame.WriteTo(buffer, out int written);
-                m_socket.Write(new ArraySegment<byte>(byteBuffer.Memory.ToArray(), 0, written));
+                m_socket.Write(new ArraySegment<byte>(mem.ToArray(), 0, written));
             }
         }
         public void WriteFrameSet(IList<OutboundFrame> frames)
@@ -169,14 +170,15 @@ namespace RabbitMQ.Client.Impl
             foreach (var frame in frames) size += frame.EstimatedSize();
             using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
             {
-                Span<byte> buffer = byteBuffer.Memory.Span;
+                var mem = byteBuffer.Memory;
+                Span<byte> buffer = mem.Span;
                 var total = ZERO;
                 foreach (var f in frames)
                 {
                     f.WriteTo(buffer.Slice(total), out int written);
                     total += written;
                 }
-                m_socket.Write(new ArraySegment<byte>(byteBuffer.Memory.ToArray(), 0, total));
+                m_socket.Write(new ArraySegment<byte>(mem.ToArray(), 0, total));
             }
         }
 

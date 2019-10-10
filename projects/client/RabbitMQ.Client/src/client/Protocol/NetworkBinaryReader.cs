@@ -58,6 +58,7 @@ namespace RabbitMQ.Util
             var data = input.Read(1);
             return data[ZERO].Span[ZERO];
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ReadFirstByte(this ArraySegmentSequence input)
         {
             var data = input.ReadNotExpecting(1);
@@ -149,6 +150,11 @@ namespace RabbitMQ.Util
             };
 
             return BinaryPrimitives.ReadUInt16BigEndian(bytes);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SkipUInt16(this ArraySegmentSequence input)
+        {
+            input.Skip(2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint ReadUInt32(this ArraySegmentSequence input)
@@ -397,6 +403,8 @@ namespace RabbitMQ.Util
 
         private const uint UZERO = 0U;
         private const int ZERO = 0;
+        private const long LZERO = 0L;
+        private const byte BZERO = default(byte);
         private const byte S = 83;
         private const byte T = 84;
         private const byte I = 73;
@@ -411,6 +419,7 @@ namespace RabbitMQ.Util
         private const byte s = 115;
         private const byte t = 116;
         private const byte x = 120;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object ReadFieldValue(this ArraySegmentSequence input, out long read)
         {
@@ -460,7 +469,7 @@ namespace RabbitMQ.Util
                     read = 2L;
                     break;
                 case t:
-                    value = (ReadByte(input) != default(byte));
+                    value = (ReadByte(input) != BZERO);
                     read = 1L;
                     break;
                 case x:
@@ -470,7 +479,7 @@ namespace RabbitMQ.Util
                     break;
                 case V:
                     value = null;
-                    read = default(long);
+                    read = LZERO;
                     break;
                 default:
                     throw new SyntaxError("Unrecognised type in table: " + (char)discriminator);

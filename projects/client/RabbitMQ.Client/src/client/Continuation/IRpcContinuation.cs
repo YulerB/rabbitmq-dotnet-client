@@ -44,10 +44,10 @@ namespace RabbitMQ.Client.Impl
 {
     public interface IRpcContinuation
     {
-        void HandleCommand(Command<FrameBuilder> cmd);
+        void HandleCommand(AssembledCommandBase<FrameBuilder> cmd);
         void HandleModelShutdown(ShutdownEventArgs reason);
     }
-    public interface IRpcContinuation<R> where R: Command<FrameBuilder>
+    public interface IRpcContinuation<R> where R: AssembledCommandBase<FrameBuilder>
     {
         void HandleCommand(R cmd);
         void HandleModelShutdown(ShutdownEventArgs reason);

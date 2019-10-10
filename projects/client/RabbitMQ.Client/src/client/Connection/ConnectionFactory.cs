@@ -344,8 +344,7 @@ namespace RabbitMQ.Client
             // Our list is in order of preference, the server one is not.
             foreach (IAuthMechanismFactory factory in AuthMechanisms)
             {
-                var factoryName = factory.Name;
-                if (mechanismNames.Any<string>(x => string.Equals(x, factoryName, StringComparison.OrdinalIgnoreCase)))
+                if (mechanismNames.Any<string>(x => string.Equals(x, factory.Name, StringComparison.OrdinalIgnoreCase)))
                 {
                     return factory;
                 }
@@ -426,8 +425,7 @@ namespace RabbitMQ.Client
         /// </exception>
         public IConnection CreateConnection(IList<string> hostnames, String clientProvidedName)
         {
-            var endpoints = hostnames.Select(h => new AmqpTcpEndpoint(h, this.Port, this.Ssl));
-            return CreateConnection(new DefaultEndpointResolver(endpoints), clientProvidedName);
+            return CreateConnection(new DefaultEndpointResolver(hostnames.Select(h => new AmqpTcpEndpoint(h, this.Port, this.Ssl))), clientProvidedName);
         }
 
         /// <summary>
@@ -477,8 +475,7 @@ namespace RabbitMQ.Client
                 }
                 else
                 {
-                    IProtocol protocol = Protocols.DefaultProtocol;
-                    conn = protocol.CreateConnection(this, false, endpointResolver.SelectOne(this.CreateHyperFrameHandler), clientProvidedName);
+                    conn = Protocols.DefaultProtocol.CreateConnection(this, false, endpointResolver.SelectOne(this.CreateHyperFrameHandler), clientProvidedName);
                 }
             }
             catch (Exception e)

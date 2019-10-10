@@ -140,11 +140,11 @@ namespace RabbitMQ.Client.Impl
             lock (m_sessionMap)
             {
                 ushort? channelNumber = UInts.Allocate();
-                if (!channelNumber.HasValue)
+                if (channelNumber.HasValue)
                 {
-                    throw new ChannelAllocationException();
+                    return CreateInternal(channelNumber.Value);
                 }
-                return CreateInternal(channelNumber.Value);
+                throw new ChannelAllocationException();
             }
         }
 
@@ -152,11 +152,11 @@ namespace RabbitMQ.Client.Impl
         {
             lock (m_sessionMap)
             {
-                if (!UInts.Reserve(channelNumber))
+                if (UInts.Reserve(channelNumber))
                 {
-                    throw new ChannelAllocationException(channelNumber);
+                    return CreateInternal(channelNumber);
                 }
-                return CreateInternal(channelNumber);
+                throw new ChannelAllocationException(channelNumber);
             }
         }
 

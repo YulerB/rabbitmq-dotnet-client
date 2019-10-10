@@ -47,7 +47,7 @@ namespace RabbitMQ.Client.Impl
 
     public class BasicPublishBatch : IBasicPublishBatch
     {
-        private readonly List<SendCommand> commands = new List<SendCommand>();
+        private readonly List<SendCommand<BasicPublish>> commands = new List<SendCommand<BasicPublish>>();
         private readonly ModelBase model;
         internal BasicPublishBatch (ModelBase model)
         {
@@ -57,7 +57,7 @@ namespace RabbitMQ.Client.Impl
         public void Add(string exchange, string routingKey, bool mandatory, RabbitMQ.Client.Impl.BasicProperties basicProperties, byte[] body)
         {
             commands.Add(
-                new SendCommand(
+                new SendCommand<BasicPublish>(
                     new BasicPublish(0, exchange, routingKey, mandatory ? BasicPublishFlags.Mandatory : BasicPublishFlags.None), 
                     basicProperties ?? model.CreateBasicProperties(), 
                     body

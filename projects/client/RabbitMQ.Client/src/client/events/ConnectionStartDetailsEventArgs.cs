@@ -66,5 +66,13 @@ namespace RabbitMQ.Client.Impl
         public IDictionary<string, object> ServerProperties { get; private set; }
         public byte VersionMajor { get; private set; }
         public byte VersionMinor { get; private set; }
+
+        public AmqpVersion Version
+        {
+            get
+            {
+                return new AmqpVersion(VersionMajor, VersionMinor);
+            }
+        }
     }
 }

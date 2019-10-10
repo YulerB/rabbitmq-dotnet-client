@@ -94,7 +94,7 @@ namespace RabbitMQ.Client.Impl
 
         public ushort ChannelNumber { get; private set; }
         public ShutdownEventArgs CloseReason { get; set; }
-        public Action<ISession, Command<FrameBuilder>> CommandReceived { get; set; }
+        public Action<ISession, AssembledCommandBase<FrameBuilder>> CommandReceived { get; set; }
         public Connection Connection { get; private set; }
 
         public bool IsOpen
@@ -107,7 +107,7 @@ namespace RabbitMQ.Client.Impl
             get { return Connection; }
         }
 
-        public virtual void OnCommandReceived(Command<FrameBuilder> cmd)
+        public virtual void OnCommandReceived(AssembledCommandBase<FrameBuilder> cmd)
         {
             CommandReceived?.Invoke(this, cmd);
         }
@@ -176,7 +176,7 @@ namespace RabbitMQ.Client.Impl
             OnSessionShutdown(CloseReason);
         }
 
-        public virtual void Transmit(SendCommand cmd)
+        public virtual void Transmit<T>(SendCommand<T> cmd) where T: IMethod
         {
             if (CloseReason != null)
             {
@@ -195,7 +195,7 @@ namespace RabbitMQ.Client.Impl
             // of frames within a channel.  But that is fixed in socket frame handler instead, so no need to lock.
             cmd.Transmit(ChannelNumber, Connection);
         }
-        public virtual void Transmit(IList<SendCommand> commands)
+        public virtual void Transmit<T>(IList<SendCommand<T>> commands) where T: IMethod
         {
             Connection.WriteFrameSet(CommandHelpers.CalculateFrames(ChannelNumber, Connection, commands));
         }

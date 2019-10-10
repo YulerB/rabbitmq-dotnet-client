@@ -76,7 +76,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             return ZERO;
         }
-        public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
+        public bool CompareClassAndMethod(int classId, int methodId){return ClassId == classId && MethodId == methodId;}  public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             sb.Append(")");

@@ -58,7 +58,7 @@ namespace RabbitMQ.Client.Impl
         ///<summary>
         /// Single recipient - no need for multiple handlers to be informed of arriving commands.
         ///</summary>
-        Action<ISession, Command<FrameBuilder>> CommandReceived { get; set; }
+        Action<ISession, AssembledCommandBase<FrameBuilder>> CommandReceived { get; set; }
 
         /// <summary>
         /// Gets the connection.
@@ -79,7 +79,7 @@ namespace RabbitMQ.Client.Impl
         void Close(ShutdownEventArgs reason, bool notify);
         void HandleFrame(InboundFrame frame);
         void Notify();
-        void Transmit(SendCommand cmd);
-        void Transmit(IList<SendCommand> cmd);
+        void Transmit<T>(SendCommand<T> cmd) where T: IMethod;
+        void Transmit<T>(IList<SendCommand<T>> cmd) where T: IMethod;
     }
 }

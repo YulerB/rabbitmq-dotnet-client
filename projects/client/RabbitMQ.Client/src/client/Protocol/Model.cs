@@ -62,10 +62,6 @@ namespace RabbitMQ.Client.Framing.Impl
             ModelSend(new BasicCancel(consumerTag, nowait));
         }
         public override void _Private_BasicConsume(BasicConsume args)
-          //string @queue,
-          //string @consumerTag,
-          //BasicConsumeFlags settings ,
-          //System.Collections.Generic.IDictionary<string, object> @arguments)
         {
             ModelSend(args);
         }
@@ -75,19 +71,8 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             ModelSend(new BasicGet(0, queue, autoAck));
         }
-        public override void _Private_BasicPublish(
-            BasicPublishFull args
-
-
-          //  string @exchange,
-          //string @routingKey,
-          //bool @mandatory,
-          //RabbitMQ.Client.IBasicProperties @basicProperties,
-          //byte[] @body
-            
-            )
+        public override void _Private_BasicPublish(BasicPublishFull args)
         {
-            //new BasicPublish(0, exchange, routingKey, mandatory ? BasicPublishFlags.Mandatory : BasicPublishFlags.None), (RabbitMQ.Client.Impl.BasicProperties)basicProperties, body
             ModelSend(args.PublishMethod, args.BasicProperties , args.Body);
         }
         public override void _Private_BasicRecover(bool @requeue)
@@ -323,9 +308,9 @@ namespace RabbitMQ.Client.Framing.Impl
                 throw new UnexpectedMethodException(__repBase);
             }
         }
-        public override bool DispatchAsynchronous(RabbitMQ.Client.Impl.Command<FrameBuilder> cmd)
+        public override bool DispatchAsynchronous(RabbitMQ.Client.Impl.AssembledCommandBase<FrameBuilder> cmd)
         {
-            IMethod __method = (IMethod)cmd.Method;
+            IMethod __method = cmd.Method;
             switch ((__method.ProtocolClassId << 16) | __method.ProtocolMethodId)
             {
                 case 3932240:
@@ -459,11 +444,7 @@ namespace RabbitMQ.Client.Framing.Impl
                     {
                         ConnectionStart __impl = (ConnectionStart)__method;
                         HandleConnectionStart(
-                          __impl.VersionMajor,
-                          __impl.VersionMinor,
-                          __impl.ServerProperties,
-                          __impl.Mechanisms,
-                          __impl.Locales);
+                          __impl);
                         return true;
                     }
                 case 655390:

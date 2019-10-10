@@ -320,19 +320,12 @@ namespace RabbitMQ.Client.Impl
         ///</summary>
         public ulong ReadFrom(ArraySegmentSequence stream)
         {
-            stream.ReadUInt16(); // weight - not currently used
+            stream.SkipUInt16(); // weight - not currently used
             ulong bodySize = stream.ReadUInt64();
             ReadPropertiesFrom(stream);
             return bodySize;
         }
-
-        //public void WriteTo(FrameBuilder writer, ulong bodySize)
-        //{
-        //    writer.WriteUInt16(ZERO); // weight - not currently used
-        //    writer.WriteUInt64(bodySize);
-        //    WritePropertiesTo(writer);
-        //}
-
+        
         public void WriteTo(Span<byte> writer, ulong bodySize, out int written)
         {
             NetworkBinaryWriter1.WriteUInt16(writer, ZERO, out int written1); // weight - not currently used

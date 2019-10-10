@@ -305,7 +305,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public bool DispatchAsynchronous(Command<FrameBuilder> cmd)
+        public bool DispatchAsynchronous(AssembledCommandBase<FrameBuilder> cmd)
         {
             return m_delegate.DispatchAsynchronous(cmd);
         }
@@ -315,7 +315,7 @@ namespace RabbitMQ.Client.Impl
             m_delegate.FinishClose();
         }
 
-        public void HandleCommand(ISession session, Command<FrameBuilder> cmd)
+        public void HandleCommand(ISession session, AssembledCommandBase<FrameBuilder> cmd)
         {
             m_delegate.HandleCommand(session, cmd);
         }
@@ -504,14 +504,9 @@ namespace RabbitMQ.Client.Impl
             m_delegate.HandleConnectionSecure(challenge);
         }
 
-        public void HandleConnectionStart(byte versionMajor,
-            byte versionMinor,
-            IDictionary<string, object> serverProperties,
-           string  mechanisms,
-           string locales)
+        public void HandleConnectionStart(ConnectionStart connectionStart)
         {
-            m_delegate.HandleConnectionStart(versionMajor, versionMinor, serverProperties,
-                mechanisms, locales);
+            m_delegate.HandleConnectionStart(connectionStart);
         }
 
         public void HandleConnectionTune(ConnectionTuneDetails args)

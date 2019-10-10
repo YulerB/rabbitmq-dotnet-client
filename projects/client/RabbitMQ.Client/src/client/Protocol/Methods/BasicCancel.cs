@@ -93,7 +93,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 System.Text.Encoding.UTF8.GetByteCount(m_consumerTag );
         }
 
-        public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
+        public bool CompareClassAndMethod(int classId, int methodId){return ClassId == classId && MethodId == methodId;}  public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             sb.Append(m_consumerTag); sb.Append(",");

@@ -65,8 +65,20 @@ namespace RabbitMQ.Client.Impl
 
         ///<summary>Only used to kick-start a connection open
         ///sequence. See <see cref="Connection.Open"/> </summary>
-        public TaskCompletionSource<ConnectionStartDetailsEventArgs> m_connectionStartCell = null;
+        private TaskCompletionSource<ConnectionStart> m_connectionStartCell = null;
 
+        public void CreateConnectionStart()
+        {
+            m_connectionStartCell = new TaskCompletionSource<ConnectionStart>();
+        }
+        public ConnectionStart WaitForConnection()
+        {
+            m_connectionStartCell.Task.Wait();
+            var cs = m_connectionStartCell.Task.Result;
+            m_connectionStartCell = null;
+
+            return cs;
+        }
         private TimeSpan m_handshakeContinuationTimeout = TimeSpan.FromSeconds(10);
         private TimeSpan m_continuationTimeout = TimeSpan.FromSeconds(20);
 
@@ -296,11 +308,6 @@ namespace RabbitMQ.Client.Impl
 
         public ShutdownEventArgs CloseReason { get; private set; }
 
-        public bool HasCloseReason()
-        {
-            return CloseReason != null;
-        }
-
         public IBasicConsumer DefaultConsumer { get; set; }
 
         public bool IsClosed
@@ -428,7 +435,7 @@ namespace RabbitMQ.Client.Impl
             return k.m_result;
         }
 
-        public abstract bool DispatchAsynchronous(Command<FrameBuilder> cmd);
+        public abstract bool DispatchAsynchronous(AssembledCommandBase<FrameBuilder> cmd);
 
         public void Enqueue(IRpcContinuation k)
         {
@@ -462,47 +469,39 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public void HandleCommand(ISession session, Command<FrameBuilder> cmd)
+        public void HandleCommand(ISession session, AssembledCommandBase<FrameBuilder> cmd)
         {
             if (!DispatchAsynchronous(cmd))// Was asynchronous. Already processed. No need to process further.
                 m_continuationQueue.Next().HandleCommand(cmd);
         }
 
-        //public IMethod ModelRpc(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
-        //{
-        //    var k = new SimpleBlockingRpcContinuation();
-        //    lock(_rpcLock)
-        //    {
-        //        TransmitAndEnqueue(new Command(method, header,new FrameBuilder(body)), k);
-        //        return k.GetReply(this.ContinuationTimeout).Method;
-        //    }
-        //}
-        public IMethod ModelRpc(IMethod method)
+        public IMethod ModelRpc<T>(T method) 
+            where T: IMethod
         {
             var k = new SimpleBlockingRpcContinuation();
             lock (_rpcLock)
             {
-                TransmitAndEnqueue(new SendCommand(method), k);
+                TransmitAndEnqueue(new SendCommand<T>(method), k);
                 return k.GetReply(this.ContinuationTimeout).Method;
             }
         }
 
-        public void ModelSend(IMethod method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body)
+        public void ModelSend<T>(T method, RabbitMQ.Client.Impl.BasicProperties header, byte[] body) where T: IMethod
         {
             if (method.HasContent)
             {
                 m_flowControlBlock.WaitOne();
             }
-            Session.Transmit(new SendCommand(method, header, body));
+            Session.Transmit(new SendCommand<T>(method, header, body));
         }
 
-        public void ModelSend(IMethod method)
+        public void ModelSend<T>(T method) where T : IMethod
         {
             if (method.HasContent)
             {
                 m_flowControlBlock.WaitOne();
             }
-            Session.Transmit(new SendCommand(method));
+            Session.Transmit(new SendCommand<T>(method));
         }
 
         public virtual void OnBasicAck(BasicAckEventArgs args)
@@ -733,7 +732,7 @@ namespace RabbitMQ.Client.Impl
             return Session.ToString();
         }
 
-        public void TransmitAndEnqueue(SendCommand cmd, IRpcContinuation k)
+        public void TransmitAndEnqueue<T>(SendCommand<T> cmd, IRpcContinuation k) where T: IMethod
         {
             Enqueue(k);
             Session.Transmit(cmd);
@@ -978,11 +977,7 @@ namespace RabbitMQ.Client.Impl
             k.HandleCommand(null); // release the continuation.
         }
 
-        public void HandleConnectionStart(byte versionMajor,
-            byte versionMinor,
-            IDictionary<string, object> serverProperties,
-            string mechanisms,
-            string locales)
+        public void HandleConnectionStart(ConnectionStart connectionStart)
         {
             if (m_connectionStartCell == null)
             {
@@ -992,9 +987,7 @@ namespace RabbitMQ.Client.Impl
                         "Unexpected Connection.Start");
                 ((Connection)Session.Connection).Close(reason);
             }
-            var details = new ConnectionStartDetailsEventArgs(versionMajor,versionMinor,serverProperties,mechanisms,locales);
-            m_connectionStartCell.SetResult(details);
-            m_connectionStartCell = null;
+            m_connectionStartCell.SetResult(connectionStart);
         }
 
         ///<summary>Handle incoming Connection.Tune
@@ -1494,7 +1487,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        internal void SendCommands(IList<SendCommand> commands)
+        internal void SendCommands<T>(IList<SendCommand<T>> commands) where T: IMethod
         {
             m_flowControlBlock.WaitOne();
             AllocatatePublishSeqNos(commands.Count);

@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Impl
             Reset();
         }
 
-        public bool HandleFrame(InboundFrame f, out Command<FrameBuilder> result)
+        public bool HandleFrame(InboundFrame f, out AssembledCommandBase<FrameBuilder> result)
         {
             switch (m_state)
             {
@@ -82,7 +82,7 @@ namespace RabbitMQ.Client.Impl
                             throw new UnexpectedFrameException(f);
                         }
                         m_method = f.Method;
-                        m_state = f.Method.HasContent ? AssemblyState.ExpectingContentHeader : AssemblyState.Complete;
+                        m_state = m_method.HasContent ? AssemblyState.ExpectingContentHeader : AssemblyState.Complete;
                         result = CompletedCommand();
                         return result != null;
                     }
@@ -108,23 +108,24 @@ namespace RabbitMQ.Client.Impl
                         {
                             throw new UnexpectedFrameException(f);
                         }
-                        if ((ulong)f.Payload.Length > m_remainingBodyBytes)
+                        var payloadLength = f.Payload.Length;
+                        if ((ulong)payloadLength > m_remainingBodyBytes)
                         {
                             throw new MalformedFrameException
                                 (string.Format("Overlong content body received - {0} bytes remaining, {1} bytes received",
                                     m_remainingBodyBytes,
-                                    f.Payload.Length));
+                                    payloadLength));
                         }
                         if (frameBuilder == null)
                         {
                             frameBuilder = new FrameBuilder(2);
-                            frameBuilder.Write(f.Payload, 0, f.Payload.Length);
+                            frameBuilder.Write(f.Payload, 0, payloadLength);
                         }
                         else
                         {
-                            frameBuilder.Write(f.Payload, 0, f.Payload.Length);
+                            frameBuilder.Write(f.Payload, 0, payloadLength);
                         }
-                        m_remainingBodyBytes -= (ulong)f.Payload.Length;
+                        m_remainingBodyBytes -= (ulong)payloadLength;
                         UpdateContentBodyState();
                         result = CompletedCommand();
                         return result != null;
@@ -140,7 +141,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        private Command<FrameBuilder> CompletedCommand()
+        private AssembledCommandBase<FrameBuilder> CompletedCommand()
         {
             if (m_state != AssemblyState.Complete) return null;
 
@@ -160,9 +161,7 @@ namespace RabbitMQ.Client.Impl
 
         private void UpdateContentBodyState()
         {
-            m_state = (m_remainingBodyBytes > ULZERO)
-                ? AssemblyState.ExpectingContentBody
-                : AssemblyState.Complete;
+            m_state = m_remainingBodyBytes > ULZERO ? AssemblyState.ExpectingContentBody : AssemblyState.Complete;
         }
     }
 }

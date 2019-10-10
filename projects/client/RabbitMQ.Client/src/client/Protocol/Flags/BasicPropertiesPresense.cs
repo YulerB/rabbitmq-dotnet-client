@@ -40,27 +40,26 @@
 //   Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using System;
 namespace RabbitMQ.Client.Framing.Impl
 {
-    using System;
 
-    [Flags]
-    public enum BasicPropertiesPresense : UInt16
+    public enum PresenseFlags : UInt16
     {
         None = 0,
         HasContentType = 1,
-        HascontentEncoding = 2,
-        Hasheaders = 4,
-        HasdeliveryMode = 8,
-        Haspriority = 16,
-        HascorrelationId = 32,
-        HasreplyTo = 64,
-        Hasexpiration = 128,
-        HasmessageId = 256,
-        Hastimestamp = 512,
-        Hastype = 1024,
-        HasuserId = 2048,
-        HasappId = 4096,
-        HasclusterId = 8192
+        HasContentEncoding = 2,
+        HasHeaders = 4,
+        HasDeliveryMode = 8,
+        HasPriority = 16,
+        HasCorrelationId = 32,
+        HasReplyTo = 64,
+        HasExpiration = 128,
+        HasMessageId = 256,
+        HasTimestamp = 512,
+        HasType = 1024,
+        HasUserId = 2048,
+        HasAppId = 4096,
+        HasClusterId = 8192
     }
 }

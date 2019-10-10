@@ -79,6 +79,13 @@ namespace RabbitMQ.Client.Framing.Impl
             m_locales = initLocales;
         }
 
+        public AmqpVersion Version
+        {
+            get
+            {
+                return new AmqpVersion(VersionMajor, VersionMinor);
+            }
+        }
         public ushort ProtocolClassId { get { return 10; } }
         public ushort ProtocolMethodId { get { return 10; } }
         public string ProtocolMethodName { get { return "connection.start"; } }
@@ -110,7 +117,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 System.Text.Encoding.UTF8.GetByteCount(m_locales) +
                 NetworkBinaryWriter1.EstimateTableSize(m_serverProperties);
         }
-        public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
+        public bool CompareClassAndMethod(int classId, int methodId){return ClassId == classId && MethodId == methodId;}  public void AppendArgumentDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             sb.Append(m_versionMajor); sb.Append(",");

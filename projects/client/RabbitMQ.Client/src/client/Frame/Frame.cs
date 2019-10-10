@@ -184,21 +184,6 @@ namespace RabbitMQ.Client.Impl
             private set;
         }
 
-        public bool IsChannelCloseOkMethod()
-        {
-            return Method!=null && Method.ProtocolClassId == ChannelCloseOk.ClassId && Method.ProtocolMethodId == ChannelCloseOk.MethodId;
-        }
-
-        public bool IsChannelCloseMethod()
-        {
-            return Method != null && Method.ProtocolClassId == ChannelClose.ClassId && Method.ProtocolMethodId == ChannelClose.MethodId;
-        }
-
-        public bool IsMethodClassAndMethodSame(ushort m_closeOkClassId, ushort m_closeOkMethodId)
-        {
-            return Method != null && Method.ProtocolClassId == m_closeOkClassId && Method.ProtocolMethodId == m_closeOkMethodId;
-        }
-
         public RabbitMQ.Client.Impl.BasicProperties Header
         {
             get;
@@ -208,8 +193,8 @@ namespace RabbitMQ.Client.Impl
     }
     public static class FrameReader
     {
-             private const ulong ULZERO = 0UL;
-   private static readonly Protocol m_protocol = new Protocol();
+        private const ulong ULZERO = 0UL;
+        private static readonly Protocol m_protocol = new Protocol();
          
         private static void ProcessProtocolHeader(ArraySegmentSequence reader)
         {
@@ -384,5 +369,4 @@ namespace RabbitMQ.Client.Impl
         FrameBody = 3,
         FrameHeartbeat = 8
     }
-
 }

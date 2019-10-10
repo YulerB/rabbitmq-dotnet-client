@@ -56,7 +56,7 @@ namespace RabbitMQ.Client.Impl
     {
         private class EmptyRpcContinuation : IRpcContinuation
         {
-            public void HandleCommand(Command<FrameBuilder> cmd)
+            public void HandleCommand(AssembledCommandBase<FrameBuilder> cmd)
             {
             }
 

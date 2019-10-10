@@ -409,8 +409,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 {
                     // Try to send connection.close
                     // Wait for CloseOk in the MainLoop
-                    m_session0.Transmit(ConnectionCloseWrapper(reason.ReplyCode,
-                        reason.ReplyText));
+                    m_session0.Transmit(ConnectionCloseWrapper(reason.ReplyCode, reason.ReplyText));
                 }
                 catch (AlreadyClosedException ace)
                 {
@@ -426,7 +425,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 }
                 catch (IOException ioe)
                 {
-                    if (!m_model0.HasCloseReason())
+                    if (m_model0.IsOpen)
                     {
                         if (!abort)
                         {
@@ -481,7 +480,7 @@ namespace RabbitMQ.Client.Framing.Impl
             }
             catch (EndOfStreamException eose)
             {
-                if (!m_model0.HasCloseReason())
+                if (m_model0.IsOpen)
                 {
                     LogCloseError("Connection didn't close cleanly. "
                                   + "Socket closed unexpectedly", eose);
@@ -500,11 +499,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private SendCommand<Impl.ConnectionClose> ConnectionCloseWrapper(ushort reasonCode, string reasonText)
         {
-            Protocol.CreateConnectionClose(reasonCode,
-                reasonText,
-                out SendCommand<Impl.ConnectionClose> request,
-                out ushort replyClassId,
-                out ushort replyMethodId);
+            Protocol.CreateConnectionClose(reasonCode, reasonText, out SendCommand<Impl.ConnectionClose> request);
             return request;
         }
 
@@ -512,11 +507,6 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             return m_sessionManager.Create();
         }
-
-        //public ISession CreateSession(ushort channelNumber)
-        //{
-        //    return m_sessionManager.Create(channelNumber);
-        //}
 
         public void EnsureIsOpen()
         {
@@ -564,8 +554,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             if (!SetCloseReason(reason))
             {
-                LogCloseError("Unexpected Main Loop Exception while closing: "
-                              + reason, new Exception(reason.ToString()));
+                LogCloseError("Unexpected Main Loop Exception while closing: " + reason, new Exception(reason.ToString()));
                 return;
             }
 
@@ -575,15 +564,15 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private bool HardProtocolExceptionHandler(HardProtocolException hpe)
         {
-            if (SetCloseReason(hpe.ShutdownReason))
+            var shutdownReason = hpe.ShutdownReason;
+
+            if (SetCloseReason(shutdownReason))
             {
                 OnShutdown();
                 m_session0.SetSessionClosing(false);
                 try
                 {
-                    m_session0.Transmit(ConnectionCloseWrapper(
-                        hpe.ShutdownReason.ReplyCode,
-                        hpe.ShutdownReason.ReplyText));
+                    m_session0.Transmit(ConnectionCloseWrapper(shutdownReason.ReplyCode,shutdownReason.ReplyText));
                     return true;
                 }
                 catch (IOException ioe)
@@ -645,11 +634,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 catch (EndOfStreamException eose)
                 {
                     // Possible heartbeat exception
-                    HandleMainLoopException(new ShutdownEventArgs(
-                        ShutdownInitiator.Library,
-                        0,
-                        "End of stream",
-                        eose));
+                    HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library, USZERO, "End of stream", eose));
                 }
                 catch (HardProtocolException hpe)
                 {
@@ -658,10 +643,7 @@ namespace RabbitMQ.Client.Framing.Impl
 #if !NETFX_CORE
                 catch (Exception ex)
                 {
-                    HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library,
-                        Constants.InternalError,
-                        "Unexpected Exception",
-                        ex));
+                    HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library, Constants.InternalError, "Unexpected Exception", ex));
                 }
 #endif
 
@@ -1208,16 +1190,15 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             EnsureIsOpen();
             ISession session = CreateSession();
-            var model = (IFullModel)Protocol.CreateModel(session, this.ConsumerWorkService);
+            var model =Protocol.CreateModel(session, this.ConsumerWorkService);
             model.ContinuationTimeout = m_factory.ContinuationTimeout;
-            model._Private_ChannelOpen(string.Empty);
+            ((IFullModel)model)._Private_ChannelOpen(string.Empty);
             return model;
         }
 
         internal void HandleConnectionBlocked(string reason)
         {
-            var args = new ConnectionBlockedEventArgs(reason);
-            OnConnectionBlocked(args);
+            OnConnectionBlocked(new ConnectionBlockedEventArgs(reason));
         }
 
         internal void HandleConnectionUnblocked()
@@ -1242,8 +1223,11 @@ namespace RabbitMQ.Client.Framing.Impl
                     m_frameHandler?.Dispose();
                     m_appContinuation?.Dispose();
                     m_heartbeatRead?.Dispose();
-                    if (ConsumerWorkService!=null && ConsumerWorkService is AsyncConsumerWorkService)
-                        ((AsyncConsumerWorkService)ConsumerWorkService).Dispose();
+
+                    var cws = ConsumerWorkService as AsyncConsumerWorkService;
+
+                    if (cws != null)
+                        cws.Dispose();
                 }
                 catch (OperationInterruptedException)
                 {
@@ -1268,30 +1252,24 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private SendCommand<Impl.ChannelClose> ChannelCloseWrapper(ushort reasonCode, string reasonText)
         {
-            Protocol.CreateChannelClose(reasonCode,
-                reasonText,
-                out SendCommand<Impl.ChannelClose> request,
-                out ushort replyClassId,
-                out ushort replyMethodId);
+            Protocol.CreateChannelClose(reasonCode, reasonText, out SendCommand<Impl.ChannelClose> request);
             return request;
         }
 
         private void StartAndTune()
         {
-            var connectionStartCell = new TaskCompletionSource<ConnectionStartDetailsEventArgs>();
-            m_model0.m_connectionStartCell = connectionStartCell;
             m_model0.HandshakeContinuationTimeout = m_factory.HandshakeContinuationTimeout;
+            m_model0.CreateConnectionStart();
             m_frameHandler.SendHeader();
-            connectionStartCell.Task.Wait();
-            OnConnectionStarted(this, connectionStartCell.Task.Result);
+            ConnectionStart startResult = m_model0.WaitForConnection();
+            OnConnectionStarted(this, startResult);
         }
 
-        private void OnConnectionStarted(object sender, ConnectionStartDetailsEventArgs connectionStart)
+        private void OnConnectionStarted(object sender, ConnectionStart connectionStart)
         {
             ServerProperties = connectionStart.ServerProperties;
 
-            var serverVersion = new AmqpVersion(connectionStart.VersionMajor,
-                connectionStart.VersionMinor);
+            var serverVersion = connectionStart.Version;
             if (!serverVersion.Equals(Protocol.Version))
             {
                 TerminateMainloop();
@@ -1313,12 +1291,11 @@ namespace RabbitMQ.Client.Framing.Impl
             bool tuned = false;
             try
             {
-                string mechanismsString = connectionStart.Mechanisms;
-                string[] mechanisms = mechanismsString.Split(' ');
+                string[] mechanisms = connectionStart.Mechanisms.Split(' ');
                 IAuthMechanismFactory mechanismFactory = m_factory.AuthMechanismFactory(mechanisms);
                 if (mechanismFactory == null)
                 {
-                    throw new IOException("No compatible authentication mechanism found - server offered [" + mechanismsString + "]");
+                    throw new IOException("No compatible authentication mechanism found - server offered [" + connectionStart.Mechanisms + "]");
                 }
                 IAuthMechanism mechanism = mechanismFactory.GetInstance();
                 string challenge = null;
