@@ -23,6 +23,33 @@ namespace Unit.src.benches
             var summary = BenchmarkRunner.Run<Benches>(DefaultConfig.Instance.With(ConfigOptions.DisableOptimizationsValidator));
         }
 
+        [Test]
+        public void RunEventingConsumeBenchTestExisting()
+        {
+            Benches b = new Benches();
+            b.Setup();
+            for (int i = 0; i < 5; i++)
+            {
+                b.Existing();
+            }
+            b.Cleanup();
+            b = null;
+        }
+
+        [Test]
+        public void RunEventingConsumeBenchTestMine()
+        {
+            Benches b = new Benches();
+            b.Setup();
+            for (int i = 0; i < 10; i++)
+            {
+                b.Mine();
+            }
+            b.Cleanup();
+            b = null;
+        }
+
+
         [CoreJob]
         [MemoryDiagnoser]
         //[InliningDiagnoser]

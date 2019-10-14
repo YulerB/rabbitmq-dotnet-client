@@ -86,10 +86,9 @@ namespace RabbitMQ.Client.Framing.Impl
         private EventHandler<EventArgs> m_connectionUnblocked;
 
         private IConnectionFactory m_factory;
-        private readonly IFrameHandler m_frameHandler;
+        public readonly IFrameHandler m_frameHandler;
         private readonly Guid m_id = Guid.NewGuid();
         private ModelBase m_model0;
-        private volatile bool m_running = true;
         private MainSession m_session0;
         private SessionManager m_sessionManager;
         private const int ZERO = 0;
@@ -112,6 +111,17 @@ namespace RabbitMQ.Client.Framing.Impl
         private readonly object _heartBeatWriteLock = new object();
         private bool m_hasDisposedHeartBeatReadTimer;
         private bool m_hasDisposedHeartBeatWriteTimer;
+
+
+        /*
+             Closing
+         
+             There are 3 types of close.
+             1. we get a close from code in the normal course of things.
+             2. we get a close because of heartbeat missed.
+             3. we get a remove socket disconnect because of heartbeat missed.
+        */
+
 
 #if CORECLR
         private static readonly string version = typeof(Connection).GetTypeInfo().Assembly
@@ -139,8 +149,11 @@ namespace RabbitMQ.Client.Framing.Impl
             KnownHosts = null;
             FrameMax = UZERO;
             m_factory = factory;
+
             m_frameHandler = frameHandler;
+            m_frameHandler.ReceivedFrame += M_frameHandler_ReceivedFrame;
             m_frameHandler.EndOfStreamEvent += M_frameHandler_EndOfStreamEvent;
+
             if (factory is IAsyncConnectionFactory asyncConnectionFactory && asyncConnectionFactory.DispatchConsumersAsync)
             {
                 ConsumerWorkService = new AsyncConsumerWorkService();
@@ -154,12 +167,89 @@ namespace RabbitMQ.Client.Framing.Impl
             m_session0 = new MainSession(this) { Handler = NotifyReceivedCloseOk };
             m_model0 = (ModelBase)Protocol.CreateModel(m_session0);
 
-            StartMainLoop(factory.UseBackgroundThreadsForIO);
             Open(insist);
+        }
+
+        private void M_frameHandler_ReceivedFrame(object sender, EventArgs e)
+        {
+            try
+            {
+                InboundFrame frame = m_frameHandler.ReadFrame();
+                NotifyHeartbeatListener();
+
+                if (frame.Type == FrameType.FrameHeartbeat)
+                {
+                    return;
+                }
+
+                if (frame.IsMainChannel())
+                {
+                    // In theory, we could get non-connection.close-ok
+                    // frames here while we're quiescing (m_closeReason !=
+                    // null). In practice, there's a limited number of
+                    // things the server can ask of us on channel 0 -
+                    // essentially, just connection.close. That, combined
+                    // with the restrictions on pipelining, mean that
+                    // we're OK here to handle channel 0 traffic in a
+                    // quiescing situation, even though technically we
+                    // should be ignoring everything except
+                    // connection.close-ok.
+                    m_session0.HandleFrame(frame);
+                }
+                else if (m_closeReason == null)
+                {
+                    // No close reason, not quiescing the
+                    // connection. Handle the frame. (Of course, the
+                    // Session itself may be quiescing this particular
+                    // channel, but that's none of our concern.)
+                    ISession session = m_sessionManager.Lookup(frame.Channel);
+                    if (session == null)
+                    {
+                        throw new ChannelErrorException(frame.Channel);
+                    }
+                    else
+                    {
+                        session.HandleFrame(frame);
+                    }
+                }
+            }
+            catch (SoftProtocolException spe)
+            {
+                QuiesceChannel(spe);
+            }
+            catch (HardProtocolException hpe)
+            {
+                //System.Diagnostics.Debug.WriteLine("M_frameHandler_ReceivedFrame.HardProtocolException - " + hpe.ToString());
+                //Console.WriteLine("M_frameHandler_ReceivedFrame.HardProtocolException - " + hpe.ToString());
+
+                HardProtocolExceptionHandler(hpe);
+            }
+#if !NETFX_CORE
+            catch (Exception ex)
+            {
+                HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library, Constants.InternalError, "Unexpected Exception", ex));
+            }
+#endif
         }
 
         private void M_frameHandler_EndOfStreamEvent(object sender, EventArgs e)
         {
+            //System.Diagnostics.Debug.WriteLine("M_frameHandler_EndOfStreamEvent");
+            //Console.WriteLine("M_frameHandler_EndOfStreamEvent");
+            try
+            {
+                if (m_model0.IsOpen)
+                {
+                    LogCloseError("Connection didn't close cleanly. Socket closed unexpectedly", new EndOfStreamException());
+                }
+
+                m_appContinuation.Set();
+
+            }
+            finally
+            {
+                FinishClose();
+            }
 
         }
 
@@ -372,8 +462,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public void Abort(ushort reasonCode, string reasonText, ShutdownInitiator initiator, int timeout)
         {
-            Close(new ShutdownEventArgs(initiator, reasonCode, reasonText),
-                true, timeout);
+            Close(new ShutdownEventArgs(initiator, reasonCode, reasonText), true, timeout);
         }
 
         public void Close(ShutdownEventArgs reason)
@@ -398,6 +487,8 @@ namespace RabbitMQ.Client.Framing.Impl
         ///</remarks>
         public void Close(ShutdownEventArgs reason, bool abort, int timeout)
         {
+            //System.Diagnostics.Debug.WriteLine("Close");
+            //Console.WriteLine("Close");
             if (!SetCloseReason(reason))
             {
                 if (!abort)
@@ -408,13 +499,15 @@ namespace RabbitMQ.Client.Framing.Impl
             else
             {
                 OnShutdown();
+
                 m_session0.SetSessionClosing(false);
 
+                Protocol.CreateConnectionClose(reason.ReplyCode, reason.ReplyText, out SendCommand<Impl.ConnectionClose> connectionClose);
                 try
                 {
                     // Try to send connection.close
                     // Wait for CloseOk in the MainLoop
-                    m_session0.Transmit(ConnectionCloseWrapper(reason.ReplyCode, reason.ReplyText));
+                    m_session0.Transmit(connectionClose);
                 }
                 catch (AlreadyClosedException ace)
                 {
@@ -445,16 +538,14 @@ namespace RabbitMQ.Client.Framing.Impl
                 }
                 finally
                 {
-                    TerminateMainloop();
+                    MaybeStopHeartbeatTimers();
                 }
             }
             
-            var receivedSignal = m_appContinuation.Wait(ValidatedTimeout(timeout));
-
-            if (!receivedSignal)
-            {
-                m_frameHandler.Close();
-            }
+            //if (!m_appContinuation.Wait(ValidatedTimeout(timeout)))
+            //{
+            //    m_frameHandler.Close();
+            //}
         }
 
         private static int ValidatedTimeout(int timeout)
@@ -465,48 +556,42 @@ namespace RabbitMQ.Client.Framing.Impl
         ///<remarks>
         /// Loop only used while quiescing. Use only to cleanly close connection
         ///</remarks>
-        public void ClosingLoop()
-        {
-            try
-            {
-                //m_frameHandler.ReadTimeout = 0;
-                // Wait for response/socket closure or timeout
-                while (!m_closed)
-                {
-                    MainLoopIteration();
-                }
-            }
-            catch (ObjectDisposedException ode)
-            {
-                if (!m_closed)
-                {
-                    LogCloseError("Connection didn't close cleanly", ode);
-                }
-            }
-            catch (EndOfStreamException eose)
-            {
-                if (m_model0.IsOpen)
-                {
-                    LogCloseError("Connection didn't close cleanly. "
-                                  + "Socket closed unexpectedly", eose);
-                }
-            }
-            catch (IOException ioe)
-            {
-                LogCloseError("Connection didn't close cleanly. "
-                              + "Socket closed unexpectedly", ioe);
-            }
-            catch (Exception e)
-            {
-                LogCloseError("Unexpected exception while closing: ", e);
-            }
-        }
-
-        private SendCommand<Impl.ConnectionClose> ConnectionCloseWrapper(ushort reasonCode, string reasonText)
-        {
-            Protocol.CreateConnectionClose(reasonCode, reasonText, out SendCommand<Impl.ConnectionClose> request);
-            return request;
-        }
+        //public void ClosingLoop()
+        //{
+        //    try
+        //    {
+        //        //m_frameHandler.ReadTimeout = 0;
+        //        // Wait for response/socket closure or timeout
+        //        while (!m_closed)
+        //        {
+        //            MainLoopIteration();
+        //        }
+        //    }
+        //    catch (ObjectDisposedException ode)
+        //    {
+        //        if (!m_closed)
+        //        {
+        //            LogCloseError("Connection didn't close cleanly", ode);
+        //        }
+        //    }
+        //    catch (EndOfStreamException eose)
+        //    {
+        //        if (m_model0.IsOpen)
+        //        {
+        //            LogCloseError("Connection didn't close cleanly. "
+        //                          + "Socket closed unexpectedly", eose);
+        //        }
+        //    }
+        //    catch (IOException ioe)
+        //    {
+        //        LogCloseError("Connection didn't close cleanly. "
+        //                      + "Socket closed unexpectedly", ioe);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        LogCloseError("Unexpected exception while closing: ", e);
+        //    }
+        //}
 
         public ISession CreateSession()
         {
@@ -575,9 +660,11 @@ namespace RabbitMQ.Client.Framing.Impl
             {
                 OnShutdown();
                 m_session0.SetSessionClosing(false);
+                Protocol.CreateConnectionClose(shutdownReason.ReplyCode, shutdownReason.ReplyText, out SendCommand<Impl.ConnectionClose> connectionClose);
+
                 try
                 {
-                    m_session0.Transmit(ConnectionCloseWrapper(shutdownReason.ReplyCode,shutdownReason.ReplyText));
+                    m_session0.Transmit(connectionClose);
                     return true;
                 }
                 catch (IOException ioe)
@@ -596,6 +683,9 @@ namespace RabbitMQ.Client.Framing.Impl
 
         internal void InternalClose(ShutdownEventArgs reason)
         {
+            //System.Diagnostics.Debug.WriteLine("InternalClose");
+            //Console.WriteLine("InternalClose");
+
             if (!SetCloseReason(reason))
             {
                 if (m_closed)
@@ -607,7 +697,8 @@ namespace RabbitMQ.Client.Framing.Impl
 
             OnShutdown();
             m_session0.SetSessionClosing(true);
-            TerminateMainloop();
+
+            FinishClose();
         }
 
         private void LogCloseError(String error, Exception ex)
@@ -616,144 +707,143 @@ namespace RabbitMQ.Client.Framing.Impl
             m_shutdownReport.Add(new ShutdownReportEntry(error, ex));
         }
 
-        private void MainLoop()
-        {
-            try
-            {
-                bool shutdownCleanly = false;
-                try
-                {
-                    while (m_running)
-                    {
-                        MainLoopIteration();
-                    }
-                    shutdownCleanly = true;
-                }
-                catch (SoftProtocolException spe)
-                {
-                    QuiesceChannel(spe);
-                    shutdownCleanly = true;
-                }
-                catch (EndOfStreamException eose)
-                {
-                    // Possible heartbeat exception
-                    HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library, USZERO, "End of stream", eose));
-                }
-                catch (HardProtocolException hpe)
-                {
-                    shutdownCleanly = HardProtocolExceptionHandler(hpe);
-                }
-#if !NETFX_CORE
-                catch (Exception ex)
-                {
-                    HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library, Constants.InternalError, "Unexpected Exception", ex));
-                }
-#endif
+//        private void MainLoop()
+//        {
+//            try
+//            {
+//                bool shutdownCleanly = false;
+//                try
+//                {
+//                    while (m_running)
+//                    {
+//                        MainLoopIteration();
+//                    }
+//                    shutdownCleanly = true;
+//                }
+//                catch (SoftProtocolException spe)
+//                {
+//                    QuiesceChannel(spe);
+//                    shutdownCleanly = true;
+//                }
+//                catch (EndOfStreamException eose)
+//                {
+//                    // Possible heartbeat exception
+//                    HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library, USZERO, "End of stream", eose));
+//                }
+//                catch (HardProtocolException hpe)
+//                {
+//                    shutdownCleanly = HardProtocolExceptionHandler(hpe);
+//                }
+//#if !NETFX_CORE
+//                catch (Exception ex)
+//                {
+//                    HandleMainLoopException(new ShutdownEventArgs(ShutdownInitiator.Library, Constants.InternalError, "Unexpected Exception", ex));
+//                }
+//#endif
 
-                // If allowed for clean shutdown, run main loop until the
-                // connection closes.
-                if (shutdownCleanly)
-                {
-                    try
-                    {
-                        ClosingLoop();
-                    }
-#if NETFX_CORE
-                    catch (Exception ex)
-                    {
-                        if (SocketError.GetStatus(ex.HResult) != SocketErrorStatus.Unknown)
-                        {
-                            // means that socket was closed when frame handler
-                            // attempted to use it. Since we are shutting down,
-                            // ignore it.
-                        }
-                        else
-                        {
-                            throw ex;
-                        }
-                    }
-#else
-                    catch (SocketException )
-                    {
-                        // means that socket was closed when frame handler
-                        // attempted to use it. Since we are shutting down,
-                        // ignore it.
-                    }
-#endif
-                }
+//                // If allowed for clean shutdown, run main loop until the
+//                // connection closes.
+//                if (shutdownCleanly)
+//                {
+//                    try
+//                    {
+//                        ClosingLoop();
+//                    }
+//#if NETFX_CORE
+//                            catch (Exception ex)
+//                            {
+//                                if (SocketError.GetStatus(ex.HResult) != SocketErrorStatus.Unknown)
+//                                {
+//                                    // means that socket was closed when frame handler
+//                                    // attempted to use it. Since we are shutting down,
+//                                    // ignore it.
+//                                }
+//                                else
+//                                {
+//                                    throw ex;
+//                                }
+//                            }
+//#else
+//                    catch (SocketException)
+//                    {
+//                        // means that socket was closed when frame handler
+//                        // attempted to use it. Since we are shutting down,
+//                        // ignore it.
+//                    }
+//#endif
+//                }
 
-                FinishClose();
-            }
-            finally
-            {
-                m_appContinuation.Set();
-            }
-        }
+//                FinishClose();
+//            }
+//            finally
+//            {
+//                m_appContinuation.Set();
+//            }
+//        }
 
-        private void MainLoopIteration()
-        {
-            InboundFrame frame = m_frameHandler.ReadFrame();
+//        private void MainLoopIteration()
+//        {
+//            InboundFrame frame = m_frameHandler.ReadFrame();
 
-            NotifyHeartbeatListener();
-            // We have received an actual frame.
-            if (frame.IsHeartbeat())
-            {
-                // Ignore it: we've already just reset the heartbeat latch.
-                return;
-            }
+//            NotifyHeartbeatListener();
+//            // We have received an actual frame.
+//            if (frame.IsHeartbeat())
+//            {
+//                // Ignore it: we've already just reset the heartbeat latch.
+//                return;
+//            }
 
-            if (frame.IsMainChannel())
-            {
-                // In theory, we could get non-connection.close-ok
-                // frames here while we're quiescing (m_closeReason !=
-                // null). In practice, there's a limited number of
-                // things the server can ask of us on channel 0 -
-                // essentially, just connection.close. That, combined
-                // with the restrictions on pipelining, mean that
-                // we're OK here to handle channel 0 traffic in a
-                // quiescing situation, even though technically we
-                // should be ignoring everything except
-                // connection.close-ok.
-                m_session0.HandleFrame(frame);
-            }
-            else
-            {
-                // If we're still m_running, but have a m_closeReason,
-                // then we must be quiescing, which means any inbound
-                // frames for non-zero channels (and any inbound
-                // commands on channel zero that aren't
-                // Connection.CloseOk) must be discarded.
-                if (m_closeReason == null)
-                {
-                    // No close reason, not quiescing the
-                    // connection. Handle the frame. (Of course, the
-                    // Session itself may be quiescing this particular
-                    // channel, but that's none of our concern.)
-                    ISession session = m_sessionManager.Lookup(frame.Channel);
-                    if (session == null)
-                    {
-                        throw new ChannelErrorException(frame.Channel);
-                    }
-                    else
-                    {
-                        session.HandleFrame(frame);
-                    }
-                }
-            }
-        }
+//            if (frame.IsMainChannel())
+//            {
+//                // In theory, we could get non-connection.close-ok
+//                // frames here while we're quiescing (m_closeReason !=
+//                // null). In practice, there's a limited number of
+//                // things the server can ask of us on channel 0 -
+//                // essentially, just connection.close. That, combined
+//                // with the restrictions on pipelining, mean that
+//                // we're OK here to handle channel 0 traffic in a
+//                // quiescing situation, even though technically we
+//                // should be ignoring everything except
+//                // connection.close-ok.
+//                m_session0.HandleFrame(frame);
+//            }
+//            else
+//            {
+//                // If we're still m_running, but have a m_closeReason,
+//                // then we must be quiescing, which means any inbound
+//                // frames for non-zero channels (and any inbound
+//                // commands on channel zero that aren't
+//                // Connection.CloseOk) must be discarded.
+//                if (m_closeReason == null)
+//                {
+//                    // No close reason, not quiescing the
+//                    // connection. Handle the frame. (Of course, the
+//                    // Session itself may be quiescing this particular
+//                    // channel, but that's none of our concern.)
+//                    ISession session = m_sessionManager.Lookup(frame.Channel);
+//                    if (session == null)
+//                    {
+//                        throw new ChannelErrorException(frame.Channel);
+//                    }
+//                    else
+//                    {
+//                        session.HandleFrame(frame);
+//                    }
+//                }
+//            }
+//        }
 
         private void NotifyHeartbeatListener()
         {
-            if (m_heartbeat != USZERO)
-            {
-                m_heartbeatRead.Set();
-            }
+            if (m_heartbeat != USZERO) m_heartbeatRead.Set();
         }
 
         private void NotifyReceivedCloseOk()
         {
-            TerminateMainloop();
-            m_closed = true;
+            //System.Diagnostics.Debug.WriteLine("NotifyReceivedCloseOk - Closing");
+            //Console.WriteLine("NotifyReceivedCloseOk - Closing");
+
+            FinishClose();
         }
 
         internal void OnCallbackException(CallbackExceptionEventArgs args)
@@ -959,21 +1049,21 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        private void StartMainLoop(bool useBackgroundThread)
-        {
-            var taskName = "AMQP Connection " + Endpoint;
+//        private void StartMainLoop(bool useBackgroundThread)
+//        {
+//            var taskName = "AMQP Connection " + Endpoint;
 
-#if NETFX_CORE
-            Task.Factory.StartNew(this.MainLoop, TaskCreationOptions.LongRunning);
-#else
-            Thread mainLoopThread = new Thread(MainLoop)
-            {
-                Name = taskName,
-                IsBackground = useBackgroundThread
-            };
-            mainLoopThread.Start();
-#endif
-        }
+////#if NETFX_CORE
+////            Task.Factory.StartNew(this.MainLoop, TaskCreationOptions.LongRunning);
+////#else
+////            Thread mainLoopThread = new Thread(MainLoop)
+////            {
+////                Name = taskName,
+////                IsBackground = useBackgroundThread
+////            };
+////            mainLoopThread.Start();
+////#endif
+//        }
 
         private void HeartbeatReadTimerCallback(object state)
         {
@@ -1011,11 +1101,14 @@ namespace RabbitMQ.Client.Framing.Impl
                                 new ShutdownEventArgs(ShutdownInitiator.Library, USZERO, "End of stream", eose));
                             shouldTerminate = true;
                         }
+
                     }
 
                     if (shouldTerminate)
                     {
-                        TerminateMainloop();
+                        //System.Diagnostics.Debug.WriteLine("Heartbeat Read Failed - Closing");
+                        //Console.WriteLine("Heartbeat Read Failed - Closing");
+
                         FinishClose();
                     }
                     else if (_heartbeatReadTimer != null)
@@ -1051,6 +1144,9 @@ namespace RabbitMQ.Client.Framing.Impl
                     {
                         if (!m_closed)
                         {
+                            //System.Diagnostics.Debug.WriteLine("Write HeartBeat - " + DateTime.UtcNow.ToString());
+                            //Console.WriteLine("Write HeartBeat - " + DateTime.UtcNow.ToString());
+
                             WriteFrame(m_heartbeatFrame);
                         }
                     }
@@ -1066,7 +1162,9 @@ namespace RabbitMQ.Client.Framing.Impl
 
                     if (m_closed || shouldTerminate)
                     {
-                        TerminateMainloop();
+                        //System.Diagnostics.Debug.WriteLine("Heartbeat Wrie Failed - Closing");
+                        //Console.WriteLine("Heartbeat Wrie Failed - Closing");
+
                         FinishClose();
                     }
                 }
@@ -1074,7 +1172,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 {
                     // timer is already disposed,
                     // e.g. due to shutdown
-                } /**/
+                } 
             }
         }
 
@@ -1116,14 +1214,14 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        ///<remarks>
-        /// May be called more than once. Should therefore be idempotent.
-        ///</remarks>
-        private void TerminateMainloop()
-        {
-            MaybeStopHeartbeatTimers();
-            m_running = false;
-        }
+        /////<remarks>
+        ///// May be called more than once. Should therefore be idempotent.
+        /////</remarks>
+        //private void TerminateMainloop()
+        //{
+        //    MaybeStopHeartbeatTimers();
+        //    m_running = false;
+        //}
 
         public override string ToString()
         {
@@ -1227,7 +1325,7 @@ namespace RabbitMQ.Client.Framing.Impl
                     m_appContinuation?.Dispose();
                     m_heartbeatRead?.Dispose();
 
-                    var cws = ConsumerWorkService as AsyncConsumerWorkService;
+                    AsyncConsumerWorkService cws = ConsumerWorkService as AsyncConsumerWorkService;
 
                     if (cws != null)
                         cws.Dispose();
@@ -1264,8 +1362,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_model0.HandshakeContinuationTimeout = m_factory.HandshakeContinuationTimeout;
             m_model0.CreateConnectionStart();
             m_frameHandler.SendHeader();
-            ConnectionStart startResult = m_model0.WaitForConnection();
-            OnConnectionStarted(this, startResult);
+            OnConnectionStarted(this, m_model0.WaitForConnection());
         }
 
         private void OnConnectionStarted(object sender, ConnectionStart connectionStart)
@@ -1275,7 +1372,9 @@ namespace RabbitMQ.Client.Framing.Impl
             var serverVersion = connectionStart.Version;
             if (!serverVersion.Equals(Protocol.Version))
             {
-                TerminateMainloop();
+                //System.Diagnostics.Debug.WriteLine("Connection Started - Protocol Error - Closing");
+                //Console.WriteLine("Connection Started - Protocol Error - Closing");
+
                 FinishClose();
                 throw new ProtocolVersionMismatchException(Protocol.MajorVersion,
                     Protocol.MinorVersion,

@@ -51,6 +51,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Buffers;
+using System.Buffers.Binary;
 
 namespace RabbitMQ.Client.Impl
 {
@@ -58,9 +59,10 @@ namespace RabbitMQ.Client.Impl
     {
         private const int ZERO = 0;
         public event EventHandler<EventArgs> EndOfStreamEvent;
+        public event EventHandler<EventArgs> ReceivedFrame;
         private readonly HyperSocketFrameSettings settings;
-        private ArraySegmentSequence m_stream = new ArraySegmentSequence();
-        private IHyperTcpClient m_socket;
+        public ArraySegmentSequence m_stream = new ArraySegmentSequence();
+        public IHyperTcpClient m_socket;
         private readonly object _semaphore = new object();
         private bool _closed;
 
@@ -92,6 +94,8 @@ namespace RabbitMQ.Client.Impl
 
         private void M_stream_EndOfStreamEvent(object sender, EventArgs e)
         {
+            //System.Diagnostics.Debug.WriteLine("M_stream_EndOfStreamEvent");
+            //Console.WriteLine("M_stream_EndOfStreamEvent");
             EndOfStreamEvent?.Invoke(sender, e);
         }
 
@@ -102,12 +106,26 @@ namespace RabbitMQ.Client.Impl
 
         private void M_socket_Closed(object sender, EventArgs e)
         {
+            //System.Diagnostics.Debug.WriteLine("M_socket_Closed");
+            //Console.WriteLine("M_socket_Closed");
             m_stream.NotifyClosed();
         }
 
         private void M_socket_Receive(object sender, Memory<byte> e)
         {
-            m_stream.Write(e);
+            if (e.Length > 0)
+            {
+                m_stream.Write(e);
+
+                while (m_stream.Peek(7, out byte[] peeked))
+                {
+                    var payloadSize = BinaryPrimitives.ReadUInt32BigEndian(peeked.AsSpan().Slice(3));
+                    //Console.WriteLine(payloadSize);
+                    //System.Diagnostics.Debug.WriteLine(payloadSize);
+                    if (m_stream.Length < (payloadSize + 8)) break;
+                    ReceivedFrame?.Invoke(this, EventArgs.Empty);
+                }
+            }
         }
 
         public AmqpTcpEndpoint Endpoint { get { return settings.Endpoint; } }
@@ -119,6 +137,7 @@ namespace RabbitMQ.Client.Impl
         
         public void Close()
         {
+
             if (!_closed)
             {
                 lock (_semaphore)
@@ -162,6 +181,9 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteFrame(OutboundFrame frame)
         {
+            //System.Diagnostics.Debug.WriteLine("Write Frame - " + frame.ToString());
+            //Console.WriteLine("Write Frame - " + frame.ToString());
+            
             var size = frame.EstimatedSize();
             using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
             {
@@ -182,6 +204,9 @@ namespace RabbitMQ.Client.Impl
                 var total = ZERO;
                 foreach (var f in frames)
                 {
+                    //System.Diagnostics.Debug.WriteLine("Write Frame - " + f.ToString());
+                    //Console.WriteLine("Write Frame - " + f.ToString());
+
                     f.WriteTo(buffer.Slice(total), out int written);
                     total += written;
                 }

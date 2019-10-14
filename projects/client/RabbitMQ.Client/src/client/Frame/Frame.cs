@@ -79,6 +79,16 @@ namespace RabbitMQ.Client.Impl
         {
             return 6 + header.EstimateSize();
         }
+
+        public override string ToString()
+        {
+            return string.Format("( type={0}, channel={1}, ProtocolClassId={2}, bodyLength={3} )",
+                Type,
+                Channel,
+                header.ProtocolClassId,
+                bodyLength);
+        }
+
     }
     public class BodySegmentOutboundFrame : OutboundFrame
     {
@@ -98,6 +108,14 @@ namespace RabbitMQ.Client.Impl
         internal override int EstimatePayloadSize()
         {
             return 4 + data.Count;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("( type={0}, channel={1}, bodyLength={2} )",
+                Type,
+                Channel,
+                data.Count);
         }
     }
 
@@ -123,6 +141,13 @@ namespace RabbitMQ.Client.Impl
         internal override int EstimatePayloadSize()
         {
             return 8 + method.EstimateSize();
+        }
+        public override string ToString()
+        {
+            return string.Format("( type={0}, channel={1}, method={2} )",
+                Type,
+                Channel,
+                method);
         }
     }
 
@@ -190,6 +215,40 @@ namespace RabbitMQ.Client.Impl
             private set;
         }
         public ulong TotalBodyBytes { get; private set; }
+
+        public override string ToString()
+        {
+            if (Type == FrameType.FrameMethod)
+            {
+                return string.Format("( type={0}, channel={1}, method={2} )",
+                    Type, 
+                    Channel,
+                    Method.ToString());
+            }
+            else if (Type == FrameType.FrameBody)
+            {
+                return string.Format("( type={0}, channel={1}, Payload={2} )",
+                    Type,
+                    Channel,
+                    Payload == null ? "null" : Payload.Length.ToString());
+            }
+            else if (Type == FrameType.FrameHeader)
+            {
+                return string.Format("( type={0}, channel={1}, TotalBodyBytes={2} )",
+                    Type,
+                    Channel,
+                    TotalBodyBytes);
+            }
+            else if (Type == FrameType.FrameHeartbeat)
+            {
+                return "( Heartbeat )";
+            }
+            else
+            {
+                return base.ToString();
+            }
+        }
+
     }
     public static class FrameReader
     {

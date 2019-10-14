@@ -48,6 +48,7 @@ namespace RabbitMQ.Client.Impl
     {
         AmqpTcpEndpoint Endpoint { get; }
 
+        event EventHandler<EventArgs> ReceivedFrame;
         event EventHandler<EventArgs> EndOfStreamEvent;
         int LocalPort { get; }
 

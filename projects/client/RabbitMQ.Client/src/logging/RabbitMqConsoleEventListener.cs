@@ -55,7 +55,7 @@ namespace RabbitMQ.Client.Logging
         {
             foreach(var pl in eventData.Payload)
             {
-                var dict = pl as IDictionary<string, object>;
+                IDictionary<string, object> dict = pl as IDictionary<string, object>;
                 if(dict != null)
                 {
                     var rex = new RabbitMqExceptionDetail(dict);

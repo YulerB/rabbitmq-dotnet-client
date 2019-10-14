@@ -945,9 +945,9 @@ namespace RabbitMQ.Client.Impl
                 methodId);
             try
             {
-                ((Connection)Session.Connection).InternalClose(reason);
                 _Private_ConnectionCloseOk();
-                SetCloseReason((Session.Connection).CloseReason);
+                 ((Connection)Session.Connection).InternalClose(reason);
+               SetCloseReason((Session.Connection).CloseReason);
             }
             catch (IOException)
             {

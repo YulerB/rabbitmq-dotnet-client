@@ -44,6 +44,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Collections;
 
 namespace RabbitMQ.Client.Impl
 {
@@ -55,7 +56,6 @@ namespace RabbitMQ.Client.Impl
         private bool addingComplete=false;
         private ConcurrentQueue<Memory<byte>> data = new ConcurrentQueue<Memory<byte>>();
         private Memory<byte> top = new Memory<byte>();
-        private readonly ArraySegment<byte> empty = new ArraySegment<byte>();
         private const int ZERO = 0;
         private const long LZERO = 0L;
         private long length = LZERO;
@@ -66,14 +66,7 @@ namespace RabbitMQ.Client.Impl
         public ArraySegmentSequence(byte[] buffer)
         {
             data.Enqueue(new ArraySegment<byte>(buffer, 0, buffer.Length));
-        }
-        public ArraySegmentSequence(ArraySegment<byte> buffer)
-        {
-            data.Enqueue(buffer);
-        }
-        public ArraySegmentSequence(IEnumerable<ArraySegment<byte>> buffers)
-        {
-            foreach (var buffer in buffers) data.Enqueue(buffer);
+            length = buffer.Length;
         }
         public ArraySegmentSequence() { }
         #endregion
@@ -85,49 +78,47 @@ namespace RabbitMQ.Client.Impl
                 peeked = new byte[ZERO];
                 return true;
             }
-            if (count > length)
+            else if (count > length)
             {
                 peeked = new byte[ZERO];
                 return false;
             }
 
             peeked = new byte[count];
-            int i = ZERO;
-            if (top.Length > ZERO)
-            {
-                int diff = Math.Min(top.Length, count);
-                top.Slice(ZERO, diff).CopyTo(peeked);
-                count -= diff;
-                i += diff;
+            var spanPeeked = peeked.AsMemory();
 
-                if (count == ZERO) return true;
+            if (!top.IsEmpty)
+            {
+                int diff = Math.Min(top.Length, spanPeeked.Length);
+                top.Slice(ZERO, diff).CopyTo(spanPeeked);
+                spanPeeked = spanPeeked.Slice(diff);
+
+                if (spanPeeked.IsEmpty) return true;
             }
 
-            if (data.TryPeek(out Memory<byte> p))
+            if (!data.IsEmpty && data.TryPeek(out Memory<byte> p))
             {
-                int diff = Math.Min(p.Length, count);
-                p.Slice(ZERO, diff).CopyTo(peeked.AsMemory().Slice(i));
-                count -= diff;
-                i += diff;
-
-                if (count == ZERO) return true;
+                int diff = Math.Min(p.Length, spanPeeked.Length);
+                p.Slice(ZERO, diff).CopyTo(spanPeeked);
+                spanPeeked = spanPeeked.Slice(diff);
+                if (spanPeeked.IsEmpty)
+                    return true;
             }
             else
             {
                 return false;
             }
 
-            var contents = data.ToArray();
-            if (contents.Length > 1)
+            if (data.Count > 1)
             {
+                var contents = data.ToArray();
                 for (int j = 1; j < data.Count; j++)
                 {
-                    int diff = Math.Min(contents[j].Length, count);
-                    contents[j].Slice(ZERO, diff).CopyTo(peeked.AsMemory().Slice(i));
-                    count -= diff;
-                    i += diff;
-
-                    if (count == ZERO) return true;
+                    int diff = Math.Min(contents[j].Length, spanPeeked.Length);
+                    contents[j].Slice(ZERO, diff).CopyTo(spanPeeked);
+                    spanPeeked = spanPeeked.Slice(diff);
+                    if (spanPeeked.IsEmpty)
+                        return true;
                 }
             }
 
@@ -161,25 +152,25 @@ namespace RabbitMQ.Client.Impl
                 if (top.Length > count)
                 {
                     result.Add(top.Slice(ZERO, count));
-                    top = top.Slice(count, top.Length - count);
                     Interlocked.Add(ref length, -count);
+                    top = top.Slice(count);
                     return result;
                 }
                 else if (top.Length == count)
                 {
                     result.Add(top.Slice(ZERO, top.Length));
-                    top = empty;
+                    Interlocked.Add(ref length, -top.Length);
                     BufferUsed?.Invoke(this, originalSize);
-                    Interlocked.Add(ref length, -count);
+                    top = Memory<byte>.Empty;
                     return result;
                 }
                 else
                 {
                     result.Add(top.Slice(ZERO, top.Length));
-                    count -= top.Length;
-                    top = empty;
                     Interlocked.Add(ref length, -top.Length);
                     BufferUsed?.Invoke(this, originalSize);
+                    count -= top.Length;
+                    top = Memory<byte>.Empty;
                 }
             }
             return result;
@@ -206,25 +197,25 @@ namespace RabbitMQ.Client.Impl
                 if (top.Length > count)
                 {
                     result.Add(top.Slice(ZERO, count));
-                    top = top.Slice(count, top.Length - count);
                     Interlocked.Add(ref length, -count);
+                    top = top.Slice(count);
                     return result;
                 }
                 else if (top.Length == count)
                 {
                     result.Add(top.Slice(ZERO, top.Length));
-                    top = empty;
+                    Interlocked.Add(ref length, -top.Length);
                     BufferUsed?.Invoke(this, originalSize);
-                    Interlocked.Add(ref length, -count);
+                    top = Memory<byte>.Empty;
                     return result;
                 }
                 else
                 {
                     result.Add(top.Slice(ZERO, top.Length));
-                    count -= top.Length;
-                    top = empty;
-                    BufferUsed?.Invoke(this, originalSize);
                     Interlocked.Add(ref length, -top.Length);
+                    BufferUsed?.Invoke(this, originalSize);
+                    count -= top.Length;
+                    top = Memory<byte>.Empty;
                 }
             }
             return result;
@@ -249,23 +240,23 @@ namespace RabbitMQ.Client.Impl
 
                 if (top.Length > count)
                 {
-                    top = top.Slice(count, top.Length - count);
                     Interlocked.Add(ref length, -count);
+                    top = top.Slice(count);
                     return;
                 }
                 else if (top.Length == count)
                 {
-                    top = empty;
+                    Interlocked.Add(ref length, -top.Length);
                     BufferUsed?.Invoke(this, originalSize);
-                    Interlocked.Add(ref length, -count);
+                    top = Memory<byte>.Empty;
                     return;
                 }
                 else
                 {
-                    count -= top.Length;
-                    top = empty;
-                    BufferUsed?.Invoke(this, originalSize);
                     Interlocked.Add(ref length, -top.Length);
+                    BufferUsed?.Invoke(this, originalSize);
+                    count -= top.Length;
+                    top = Memory<byte>.Empty;
                 }
             }
         }
@@ -276,7 +267,7 @@ namespace RabbitMQ.Client.Impl
                 lock (data)
                 {
                     data.Enqueue(buffer);
-                    Interlocked.Add(ref length , buffer.Length);
+                    Interlocked.Add(ref length, buffer.Length);
                     // If the consumer thread is waiting for an item
                     // to be added to the queue, this will move it
                     // to a waiting list, to resume execution
