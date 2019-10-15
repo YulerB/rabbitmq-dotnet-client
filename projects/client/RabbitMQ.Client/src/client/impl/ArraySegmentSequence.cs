@@ -71,16 +71,66 @@ namespace RabbitMQ.Client.Impl
         public ArraySegmentSequence() { }
         #endregion
 
+        private static readonly byte[] peekedEmpty = new byte[ZERO];
+        private static readonly byte[] peeker = new byte[8];
+        public bool Peek7(out byte[] peeked)
+        {
+            int count = 7;
+            if (count > length)
+            {
+                peeked = peekedEmpty;
+                return false;
+            }
+            peeked = peeker;
+            var spanPeeked = peeker.AsMemory();
+
+            if (!top.IsEmpty)
+            {
+                int diff = Math.Min(top.Length, spanPeeked.Length);
+                top.Slice(ZERO, diff).CopyTo(spanPeeked);
+                spanPeeked = spanPeeked.Slice(diff);
+
+                if (spanPeeked.IsEmpty) return true;
+            }
+
+            if (!data.IsEmpty && data.TryPeek(out Memory<byte> p))
+            {
+                int diff = Math.Min(p.Length, spanPeeked.Length);
+                p.Slice(ZERO, diff).CopyTo(spanPeeked);
+                spanPeeked = spanPeeked.Slice(diff);
+                if (spanPeeked.IsEmpty)
+                    return true;
+            }
+            else
+            {
+                return false;
+            }
+
+            if (data.Count > 1)
+            {
+                var contents = data.ToArray();
+                for (int j = 1; j < data.Count; j++)
+                {
+                    int diff = Math.Min(contents[j].Length, spanPeeked.Length);
+                    contents[j].Slice(ZERO, diff).CopyTo(spanPeeked);
+                    spanPeeked = spanPeeked.Slice(diff);
+                    if (spanPeeked.IsEmpty)
+                        return true;
+                }
+            }
+
+            return false;
+        }
         public bool Peek(int count, out byte[] peeked)
         {
             if (count == ZERO)
             {
-                peeked = new byte[ZERO];
+                peeked = peekedEmpty;
                 return true;
             }
             else if (count > length)
             {
-                peeked = new byte[ZERO];
+                peeked = peekedEmpty;
                 return false;
             }
 
@@ -220,6 +270,49 @@ namespace RabbitMQ.Client.Impl
             }
             return result;
         }
+        public List<Memory<byte>> ReadExpecting(int count)
+        {
+            result.Clear();
+            while (count > ZERO)
+            {
+                if (top.IsEmpty)
+                {
+                    if (!data.TryDequeue(out top) && addingComplete)
+                    {
+                        EndOfStreamEvent?.Invoke(this, EventArgs.Empty);
+                        throw new EndOfStreamException();
+                    }
+
+                    originalSize = top.Length;
+                }
+
+                if (top.Length > count)
+                {
+                    result.Add(top.Slice(ZERO, count));
+                    Interlocked.Add(ref length, -count);
+                    top = top.Slice(count);
+                    return result;
+                }
+                else if (top.Length == count)
+                {
+                    result.Add(top.Slice(ZERO, top.Length));
+                    Interlocked.Add(ref length, -top.Length);
+                    BufferUsed?.Invoke(this, originalSize);
+                    top = Memory<byte>.Empty;
+                    return result;
+                }
+                else
+                {
+                    result.Add(top.Slice(ZERO, top.Length));
+                    Interlocked.Add(ref length, -top.Length);
+                    BufferUsed?.Invoke(this, originalSize);
+                    count -= top.Length;
+                    top = Memory<byte>.Empty;
+                }
+            }
+            return result;
+        }
+
         public void Skip(int count)
         {
             while (count > ZERO)
@@ -300,6 +393,7 @@ namespace RabbitMQ.Client.Impl
             top = null;
             data = null;
             BufferUsed = null;
+            EndOfStreamEvent = null;
         }
         #endregion
     }

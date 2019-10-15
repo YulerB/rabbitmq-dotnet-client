@@ -27,7 +27,7 @@ namespace RabbitMQ.Client
             sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
-            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 5);
+            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 4);
             sEvent = new SocketAsyncEventArgs { AcceptSocket = sock };
             sEvent.Completed += SEvent_Completed;
         }
@@ -82,7 +82,8 @@ namespace RabbitMQ.Client
                 do
                 {
                     if (e.BytesTransferred > 0) this.Receive?.Invoke(this, ringBuffer.Take(e.BytesTransferred));
-                    ringBuffer.Fill(e.SetBuffer);
+                    var peeked = ringBuffer.Peek();
+                    e.SetBuffer(peeked.Array, peeked.Offset, peeked.Count);
                 } while (sock.Connected && e.SocketError == SocketError.Success && !sock.ReceiveAsync(e));
 
                 if (!sock.Connected || e.SocketError != SocketError.Success)
@@ -157,6 +158,7 @@ namespace RabbitMQ.Client
             if (disposing)
             {
                 sock.Dispose();
+                sEvent.Completed -= SEvent_Completed;
                 sEvent.Dispose();
             }
             Receive = null;

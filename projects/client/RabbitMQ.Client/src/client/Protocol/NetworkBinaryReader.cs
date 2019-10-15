@@ -61,8 +61,7 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ReadFirstByte(this ArraySegmentSequence input)
         {
-            var data = input.ReadNotExpecting(1);
-            return data[ZERO].Span[ZERO];
+            return input.Read(1)[ZERO].Span[ZERO];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] ReadBytes(this ArraySegmentSequence input,int payloadSize)

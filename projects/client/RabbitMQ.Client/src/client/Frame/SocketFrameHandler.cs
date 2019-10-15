@@ -117,7 +117,7 @@ namespace RabbitMQ.Client.Impl
             {
                 m_stream.Write(e);
 
-                while (m_stream.Peek(7, out byte[] peeked))
+                while (m_stream.Peek7(out byte[] peeked))
                 {
                     var payloadSize = BinaryPrimitives.ReadUInt32BigEndian(peeked.AsSpan().Slice(3));
                     //Console.WriteLine(payloadSize);
@@ -266,6 +266,12 @@ namespace RabbitMQ.Client.Impl
         {
             if (disposing)
             {
+                m_socket.Closed -= M_socket_Closed;
+                m_socket.Receive -= M_socket_Receive;
+
+                m_stream.BufferUsed -= M_stream_BufferUsed;
+                m_stream.EndOfStreamEvent -= M_stream_EndOfStreamEvent;
+
                 m_socket?.Dispose();
                 m_stream.Dispose();
             }
