@@ -51,7 +51,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public IDictionary<string, object> Arguments { get; private set; }
+        public Dictionary<string, object> Arguments { get; private set; }
         public bool Durable { get; private set; }
         public bool IsAutoDelete { get; private set; }
 
@@ -65,13 +65,12 @@ namespace RabbitMQ.Client.Impl
             ModelDelegate.ExchangeDeclare(Name, type, Durable, IsAutoDelete, Arguments);
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return String.Format("{0}: name = '{1}', type = '{2}', durable = {3}, autoDelete = {4}, arguments = '{5}'",
-                GetType().Name, Name, type, Durable, IsAutoDelete, Arguments);
+            return $"{GetType().Name}: name = '{Name}', type = '{type}', durable = {Durable.ToString()}, autoDelete = {IsAutoDelete.ToString()}, arguments = '{Arguments}'";
         }
 
-        public RecordedExchange WithArguments(IDictionary<string, object> value)
+        public RecordedExchange WithArguments(Dictionary<string, object> value)
         {
             Arguments = value;
             return this;

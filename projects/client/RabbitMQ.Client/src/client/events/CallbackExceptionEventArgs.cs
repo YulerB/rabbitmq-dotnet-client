@@ -54,12 +54,12 @@ namespace RabbitMQ.Client.Events
 
         ///<summary>Access helpful information about the context in
         ///which the wrapped exception was thrown.</summary>
-        public IDictionary<string, object> Detail { get; private set; }
+        public Dictionary<string, object> Detail { get; private set; }
 
         ///<summary>Access the wrapped exception.</summary>
         public Exception Exception { get; private set; }
 
-        public IDictionary<string, object> UpdateDetails(IDictionary<string, object> other)
+        public Dictionary<string, object> UpdateDetails(Dictionary<string, object> other)
         {
             foreach (var pair in other)
             {
@@ -87,7 +87,7 @@ namespace RabbitMQ.Client.Events
     ///<para>
     /// Code constructing CallbackExceptionEventArgs instances will
     /// usually place helpful information about the context of the
-    /// call in the IDictionary available through the Detail property.
+    /// call in the Dictionary available through the Detail property.
     ///</para>
     ///</remarks>
     public class CallbackExceptionEventArgs : BaseExceptionEventArgs
@@ -106,7 +106,7 @@ namespace RabbitMQ.Client.Events
         }
 
         public static CallbackExceptionEventArgs Build(Exception e,
-                                                       IDictionary<string, object> details)
+                                                       Dictionary<string, object> details)
         {
             var exnArgs = new CallbackExceptionEventArgs(e);
             exnArgs.UpdateDetails(details);

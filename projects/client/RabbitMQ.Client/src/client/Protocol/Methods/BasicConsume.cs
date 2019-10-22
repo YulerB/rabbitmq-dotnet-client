@@ -57,14 +57,14 @@ namespace RabbitMQ.Client.Framing.Impl
         private string m_queue;
         private string m_consumerTag;
         private BasicConsumeFlags m_settings;
-        private System.Collections.Generic.IDictionary<string, object> m_arguments;
+        private System.Collections.Generic.Dictionary<string, object> m_arguments;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Queue { get { return m_queue; } }
         public string ConsumerTag { get { return m_consumerTag; } }
 
         public BasicConsumeFlags Settings { get { return m_settings; } }
-        public System.Collections.Generic.IDictionary<string, object> Arguments { get { return m_arguments; } }
+        public System.Collections.Generic.Dictionary<string, object> Arguments { get { return m_arguments; } }
 
         public BasicConsume() { }
         public BasicConsume(
@@ -72,7 +72,7 @@ namespace RabbitMQ.Client.Framing.Impl
           string initQueue,
           string initConsumerTag,
           BasicConsumeFlags settings,
-          System.Collections.Generic.IDictionary<string, object> initArguments)
+          System.Collections.Generic.Dictionary<string, object> initArguments)
         {
             m_reserved1 = initReserved1;
             m_queue = initQueue;

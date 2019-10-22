@@ -66,7 +66,7 @@ namespace RabbitMQ.Client
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // TODO: sealed override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~AsyncConsumerWorkService() {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
@@ -106,7 +106,7 @@ namespace RabbitMQ.Client
             workQueue.Add(work);
         }
 
-        async Task Loop()
+        private async Task Loop()
         {
             foreach (var work in workQueue.GetConsumingEnumerable(tokenSource.Token))
             {
@@ -139,7 +139,7 @@ namespace RabbitMQ.Client
             }
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // TODO: sealed override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~WorkPool() {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);
@@ -193,7 +193,11 @@ namespace RabbitMQ.Client
                     await work.Execute(model).ConfigureAwait(false);
                 }
 
-                await Task.WhenAny(Task.Delay(waitTime, tokenSource.Token), messageArrived.Task).ConfigureAwait(false);
+                await Task.WhenAny(new Task[]{
+                    Task.Delay(waitTime, tokenSource.Token),
+                    messageArrived.Task
+                }).ConfigureAwait(false);
+
                 messageArrived.TrySetResult(true);
                 messageArrived = new TaskCompletionSource<bool>();
             }
@@ -222,7 +226,7 @@ namespace RabbitMQ.Client
                 this.messageArrived = null;
                 this.task = null;
                 this.model = null;
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
+                // TODO: free unmanaged resources (unmanaged objects) and sealed override a finalizer below.
                 // TODO: set large fields to null.
 
                 disposedValue = true;
@@ -230,7 +234,7 @@ namespace RabbitMQ.Client
 
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        // TODO: sealed override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
         // ~WorkPool() {
         //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
         //   Dispose(false);

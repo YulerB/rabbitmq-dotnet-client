@@ -57,13 +57,13 @@ namespace RabbitMQ.Client.Framing.Impl
         private string m_queue;
         private string m_exchange;
         private string m_routingKey;
-        private System.Collections.Generic.IDictionary<string, object> m_arguments;
+        private System.Collections.Generic.Dictionary<string, object> m_arguments;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Queue { get { return m_queue; } }
         public string Exchange { get { return m_exchange; } }
         public string RoutingKey { get { return m_routingKey; } }
-        public System.Collections.Generic.IDictionary<string, object> Arguments { get { return m_arguments; } }
+        public System.Collections.Generic.Dictionary<string, object> Arguments { get { return m_arguments; } }
 
         public QueueUnbind() { }
         public QueueUnbind(
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Framing.Impl
           string initQueue,
           string initExchange,
           string initRoutingKey,
-          System.Collections.Generic.IDictionary<string, object> initArguments)
+          System.Collections.Generic.Dictionary<string, object> initArguments)
         {
             m_reserved1 = initReserved1;
             m_queue = initQueue;

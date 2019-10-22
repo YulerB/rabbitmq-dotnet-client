@@ -118,9 +118,9 @@ namespace RabbitMQ.Client
         public string ReplyText { get; private set; }
 
         /// <summary>
-        /// Override ToString to be useful for debugging.
+        /// sealed override ToString to be useful for debugging.
         /// </summary>
-        public override string ToString()
+        public sealed override string ToString()
         {
             return "AMQP close-reason, initiated by " + Initiator +
                    ", code=" + ReplyCode +

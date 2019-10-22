@@ -51,7 +51,7 @@ namespace RabbitMQ.Client
             string queue,
             BasicConsumeFlags settings,
             string consumerTag = "",
-            IDictionary<string, object> arguments = null)
+            Dictionary<string, object> arguments = null)
         {
             return model.BasicConsume(queue, consumerTag, settings, arguments, consumer);
         }
@@ -75,7 +75,7 @@ namespace RabbitMQ.Client
         public static string BasicConsume(this IModel model, string queue,
             bool autoAck,
             string consumerTag,
-            IDictionary<string, object> arguments,
+            Dictionary<string, object> arguments,
             IBasicConsumer consumer)
         {
             return model.BasicConsume(queue, consumerTag, autoAck ? BasicConsumeFlags.NoAck : BasicConsumeFlags.None, arguments, consumer);
@@ -115,7 +115,7 @@ namespace RabbitMQ.Client
         /// (Spec method) Declare a queue.
         /// </summary>
         public static QueueDeclareOk QueueDeclare(this IModel model, string queue = "", bool durable = false, bool exclusive = true,
-            bool autoDelete = true, IDictionary<string, object> arguments = null)
+            bool autoDelete = true, Dictionary<string, object> arguments = null)
             {
                 return model.QueueDeclare(queue, durable, exclusive, autoDelete, arguments);
             }
@@ -123,7 +123,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// (Extension method) Bind an exchange to an exchange.
         /// </summary>
-        public static void ExchangeBind(this IModel model, string destination, string source, string routingKey, IDictionary<string, object> arguments = null)
+        public static void ExchangeBind(this IModel model, string destination, string source, string routingKey, Dictionary<string, object> arguments = null)
         {
             model.ExchangeBind(new ExchangeBind(0,destination, source, routingKey, false, arguments));
         }
@@ -131,7 +131,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// (Extension method) Like exchange bind but sets nowait to true. 
         /// </summary>
-        public static void ExchangeBindNoWait(this IModel model, string destination, string source, string routingKey, IDictionary<string, object> arguments = null)
+        public static void ExchangeBindNoWait(this IModel model, string destination, string source, string routingKey, Dictionary<string, object> arguments = null)
         {
             model.ExchangeBindNoWait(new ExchangeBind(0, destination, source, routingKey, true, arguments));
         }
@@ -140,7 +140,7 @@ namespace RabbitMQ.Client
         /// (Spec method) Declare an exchange.
         /// </summary>
         public static void ExchangeDeclare(this IModel model, string exchange, string type, bool durable = false, bool autoDelete = false,
-            IDictionary<string, object> arguments = null)
+            Dictionary<string, object> arguments = null)
             {
                 model.ExchangeDeclare(exchange, type, durable, autoDelete, arguments);
             }
@@ -149,7 +149,7 @@ namespace RabbitMQ.Client
         /// (Extension method) Like ExchangeDeclare but sets nowait to true. 
         /// </summary>
         public static void ExchangeDeclareNoWait(this IModel model, string exchange, string type, bool durable = false, bool autoDelete = false,
-            IDictionary<string, object> arguments = null)
+            Dictionary<string, object> arguments = null)
             {
                 model.ExchangeDeclareNoWait(exchange, type, durable, autoDelete, arguments);
             }
@@ -160,7 +160,7 @@ namespace RabbitMQ.Client
         public static void ExchangeUnbind(this IModel model, string destination,
             string source,
             string routingKey,
-            IDictionary<string, object> arguments = null)
+            Dictionary<string, object> arguments = null)
             {
                 model.ExchangeUnbind(new ExchangeUnbind(0, destination, source, routingKey, false, arguments));
             }
@@ -184,7 +184,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// (Spec method) Binds a queue.
         /// </summary>
-        public static void QueueBind(this IModel model, string queue, string exchange, string routingKey, IDictionary<string, object> arguments = null)
+        public static void QueueBind(this IModel model, string queue, string exchange, string routingKey, Dictionary<string, object> arguments = null)
         {
             model.QueueBind(queue, exchange, routingKey, arguments);
         }
@@ -208,7 +208,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// (Spec method) Unbinds a queue.
         /// </summary>
-        public static void QueueUnbind(this IModel model, string queue, string exchange, string routingKey, IDictionary<string, object> arguments = null)
+        public static void QueueUnbind(this IModel model, string queue, string exchange, string routingKey, Dictionary<string, object> arguments = null)
         {
             model.QueueUnbind(queue, exchange, routingKey, arguments);
         }

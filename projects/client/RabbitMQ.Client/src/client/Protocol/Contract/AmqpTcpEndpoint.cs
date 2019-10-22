@@ -251,7 +251,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Compares this instance by value (protocol, hostname, port) against another instance.
         /// </summary>
-        public override bool Equals(object obj)
+        public sealed override bool Equals(object obj)
         {
             if (!(obj is AmqpTcpEndpoint other))
             {
@@ -272,7 +272,7 @@ namespace RabbitMQ.Client
         /// Implementation of hash code depending on protocol, hostname and port,
         /// to line up with the implementation of <see cref="Equals"/>.
         /// </summary>
-        public override int GetHashCode()
+        public sealed override int GetHashCode()
         {
             return HostName.GetHashCode() ^ Port;
         }
@@ -283,9 +283,10 @@ namespace RabbitMQ.Client
         /// <remarks>
         /// This method is intended mainly for debugging and logging use.
         /// </remarks>
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return Ssl!=null && Ssl.Enabled ? "amqps://" : "amqp://" + HostName + ":" + Port;
+            var prefix = Ssl != null && Ssl.Enabled ? "amqps://" : "amqp://";
+            return String.Concat(new string[] { prefix, HostName, ":", Port.ToString() });
         }
     }
 }

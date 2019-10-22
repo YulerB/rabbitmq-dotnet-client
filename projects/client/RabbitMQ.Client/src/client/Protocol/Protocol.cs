@@ -47,15 +47,15 @@ namespace RabbitMQ.Client.Framing
     public partial class Protocol : RabbitMQ.Client.Framing.Impl.ProtocolBase
     {
         ///<summary>Protocol major version (= 0)</summary>
-        public override int MajorVersion { get { return 0; } }
+        public sealed override int MajorVersion { get { return 0; } }
         ///<summary>Protocol minor version (= 9)</summary>
-        public override int MinorVersion { get { return 9; } }
+        public sealed override int MinorVersion { get { return 9; } }
         ///<summary>Protocol revision (= 1)</summary>
-        public override int Revision { get { return 1; } }
+        public sealed override int Revision { get { return 1; } }
         ///<summary>Protocol API name (= :AMQP_0_9_1)</summary>
-        public override string ApiName { get { return ":AMQP_0_9_1"; } }
+        public sealed override string ApiName { get { return ":AMQP_0_9_1"; } }
         ///<summary>Default TCP port (= 5672)</summary>
-        public override int DefaultPort { get { return 5672; } }
+        public sealed override int DefaultPort { get { return 5672; } }
 
     }
 }

@@ -54,7 +54,7 @@ namespace RabbitMQ.Client.Unit
         {
 
                 ushort channel = 1;
-                MethodOutboundFrame mFrame = new MethodOutboundFrame(channel, new ConnectionSecureOk(" "));
+                MethodOutboundFrame< ConnectionSecureOk> mFrame = new MethodOutboundFrame<ConnectionSecureOk>(channel, new ConnectionSecureOk(" "));
             byte[] bytes = new byte[mFrame.EstimatedSize()*2];
 
 

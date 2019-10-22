@@ -62,12 +62,12 @@ namespace RabbitMQ.Client.Impl
         ///<summary>The AMQP method ID within the content-class, or 0 if none.</summary>
         public ushort MethodId { get; private set; }
 
-        public override ushort ReplyCode
+        public sealed override ushort ReplyCode
         {
             get { return Constants.NotImplemented; }
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
             return MethodId == 0
                 ? $"{base.ToString()}<{this.ClassId}>"

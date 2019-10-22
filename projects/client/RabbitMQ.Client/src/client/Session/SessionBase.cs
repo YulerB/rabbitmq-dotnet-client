@@ -129,9 +129,11 @@ namespace RabbitMQ.Client.Impl
             handler?.Invoke(this, reason);
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return GetType().Name + "#" + ChannelNumber + ":" + Connection;
+            return String.Concat(new string[]{
+                GetType().Name, "#", ChannelNumber.ToString(), ":", Connection.ToString()
+            });
         }
 
         public void Close(ShutdownEventArgs reason)
@@ -195,9 +197,9 @@ namespace RabbitMQ.Client.Impl
             // of frames within a channel.  But that is fixed in socket frame handler instead, so no need to lock.
             cmd.Transmit(ChannelNumber, Connection);
         }
-        public virtual void Transmit<T>(IList<SendCommand<T>> commands) where T: IMethod
+        public virtual void Transmit<T>(List<SendCommand<T>> commands) where T: IMethod
         {
-            Connection.WriteFrameSet(CommandHelpers.CalculateFrames(ChannelNumber, Connection, commands));
+            Connection.WriteFrameSet(CommandHelpers.CalculateFrames<T>(ChannelNumber, Connection, commands));
         }
     }
 }

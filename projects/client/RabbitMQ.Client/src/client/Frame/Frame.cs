@@ -67,7 +67,7 @@ namespace RabbitMQ.Client.Impl
             this.bodyLength = bodyLength;
         }
 
-        public override void WritePayload(Span<byte> writer, out int written)
+        public sealed override void WritePayload(Span<byte> writer, out int written)
         {
             var total = 2 + header.EstimateSize();
             NetworkBinaryWriter1.WriteUInt32(writer, (uint)total, out int written1);
@@ -75,18 +75,22 @@ namespace RabbitMQ.Client.Impl
             header.WriteTo(writer.Slice(written1 + written2),bodyLength, out int written3);
             written = written1 + written2 + written3;
         }
-        internal override int EstimatePayloadSize()
+        internal sealed override int EstimatePayloadSize()
         {
             return 6 + header.EstimateSize();
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return string.Format("( type={0}, channel={1}, ProtocolClassId={2}, bodyLength={3} )",
-                Type,
-                Channel,
-                header.ProtocolClassId,
-                bodyLength);
+            return string.Format(
+                "( type={0}, channel={1}, ProtocolClassId={2}, bodyLength={3} )", 
+                new object[] {
+                    Type,
+                    Channel,
+                    header.ProtocolClassId,
+                    bodyLength
+                }
+            );
         }
 
     }
@@ -99,37 +103,34 @@ namespace RabbitMQ.Client.Impl
             this.data = data;
         }
 
-        public override void WritePayload(Span<byte> writer, out int written)
+        public sealed override void WritePayload(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt32(writer, (uint)data.Count, out int written1);
             NetworkBinaryWriter1.Write(writer.Slice(written1), data.Array, data.Offset, data.Count, out int written2);
             written = written1 + written2;
         }
-        internal override int EstimatePayloadSize()
+        internal sealed override int EstimatePayloadSize()
         {
             return 4 + data.Count;
         }
 
         public override string ToString()
         {
-            return string.Format("( type={0}, channel={1}, bodyLength={2} )",
-                Type,
-                Channel,
-                data.Count);
+            return $"( type={Type}, channel={Channel.ToString()}, bodyLength={data.Count.ToString()} )";
         }
     }
 
-    public class MethodOutboundFrame : OutboundFrame
+    public class MethodOutboundFrame<T> : OutboundFrame where T: IMethod
     {
-        private readonly IMethod method;
+        private readonly T method;
 
-        public MethodOutboundFrame(ushort channel, IMethod method) : base(FrameType.FrameMethod, channel)
+        public MethodOutboundFrame(ushort channel, T method) : base(FrameType.FrameMethod, channel)
         {
             this.method = method;
         }
 
 
-        public override void WritePayload(Span<byte> writer, out int written)
+        public sealed override void WritePayload(Span<byte> writer, out int written)
         {
             var total = 4 + method.EstimateSize();
             NetworkBinaryWriter1.WriteUInt32(writer, (uint)total, out int written1);
@@ -138,16 +139,13 @@ namespace RabbitMQ.Client.Impl
             method.WriteArgumentsTo(writer.Slice(written1 + written2 + written3), out int written4);
             written = written1 + written2 + written3 + written4;
         }
-        internal override int EstimatePayloadSize()
+        internal sealed override int EstimatePayloadSize()
         {
             return 8 + method.EstimateSize();
         }
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return string.Format("( type={0}, channel={1}, method={2} )",
-                Type,
-                Channel,
-                method);
+            return $"( type={Type}, channel={Channel.ToString()}, method={method} )";
         }
     }
 
@@ -158,13 +156,13 @@ namespace RabbitMQ.Client.Impl
         }
 
 
-        public override void WritePayload(Span<byte> writer, out int written)
+        public sealed override void WritePayload(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt32(writer, 0U, out int written1);
             written = written1;
         }
 
-        internal override int EstimatePayloadSize()
+        internal sealed override int EstimatePayloadSize()
         {
             return 4;
         }
@@ -220,24 +218,16 @@ namespace RabbitMQ.Client.Impl
         {
             if (Type == FrameType.FrameMethod)
             {
-                return string.Format("( type={0}, channel={1}, method={2} )",
-                    Type, 
-                    Channel,
-                    Method.ToString());
+                return $"( type={Type}, channel={Channel.ToString()}, method={Method} )";
             }
             else if (Type == FrameType.FrameBody)
             {
-                return string.Format("( type={0}, channel={1}, Payload={2} )",
-                    Type,
-                    Channel,
-                    Payload == null ? "null" : Payload.Length.ToString());
+                var len = Payload == null ? "null" : Payload.Length.ToString();
+                return $"( type={Type}, channel={Channel.ToString()}, Payload={len} )";
             }
             else if (Type == FrameType.FrameHeader)
             {
-                return string.Format("( type={0}, channel={1}, TotalBodyBytes={2} )",
-                    Type,
-                    Channel,
-                    TotalBodyBytes);
+                return $"( type={Type}, channel={Channel.ToString()}, TotalBodyBytes={TotalBodyBytes.ToString()} )";
             }
             else if (Type == FrameType.FrameHeartbeat)
             {
@@ -350,16 +340,16 @@ namespace RabbitMQ.Client.Impl
                 if (payload.Length != payloadSize)
                 {
                     // Early EOF.
-                    throw new MalformedFrameException("Short frame - expected " +
-                                                      payloadSize + " bytes, got " +
-                                                      payload.Length + " bytes");
+                    throw new MalformedFrameException(String.Concat(new string[]{"Short frame - expected " ,
+                                                      payloadSize.ToString(), " bytes, got " ,
+                                                      payload.Length.ToString() , " bytes" }));
                 }
             }
 
             byte frameEndMarker = reader.ReadByte();
             if (frameEndMarker != Constants.FrameEnd)
             {
-                throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker);
+                throw new MalformedFrameException("Bad frame end marker: " + frameEndMarker.ToString());
             }
 
             return new InboundFrame((FrameType)type, channel, payload, m_method, m_content, totalBodyBytes);
@@ -395,12 +385,8 @@ namespace RabbitMQ.Client.Impl
 
         public override string ToString()
         {
-            return string.Format("(type={0}, channel={1}, {2} bytes of payload)",
-                Type,
-                Channel,
-                Payload == null
-                    ? "(null)"
-                    : Payload.Length.ToString());
+            var len = Payload == null ? "(null)" : Payload.Length.ToString();
+            return $"(type={Type}, channel={Channel.ToString()}, {len} bytes of payload)";
         }
 
         public bool IsMethod()

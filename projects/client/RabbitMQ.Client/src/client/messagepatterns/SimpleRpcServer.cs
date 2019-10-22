@@ -78,8 +78,8 @@
 //    ///<para>
 //    /// If you are implementing a service that responds to
 //    /// "jms/stream-message"-formatted requests (as implemented by
-//    /// RabbitMQ.Client.Content.IStreamMessageReader), override
-//    /// HandleStreamMessageCall. Otherwise, override HandleSimpleCall
+//    /// RabbitMQ.Client.Content.IStreamMessageReader), sealed override
+//    /// HandleStreamMessageCall. Otherwise, sealed override HandleSimpleCall
 //    /// or HandleCall as appropriate. Asynchronous, one-way requests
 //    /// are dealt with by HandleCast etc.
 //    ///</para>
@@ -259,7 +259,7 @@
 //            byte[] body,
 //            out IBasicProperties replyProperties)
 //        {
-//            // Override to do something with the request.
+//            // sealed override to do something with the request.
 //            replyProperties = null;
 //            return null;
 //        }
@@ -276,7 +276,7 @@
 //            IBasicProperties requestProperties,
 //            byte[] body)
 //        {
-//            // Override to do something with the request.
+//            // sealed override to do something with the request.
 //        }
 
 //        ///<summary>Called by HandleCall and HandleCast when a
@@ -305,7 +305,7 @@
 //            IBasicProperties requestProperties,
 //            object[] args)
 //        {
-//            // Override to do something with the request.
+//            // sealed override to do something with the request.
 //        }
 
 //        ///<summary>Enters the main loop of the RPC service.</summary>

@@ -51,11 +51,11 @@ namespace RabbitMQ.Client.Logging
             this.EnableEvents(RabbitMqClientEventSource.Log, EventLevel.Informational, RabbitMqClientEventSource.Keywords.Log);
         }
 
-        protected override void OnEventWritten(EventWrittenEventArgs eventData)
+        protected sealed override void OnEventWritten(EventWrittenEventArgs eventData)
         {
             foreach(var pl in eventData.Payload)
             {
-                IDictionary<string, object> dict = pl as IDictionary<string, object>;
+                Dictionary<string, object> dict = pl as Dictionary<string, object>;
                 if(dict != null)
                 {
                     var rex = new RabbitMqExceptionDetail(dict);
@@ -68,7 +68,7 @@ namespace RabbitMQ.Client.Logging
             }
         }
 
-        public override void Dispose()
+        public sealed override void Dispose()
         {
             this.DisableEvents(RabbitMqClientEventSource.Log);
         }

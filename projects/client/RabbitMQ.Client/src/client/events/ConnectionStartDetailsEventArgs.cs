@@ -48,7 +48,7 @@ namespace RabbitMQ.Client.Impl
         public ConnectionStartDetailsEventArgs(
             byte versionMajor,
             byte versionMinor,
-            IDictionary<string, object> serverProperties,
+            Dictionary<string, object> serverProperties,
             string mechanisms,
             string locales
             )
@@ -63,7 +63,7 @@ namespace RabbitMQ.Client.Impl
 
         public string Locales { get; private set; }
         public string Mechanisms { get; private set; }
-        public IDictionary<string, object> ServerProperties { get; private set; }
+        public Dictionary<string, object> ServerProperties { get; private set; }
         public byte VersionMajor { get; private set; }
         public byte VersionMinor { get; private set; }
 

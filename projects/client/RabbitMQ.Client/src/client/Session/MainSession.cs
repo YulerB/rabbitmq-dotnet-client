@@ -62,7 +62,7 @@ namespace RabbitMQ.Client.Impl
 
         public Action Handler { get; set; }
 
-        public override void HandleFrame(InboundFrame frame)
+        public sealed override void HandleFrame(InboundFrame frame)
         {
             lock (_closingLock)
             {
@@ -111,7 +111,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public override void Transmit<T>(SendCommand<T> cmd)
+        public sealed override void Transmit<T>(SendCommand<T> cmd)
         {
             lock (_closingLock)
             {
@@ -124,8 +124,7 @@ namespace RabbitMQ.Client.Impl
 
             // Allow always for sending close ok
             // Or if application initiated, allow also for sending close
-            IMethod method = cmd.Method;
-            if ((!m_closeServerInitiated && method is ConnectionClose) || method is ConnectionCloseOk)
+            if ((!m_closeServerInitiated && cmd.Method is ConnectionClose) || cmd.Method is ConnectionCloseOk)
             {
                 base.Transmit(cmd);
             }

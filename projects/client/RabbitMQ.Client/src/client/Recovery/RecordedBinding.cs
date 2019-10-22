@@ -49,7 +49,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public IDictionary<string, object> Arguments { get; protected set; }
+        public Dictionary<string, object> Arguments { get; protected set; }
         public string Destination { get; set; }
         public string RoutingKey { get; protected set; }
         public string Source { get; protected set; }
@@ -63,7 +63,7 @@ namespace RabbitMQ.Client.Impl
                 (Arguments == other.Arguments);
         }
 
-        public override bool Equals(object obj)
+        public sealed override bool Equals(object obj)
         {
             if (ReferenceEquals(obj, null))
             {
@@ -80,7 +80,7 @@ namespace RabbitMQ.Client.Impl
 			return Equals(other);
         }
 
-        public override int GetHashCode()
+        public sealed override int GetHashCode()
         {
             return Source.GetHashCode() ^
                    Destination.GetHashCode() ^
@@ -92,13 +92,12 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return String.Format("{0}: source = '{1}', destination = '{2}', routingKey = '{3}', arguments = '{4}'",
-                GetType().Name, Source, Destination, RoutingKey, Arguments);
+            return $"{GetType().Name}: source = '{Source}', destination = '{Destination}', routingKey = '{RoutingKey}', arguments = '{Arguments}'";
         }
 
-        public RecordedBinding WithArguments(IDictionary<string, object> value)
+        public RecordedBinding WithArguments(Dictionary<string, object> value)
         {
             Arguments = value;
             return this;
@@ -130,7 +129,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public override void Recover()
+        public sealed override void Recover()
         {
             ModelDelegate.QueueBind(Destination, Source, RoutingKey, Arguments);
         }
@@ -143,7 +142,7 @@ namespace RabbitMQ.Client.Impl
         {
         }
 
-        public override void Recover()
+        public sealed override void Recover()
         {
             ModelDelegate.ExchangeBind(Destination, Source, RoutingKey, Arguments);
         }

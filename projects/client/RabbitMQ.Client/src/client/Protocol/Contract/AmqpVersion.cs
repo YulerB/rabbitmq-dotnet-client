@@ -90,7 +90,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Implement value-equality comparison.
         /// </summary>
-        public override bool Equals(object other)
+        public sealed override bool Equals(object other)
         {
             return (other is AmqpVersion version) && (version.Major == Major) && (version.Minor == Minor);
         }
@@ -98,7 +98,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Implement hashing as for value-equality.
         /// </summary>
-        public override int GetHashCode()
+        public sealed override int GetHashCode()
         {
             return 31*Major.GetHashCode() + Minor.GetHashCode();
         }
@@ -109,9 +109,9 @@ namespace RabbitMQ.Client
         /// <remarks>
         /// The specification currently uses "MAJOR-MINOR" as a display format.
         /// </remarks>
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return Major + "-" + Minor;
+            return Major.ToString() + "-" + Minor.ToString();
         }
     }
 }

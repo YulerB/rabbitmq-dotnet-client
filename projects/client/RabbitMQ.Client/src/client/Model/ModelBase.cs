@@ -60,8 +60,8 @@ namespace RabbitMQ.Client.Impl
     public abstract partial class ModelBase : IFullModel, IRecoverable
     {
         private const int ZERO = 0;
-         private const ulong ULZERO = 0UL;
-       public readonly IDictionary<string, IBasicConsumer> m_consumers = new Dictionary<string, IBasicConsumer>();
+        private const ulong ULZERO = 0UL;
+        private readonly Dictionary<string, IBasicConsumer> m_consumers = new Dictionary<string, IBasicConsumer>();
 
         ///<summary>Only used to kick-start a connection open
         ///sequence. See <see cref="Connection.Open"/> </summary>
@@ -698,7 +698,7 @@ namespace RabbitMQ.Client.Impl
             this.ConsumerDispatcher.Shutdown(this);
         }
 
-        protected void BroadcastShutdownToConsumers(IDictionary<string, IBasicConsumer> cs, ShutdownEventArgs reason)
+        protected void BroadcastShutdownToConsumers(Dictionary<string, IBasicConsumer> cs, ShutdownEventArgs reason)
         {
             foreach (var c in cs)
             {
@@ -727,7 +727,7 @@ namespace RabbitMQ.Client.Impl
                 return false;
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
             return Session.ToString();
         }
@@ -1065,7 +1065,7 @@ namespace RabbitMQ.Client.Impl
         public abstract void _Private_ExchangeDeclare(string exchange,
             string type,
              ExchangeDeclareFlags flag,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         public abstract void _Private_ExchangeDelete(string exchange,
             ExchangeDeleteFlags flag);
@@ -1076,11 +1076,11 @@ namespace RabbitMQ.Client.Impl
             string exchange,
             string routingKey,
             bool nowait,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         public abstract void _Private_QueueDeclare(string queue,
             QueueDeclareFlags flag,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         public abstract uint _Private_QueueDelete(string queue,
             QueueDeleteFlags flag);
@@ -1121,7 +1121,7 @@ namespace RabbitMQ.Client.Impl
         public string BasicConsume(string queue,
             string consumerTag,
             BasicConsumeFlags settings,
-            IDictionary<string, object> arguments,
+            Dictionary<string, object> arguments,
             IBasicConsumer consumer)
         {
             // TODO: Replace with flag
@@ -1271,7 +1271,7 @@ namespace RabbitMQ.Client.Impl
             _Private_ExchangeBind(args);
         }
 
-        public void ExchangeDeclare(string exchange, string type, bool durable, bool autoDelete, IDictionary<string, object> arguments)
+        public void ExchangeDeclare(string exchange, string type, bool durable, bool autoDelete, Dictionary<string, object> arguments)
         {
             _Private_ExchangeDeclare(exchange, type,
                 (durable ? ExchangeDeclareFlags.Durable : ExchangeDeclareFlags.None) | (autoDelete ? ExchangeDeclareFlags.AutoDelete : ExchangeDeclareFlags.None),
@@ -1282,7 +1282,7 @@ namespace RabbitMQ.Client.Impl
             string type,
             bool durable,
             bool autoDelete,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             _Private_ExchangeDeclare(
                 exchange, 
@@ -1325,7 +1325,7 @@ namespace RabbitMQ.Client.Impl
         public void QueueBind(string queue,
             string exchange,
             string routingKey,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             _Private_QueueBind(queue, exchange, routingKey, false, arguments);
         }
@@ -1333,7 +1333,7 @@ namespace RabbitMQ.Client.Impl
         public void QueueBindNoWait(string queue,
             string exchange,
             string routingKey,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             _Private_QueueBind(queue, exchange, routingKey, true, arguments);
         }
@@ -1341,13 +1341,13 @@ namespace RabbitMQ.Client.Impl
         public QueueDeclareOk QueueDeclare(string queue, 
             bool durable,
             bool exclusive, bool autoDelete,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             return QueueDeclare(queue, false, durable, exclusive, autoDelete, arguments);
         }
 
         public void QueueDeclareNoWait(string queue, bool durable, bool exclusive,
-            bool autoDelete, IDictionary<string, object> arguments)
+            bool autoDelete, Dictionary<string, object> arguments)
         {
             _Private_QueueDeclare(queue, 
                 (durable ? QueueDeclareFlags.Durable : QueueDeclareFlags.None) |
@@ -1400,7 +1400,7 @@ namespace RabbitMQ.Client.Impl
         public abstract void QueueUnbind(string queue,
             string exchange,
             string routingKey,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         public abstract void TxCommit();
 
@@ -1487,7 +1487,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        internal void SendCommands<T>(IList<SendCommand<T>> commands) where T: IMethod
+        internal void SendCommands<T>(List<SendCommand<T>> commands) where T: IMethod
         {
             m_flowControlBlock.WaitOne();
             AllocatatePublishSeqNos(commands.Count);
@@ -1524,7 +1524,7 @@ namespace RabbitMQ.Client.Impl
         }
 
         private QueueDeclareOk QueueDeclare(string queue, bool passive, bool durable, bool exclusive,
-            bool autoDelete, IDictionary<string, object> arguments)
+            bool autoDelete, Dictionary<string, object> arguments)
         {
             var k = new QueueDeclareRpcContinuation();
             lock(_rpcLock)

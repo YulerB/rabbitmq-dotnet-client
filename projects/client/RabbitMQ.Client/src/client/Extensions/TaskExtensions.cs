@@ -50,8 +50,13 @@ namespace RabbitMQ.Client.Impl
 
         public static async Task TimeoutAfter(this Task task, int millisecondsTimeout)
         {
-            if (task == await Task.WhenAny(task, Task.Delay(millisecondsTimeout)).ConfigureAwait(false))
+            if (task == await Task.WhenAny(new Task[] {
+                task,
+                Task.Delay(millisecondsTimeout)
+            }).ConfigureAwait(false))
+            {
                 await task;
+            }
             else
             {
                 var supressErrorTask = task.ContinueWith(t => t.Exception.Handle(e => true), TaskContinuationOptions.OnlyOnFaulted);

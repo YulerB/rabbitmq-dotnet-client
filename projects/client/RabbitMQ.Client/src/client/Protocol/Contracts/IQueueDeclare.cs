@@ -52,6 +52,6 @@ namespace RabbitMQ.Client.Framing
         ushort Reserved1 { get; }
         string Queue { get; }
         QueueDeclareFlags Flag { get; }
-        System.Collections.Generic.IDictionary<string, object> Arguments { get; }
+        System.Collections.Generic.Dictionary<string, object> Arguments { get; }
     }
 }

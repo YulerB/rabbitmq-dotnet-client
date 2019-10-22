@@ -111,10 +111,7 @@ namespace RabbitMQ.Client.Impl
                         var payloadLength = f.Payload.Length;
                         if ((ulong)payloadLength > m_remainingBodyBytes)
                         {
-                            throw new MalformedFrameException
-                                (string.Format("Overlong content body received - {0} bytes remaining, {1} bytes received",
-                                    m_remainingBodyBytes,
-                                    payloadLength));
+                            throw new MalformedFrameException($"Overlong content body received - {m_remainingBodyBytes.ToString()} bytes remaining, {payloadLength.ToString()} bytes received");
                         }
                         if (frameBuilder == null)
                         {

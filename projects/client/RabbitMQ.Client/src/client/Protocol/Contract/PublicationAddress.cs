@@ -38,6 +38,7 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using System;
 using System.Text.RegularExpressions;
 
 namespace RabbitMQ.Client
@@ -119,9 +120,9 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Reconstruct the "uri" from its constituents.
         /// </summary>
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return ExchangeType + "://" + ExchangeName + "/" + RoutingKey;
+            return String.Concat(new string[] { ExchangeType, "://", ExchangeName, "/", RoutingKey });
         }
     }
 }

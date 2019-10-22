@@ -51,10 +51,10 @@ namespace RabbitMQ.Client
     /// </para>
     /// <para>
     /// Instances of this object may be found as values held in
-    /// IDictionary instances returned from
+    /// Dictionary instances returned from
     /// RabbitMQ.Client.Impl.WireFormatting.ReadTable, e.g. as part of
     /// IBasicProperties.Headers tables. Likewise, instances may be
-    /// set as values in an IDictionary table to be encoded by
+    /// set as values in an Dictionary table to be encoded by
     /// RabbitMQ.Client.Impl.WireFormatting.WriteTable.
     /// </para>
     /// <para>

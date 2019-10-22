@@ -284,7 +284,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Dictionary of client properties to be sent to the server.
         /// </summary>
-        public IDictionary<string, object> ClientProperties { get; set; }
+        public Dictionary<string, object> ClientProperties { get; set; }
 
         /// <summary>
         /// Password to use when authenticating to the server.
@@ -341,17 +341,15 @@ namespace RabbitMQ.Client
         /// </summary>
         public IAuthMechanismFactory AuthMechanismFactory(IList<string> mechanismNames)
         {
-            // Our list is in order of preference, the server one is not.
-            foreach (IAuthMechanismFactory factory in AuthMechanisms)
-            {
-                if (mechanismNames.Any<string>(x => string.Equals(x, factory.Name, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return factory;
-                }
-            }
-            return null;
+            return AuthMechanisms.FirstOrDefault(
+                factory =>
+                    mechanismNames.Any(
+                        x => 
+                            string.Equals(x, factory.Name, StringComparison.OrdinalIgnoreCase)
+                    )
+            );
         }
-
+        
         /// <summary>
         /// Create a connection to one of the endpoints provided by the IEndpointResolver
         /// returned by the EndpointResolverFactory. By default the configured
@@ -388,7 +386,7 @@ namespace RabbitMQ.Client
         /// Create a connection using a list of hostnames using the configured port.
         /// By default each hostname is tried in a random order until a successful connection is
         /// found or the list is exhausted using the DefaultEndpointResolver.
-        /// The selection behaviour can be overriden by configuring the EndpointResolverFactory.
+        /// The selection behaviour can be sealed overriden by configuring the EndpointResolverFactory.
         /// </summary>
         /// <param name="hostnames">
         /// List of hostnames to use for the initial
@@ -407,7 +405,7 @@ namespace RabbitMQ.Client
         /// Create a connection using a list of hostnames using the configured port.
         /// By default each endpoint is tried in a random order until a successful connection is
         /// found or the list is exhausted.
-        /// The selection behaviour can be overriden by configuring the EndpointResolverFactory.
+        /// The selection behaviour can be sealed overriden by configuring the EndpointResolverFactory.
         /// </summary>
         /// <param name="hostnames">
         /// List of hostnames to use for the initial
@@ -425,13 +423,21 @@ namespace RabbitMQ.Client
         /// </exception>
         public IConnection CreateConnection(IList<string> hostnames, String clientProvidedName)
         {
-            return CreateConnection(new DefaultEndpointResolver(hostnames.Select(h => new AmqpTcpEndpoint(h, this.Port, this.Ssl))), clientProvidedName);
+            return CreateConnection(
+                new DefaultEndpointResolver(
+                    hostnames.Select(
+                        h => 
+                            new AmqpTcpEndpoint(h, this.Port, this.Ssl)
+                    )
+                ), 
+                clientProvidedName
+            );
         }
 
         /// <summary>
         /// Create a connection using a list of endpoints. By default each endpoint will be tried
         /// in a random order until a successful connection is found or the list is exhausted.
-        /// The selection behaviour can be overriden by configuring the EndpointResolverFactory.
+        /// The selection behaviour can be sealed overriden by configuring the EndpointResolverFactory.
         /// </summary>
         /// <param name="endpoints">
         /// List of endpoints to use for the initial
@@ -475,7 +481,9 @@ namespace RabbitMQ.Client
                 }
                 else
                 {
-                    conn = Protocols.DefaultProtocol.CreateConnection(this, false, endpointResolver.SelectOne(this.CreateHyperFrameHandler), clientProvidedName);
+                    conn = Protocols.DefaultProtocol.CreateConnection(this, false, endpointResolver.SelectOne(
+                        this.CreateHyperFrameHandler
+                    ), clientProvidedName);
                 }
             }
             catch (Exception e)
@@ -497,6 +505,7 @@ namespace RabbitMQ.Client
             return CreateHyperFrameHandler(this.Endpoint.CloneWithHostname(hostname));
         }
 
+        private static readonly char[] delimiter = new char[] { ':' };
 
         public void SetUri(Uri uri)
         {
@@ -537,7 +546,7 @@ namespace RabbitMQ.Client
             string userInfo = uri.UserInfo;
             if (!string.IsNullOrEmpty(userInfo))
             {
-                string[] userPass = userInfo.Split(':');
+                string[] userPass = userInfo.Split(delimiter);
                 if (userPass.Length > 2)
                 {
                     throw new ArgumentException("Bad user info in AMQP " + "URI: " + userInfo);

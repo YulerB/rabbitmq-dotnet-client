@@ -111,7 +111,7 @@
 //        [Test]
 //        public void TestTableLengthRead()
 //        {
-//            IDictionary t = (IDictionary)Reader(new byte[] { 0x00, 0x00, 0x00, 0x0C,
+//            Dictionary t = (Dictionary)Reader(new byte[] { 0x00, 0x00, 0x00, 0x0C,
 //                                                             0x03, 0x61, 0x62, 0x63,
 //                                                             0x53, 0x00, 0x00, 0x00,
 //                                                             0x03, 0x64, 0x65, 0x66 }).ReadTable();

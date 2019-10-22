@@ -73,7 +73,7 @@ namespace RabbitMQ.Client.Framing.Impl
         private readonly EmptyOutboundFrame m_heartbeatFrame = new EmptyOutboundFrame();
 
         private ManualResetEventSlim m_appContinuation = new ManualResetEventSlim(false);
-        private IDictionary<string, object> m_clientProperties;
+        private Dictionary<string, object> m_clientProperties;
 
         private volatile ShutdownEventArgs m_closeReason = null;
         private volatile bool m_closed = false;
@@ -385,7 +385,7 @@ namespace RabbitMQ.Client.Framing.Impl
             get { return m_sessionManager.ChannelMax; }
         }
 
-        public IDictionary<string, object> ClientProperties
+        public Dictionary<string, object> ClientProperties
         {
             get { return m_clientProperties; }
             set { m_clientProperties = value; }
@@ -435,7 +435,7 @@ namespace RabbitMQ.Client.Framing.Impl
             get { return m_frameHandler.Endpoint.Protocol as ProtocolBase; }
         }
 
-        public IDictionary<string, object> ServerProperties { get; set; }
+        public Dictionary<string, object> ServerProperties { get; set; }
 
         public IList<ShutdownReportEntry> ShutdownReport
         {
@@ -448,7 +448,7 @@ namespace RabbitMQ.Client.Framing.Impl
             get { return m_frameHandler.Endpoint.Protocol; }
         }
 
-        public static IDictionary<string, object> DefaultClientProperties()
+        public static Dictionary<string, object> DefaultClientProperties()
         {
             return new Dictionary<string, object>
             {
@@ -885,7 +885,7 @@ namespace RabbitMQ.Client.Framing.Impl
                         // of the heartbeat setting in setHeartbeat above.
                         if (m_missedHeartbeats > 2 * 4)
                         {
-                            String description = String.Format("Heartbeat missing with heartbeat == {0} seconds", m_heartbeat);
+                            String description = $"Heartbeat missing with heartbeat == {m_heartbeat.ToString()} seconds";
                             var eose = new EndOfStreamException(description);
                             ESLog.Error(description, eose);
                             m_shutdownReport.Add(new ShutdownReportEntry(description, eose));
@@ -1006,9 +1006,9 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return string.Format("Connection({0},{1})", m_id, Endpoint);
+            return $"Connection({m_id.ToString()},{Endpoint})";
         }
 
         internal void WriteFrame(OutboundFrame f)
@@ -1016,7 +1016,7 @@ namespace RabbitMQ.Client.Framing.Impl
             m_frameHandler.WriteFrame(f);
         }
 
-        internal void WriteFrameSet(IList<OutboundFrame> f)
+        internal void WriteFrameSet(List<OutboundFrame> f)
         {
             m_frameHandler.WriteFrameSet(f);
         }
@@ -1173,7 +1173,7 @@ namespace RabbitMQ.Client.Framing.Impl
             bool tuned = false;
             try
             {
-                string[] mechanisms = connectionStart.Mechanisms.Split(' ');
+                string[] mechanisms = connectionStart.Mechanisms.Split(new char[] { ' ' });
                 IAuthMechanismFactory mechanismFactory = m_factory.AuthMechanismFactory(mechanisms);
                 if (mechanismFactory == null)
                 {

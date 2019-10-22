@@ -53,19 +53,19 @@ namespace RabbitMQ.Client.Framing.Impl
         public const ushort ClassId = 10;
         public const ushort MethodId = 11;
 
-        private System.Collections.Generic.IDictionary<string, object> m_clientProperties;
+        private System.Collections.Generic.Dictionary<string, object> m_clientProperties;
         private string m_mechanism;
         private string m_response;
         private string m_locale;
 
-        public System.Collections.Generic.IDictionary<string, object> ClientProperties { get { return m_clientProperties; } }
+        public System.Collections.Generic.Dictionary<string, object> ClientProperties { get { return m_clientProperties; } }
         public string Mechanism { get { return m_mechanism; } }
         public string Response { get { return m_response; } }
         public string Locale { get { return m_locale; } }
         public ConnectionStartOk() { }
 
         public ConnectionStartOk(
-          System.Collections.Generic.IDictionary<string, object> initClientProperties,
+          System.Collections.Generic.Dictionary<string, object> initClientProperties,
           string initMechanism,
           string initResponse,
           string initLocale)

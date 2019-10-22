@@ -54,7 +54,7 @@ namespace RabbitMQ.Client.Framing.Impl
 {
     public abstract class ProtocolBase : IProtocol
     {
-        public IDictionary<string, bool> Capabilities = new Dictionary<string, bool>();
+        public Dictionary<string, bool> Capabilities = new Dictionary<string, bool>();
 
         public ProtocolBase()
         {
@@ -98,17 +98,17 @@ namespace RabbitMQ.Client.Framing.Impl
         public abstract RabbitMQ.Client.Impl.BasicProperties DecodeContentHeaderFrom(ArraySegmentSequence reader);
         public abstract IMethod DecodeMethodFrom(ArraySegmentSequence reader);
 
-        public override bool Equals(object obj)
+        public sealed override bool Equals(object obj)
         {
             return (GetType() == obj.GetType());
         }
 
-        public override int GetHashCode()
+        public sealed override int GetHashCode()
         {
             return GetType().GetHashCode();
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
             return Version.ToString();
         }

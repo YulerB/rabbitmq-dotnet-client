@@ -140,7 +140,7 @@ namespace RabbitMQ.Client
             }
         }
 
-        public void Write(IList<ArraySegment<byte>> data)
+        public void Write(List<ArraySegment<byte>> data)
         {
             using (var ms = MemoryStreamPool.GetObject())
             {

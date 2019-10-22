@@ -83,9 +83,9 @@ namespace RabbitMQ.Client.Impl
         public abstract string Expiration { get; set; }
 
         /// <summary>
-        /// Message header field table. Is of type <see cref="IDictionary{TKey,TValue}" />.
+        /// Message header field table. Is of type <see cref="Dictionary{TKey,TValue}" />.
         /// </summary>
-        public abstract IDictionary<string, object> Headers { get; set; }
+        public abstract Dictionary<string, object> Headers { get; set; }
 
         /// <summary>
         /// Application message Id.

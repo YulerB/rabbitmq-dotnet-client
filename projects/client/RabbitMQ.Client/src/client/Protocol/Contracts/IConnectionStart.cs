@@ -48,7 +48,7 @@ namespace RabbitMQ.Client.Framing
     {
         byte VersionMajor { get; }
         byte VersionMinor { get; }
-        System.Collections.Generic.IDictionary<string, object> ServerProperties { get; }
+        System.Collections.Generic.Dictionary<string, object> ServerProperties { get; }
         string Mechanisms { get; }
         string Locales { get; }
     }

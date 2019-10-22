@@ -70,12 +70,12 @@
 //            array.Add(1234);
 //            t["fieldarray"] = array;
 //            WireFormatting.WriteTable(w, t);
-//            IDictionary nt = (IDictionary)WireFormatting.ReadTable(Reader(Contents(w)));
+//            Dictionary nt = (Dictionary)WireFormatting.ReadTable(Reader(Contents(w)));
 //            Assert.AreEqual(Encoding.UTF8.GetBytes("Hello"), nt["string"]);
 //            Assert.AreEqual(1234, nt["int"]);
 //            Assert.AreEqual(12.34m, nt["decimal"]);
 //            Assert.AreEqual(0, ((AmqpTimestamp)nt["timestamp"]).UnixTime);
-//            IDictionary nt2 = (IDictionary)nt["fieldtable"];
+//            Dictionary nt2 = (Dictionary)nt["fieldtable"];
 //            Assert.AreEqual(Encoding.UTF8.GetBytes("test"), nt2["test"]);
 //            IList narray = (IList)nt["fieldarray"];
 //            Assert.AreEqual(Encoding.UTF8.GetBytes("longstring"), narray[0]);
@@ -127,7 +127,7 @@
 //            t["x"] = new BinaryTableValue(xbytes);
 //            t["V"] = null;
 //            WireFormatting.WriteTable(w, t);
-//            IDictionary nt = (IDictionary)WireFormatting.ReadTable(Reader(Contents(w)));
+//            Dictionary nt = (Dictionary)WireFormatting.ReadTable(Reader(Contents(w)));
 //            Assert.AreEqual(typeof(sbyte), nt["b"].GetType()); Assert.AreEqual((sbyte)-128, nt["b"]);
 //            Assert.AreEqual(typeof(double), nt["d"].GetType()); Assert.AreEqual((double)123, nt["d"]);
 //            Assert.AreEqual(typeof(float), nt["f"].GetType()); Assert.AreEqual((float)123, nt["f"]);

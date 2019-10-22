@@ -52,7 +52,7 @@ namespace RabbitMQ.Client.Impl
             Queue = queue;
         }
 
-        public IDictionary<string, object> Arguments { get; set; }
+        public Dictionary<string, object> Arguments { get; set; }
         public bool AutoAck { get; set; }
         public IBasicConsumer Consumer { get; set; }
         public string ConsumerTag { get; set; }
@@ -68,7 +68,7 @@ namespace RabbitMQ.Client.Impl
             return ConsumerTag;
         }
 
-        public RecordedConsumer WithArguments(IDictionary<string, object> value)
+        public RecordedConsumer WithArguments(Dictionary<string, object> value)
         {
             Arguments = value;
             return this;

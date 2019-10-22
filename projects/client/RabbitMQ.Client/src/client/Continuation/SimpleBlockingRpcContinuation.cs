@@ -73,11 +73,10 @@ namespace RabbitMQ.Client.Impl
 
         private static void ReportInvalidInvariant(Either<AssembledCommandBase<FrameBuilder>, ShutdownEventArgs> result)
         {
-            string error = "Illegal EitherAlternative " + result.Alternative;
 #if !(NETFX_CORE)
-            //Trace.Fail(error);
+            //Trace.Fail("Illegal EitherAlternative " + result.Alternative);
 #else
-            MetroEventSource.Log.Error(error);
+            MetroEventSource.Log.Error("Illegal EitherAlternative " + result.Alternative);
 #endif
         }
 

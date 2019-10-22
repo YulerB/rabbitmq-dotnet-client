@@ -25,28 +25,28 @@ namespace RabbitMQ.Client.Events
         public event AsyncEventHandler<ConsumerEventArgs> Unregistered;
 
         ///<summary>Fires the Unregistered event.</summary>
-        public override async Task HandleBasicCancelOk(string consumerTag)
+        public sealed override async Task HandleBasicCancelOk(string consumerTag)
         {
             await base.HandleBasicCancelOk(consumerTag).ConfigureAwait(false);
             await Raise(Unregistered, new ConsumerEventArgs(consumerTag)).ConfigureAwait(false);
         }
 
         ///<summary>Fires the Registered event.</summary>
-        public override async Task HandleBasicConsumeOk(string consumerTag)
+        public sealed override async Task HandleBasicConsumeOk(string consumerTag)
         {
             await base.HandleBasicConsumeOk(consumerTag).ConfigureAwait(false);
             await Raise(Registered, new ConsumerEventArgs(consumerTag)).ConfigureAwait(false);
         }
 
         ///<summary>Fires the Received event.</summary>
-        public override async Task HandleBasicDeliver(BasicDeliverEventArgs args)
+        public sealed override async Task HandleBasicDeliver(BasicDeliverEventArgs args)
         {
             await base.HandleBasicDeliver(args).ConfigureAwait(false);
             await Raise(Received, args).ConfigureAwait(false);
         }
 
         ///<summary>Fires the Shutdown event.</summary>
-        public override async Task HandleModelShutdown(object model, ShutdownEventArgs reason)
+        public sealed override async Task HandleModelShutdown(object model, ShutdownEventArgs reason)
         {
             await base.HandleModelShutdown(model, reason).ConfigureAwait(false);
             await Raise(Shutdown, reason).ConfigureAwait(false);

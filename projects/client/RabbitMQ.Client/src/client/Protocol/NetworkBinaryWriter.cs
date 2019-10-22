@@ -133,7 +133,7 @@ namespace RabbitMQ.Util
             }
 
             byte[] bytes = Encoding.UTF8.GetBytes(val);
-            if (bytes.Length > 255) throw new WireFormattingException($"Short string too long; UTF-8 encoded length={bytes.Length}, max=255");
+            if (bytes.Length > 255) throw new WireFormattingException($"Short string too long; UTF-8 encoded length={bytes.Length.ToString()}, max=255");
             output[ZERO] = Convert.ToByte(bytes.Length);
             bytes.AsSpan().CopyTo(output.Slice(1));
             written = bytes.Length + 1;
@@ -217,7 +217,7 @@ namespace RabbitMQ.Util
         ///</para>
         ///</remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTable(Span<byte> output, IDictionary<string, object> val, out int written)
+        public static void WriteTable(Span<byte> output, Dictionary<string, object> val, out int written)
         {
             if (val == null)
             {
@@ -238,7 +238,7 @@ namespace RabbitMQ.Util
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void WriteTable(Span<byte> output, IDictionary<string, bool> val, out int written)
+        public static void WriteTable(Span<byte> output, Dictionary<string, bool> val, out int written)
         {
             if (val == null)
             {
@@ -275,7 +275,7 @@ namespace RabbitMQ.Util
                 bitRepresentation[2] != ZERO || // mantissa extends into top word
                 bitRepresentation[ZERO] < ZERO) // mantissa extends beyond 31 bits
             {
-                throw new WireFormattingException("Decimal overflow in AMQP encoding", value);
+                throw new WireFormattingException("Decimal overflow in AMQP encoding", value.ToString());
             }
             scale = (byte)((((uint)bitRepresentation[3]) >> 16) & 0xFF);
             mantissa = (int)((((uint)bitRepresentation[3]) & 0x80000000) |
@@ -365,16 +365,16 @@ namespace RabbitMQ.Util
                 WriteTimestamp(output.Slice(1), (AmqpTimestamp)value, out int written1);
                 written = written1 + 1;
             }
-            else if (value is IDictionary<string, bool>)
+            else if (value is Dictionary<string, bool>)
             {
                 output[ZERO] = F;
-                WriteTable(output.Slice(1), value as IDictionary<string, bool>, out int written1);
+                WriteTable(output.Slice(1), value as Dictionary<string, bool>, out int written1);
                 written = written1 + 1;
             }
-            else if (value is IDictionary)
+            else if (value is Dictionary<string, object>)
             {
                 output[ZERO] = F;
-                WriteTable(output.Slice(1), value as IDictionary<string, object>, out int written1);
+                WriteTable(output.Slice(1), value as Dictionary<string, object>, out int written1);
                 written = written1 + 1;
             }
             else if (value is IList)
@@ -456,12 +456,12 @@ namespace RabbitMQ.Util
             written = 2;
         }
 
-        public static int EstimateTableSize(IDictionary<string, object> m_arguments)
+        public static int EstimateTableSize(Dictionary<string, object> m_arguments)
         {
             if (m_arguments == null) return 4;
             return 4+EstimateTableContentSize(m_arguments);
         }
-        private static int EstimateTableSize(IDictionary<string, bool> m_arguments)
+        private static int EstimateTableSize(Dictionary<string, bool> m_arguments)
         {
             if (m_arguments == null) return 4;
             return 4+EstimateTableContentSize(m_arguments);
@@ -471,7 +471,7 @@ namespace RabbitMQ.Util
             if (m_arguments == null) return 4;
             return 4+EstimateArrayContentSize(m_arguments);
         }
-        private static int EstimateTableContentSize(IDictionary<string, object> val)
+        private static int EstimateTableContentSize(Dictionary<string, object> val)
         {
             int size = ZERO;
 
@@ -481,7 +481,7 @@ namespace RabbitMQ.Util
             }
             return size;
         }
-        private static int EstimateTableContentSize(IDictionary<string, bool> val)
+        private static int EstimateTableContentSize(Dictionary<string, bool> val)
         {
             int size = ZERO;
 
@@ -517,13 +517,13 @@ namespace RabbitMQ.Util
             {
                 return 9;
             }
-            else if (value is IDictionary<string, bool>)
+            else if (value is Dictionary<string, bool>)
             {
-                return 1 + EstimateTableSize(value as IDictionary<string, bool>);
+                return 1 + EstimateTableSize(value as Dictionary<string, bool>);
             }
-            else if (value is IDictionary)
+            else if (value is Dictionary<string, object>)
             {
-                return 1 + EstimateTableSize(value as IDictionary<string, object>);
+                return 1 + EstimateTableSize(value as Dictionary<string, object>);
             }
             else if (value is IList)
             {

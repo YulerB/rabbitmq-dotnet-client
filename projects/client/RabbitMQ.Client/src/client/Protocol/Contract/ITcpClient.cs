@@ -35,7 +35,7 @@ namespace RabbitMQ.Client
         int ClientLocalEndPointPort { get; }
         Task ConnectAsync();
         void Write(ArraySegment<byte> data);
-        void Write(IList<ArraySegment<byte>> data);
+        void Write(List<ArraySegment<byte>> data);
         event EventHandler<Memory<byte>> Receive;
         event EventHandler Closed;
 

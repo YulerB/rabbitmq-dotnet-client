@@ -80,6 +80,6 @@ namespace RabbitMQ.Client.Impl
         void HandleFrame(InboundFrame frame);
         void Notify();
         void Transmit<T>(SendCommand<T> cmd) where T: IMethod;
-        void Transmit<T>(IList<SendCommand<T>> cmd) where T: IMethod;
+        void Transmit<T>(List<SendCommand<T>> cmd) where T: IMethod;
     }
 }

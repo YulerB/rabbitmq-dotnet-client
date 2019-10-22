@@ -69,6 +69,7 @@ namespace RabbitMQ.Client
 
             RemoteCertificateValidationCallback remoteCertValidator =
                 sslOption.CertificateValidationCallback ?? helper.CertificateValidationCallback;
+
             LocalCertificateSelectionCallback localCertSelector =
                 sslOption.CertificateSelectionCallback ?? helper.CertificateSelectionCallback;
 

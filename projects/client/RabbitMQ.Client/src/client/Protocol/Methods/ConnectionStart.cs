@@ -55,20 +55,20 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private byte m_versionMajor;
         private byte m_versionMinor;
-        private System.Collections.Generic.IDictionary<string, object> m_serverProperties;
+        private System.Collections.Generic.Dictionary<string, object> m_serverProperties;
         private string m_mechanisms;
         private string m_locales;
 
         public byte VersionMajor { get { return m_versionMajor; } }
         public byte VersionMinor { get { return m_versionMinor; } }
-        public System.Collections.Generic.IDictionary<string, object> ServerProperties { get { return m_serverProperties; } }
+        public System.Collections.Generic.Dictionary<string, object> ServerProperties { get { return m_serverProperties; } }
         public string Mechanisms { get { return m_mechanisms; } }
         public string Locales { get { return m_locales; } }
         public ConnectionStart(){ }
         public ConnectionStart(
           byte initVersionMajor,
           byte initVersionMinor,
-          System.Collections.Generic.IDictionary<string, object> initServerProperties,
+          System.Collections.Generic.Dictionary<string, object> initServerProperties,
           string initMechanisms,
           string initLocales)
         {

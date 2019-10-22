@@ -95,7 +95,7 @@ namespace RabbitMQ.Client.Impl
 
         private void TransmitAsSingleFrame(ushort channelNumber, Connection connection)
         {
-            connection.WriteFrame(new MethodOutboundFrame(channelNumber, Method));
+            connection.WriteFrame(new MethodOutboundFrame<T>(channelNumber, Method));
         }
 
         private void TransmitAsFrameSet(ushort channelNumber, Connection connection)
@@ -109,7 +109,7 @@ namespace RabbitMQ.Client.Impl
 
                 var frames = new List<OutboundFrame>(2 + Convert.ToInt32(body.Length / bodyPayloadMax))
                 {
-                    new MethodOutboundFrame(channelNumber, Method),
+                    new MethodOutboundFrame<T>(channelNumber, Method),
                     new HeaderOutboundFrame(channelNumber, Header, (ulong) body.Length)
                 };
 
@@ -126,7 +126,7 @@ namespace RabbitMQ.Client.Impl
             }
             else
             {
-                connection.WriteFrame(new MethodOutboundFrame(channelNumber, Method));
+                connection.WriteFrame(new MethodOutboundFrame<T>(channelNumber, Method));
             }
         }
     }
@@ -135,14 +135,14 @@ namespace RabbitMQ.Client.Impl
     {
         private const uint UZERO = 0U;
         private const long LZERO = 0L;
-        public static List<OutboundFrame> CalculateFrames<T>(ushort channelNumber, Connection connection, IList<SendCommand<T>> commands) where T : IMethod
+        public static List<OutboundFrame> CalculateFrames<T>(ushort channelNumber, Connection connection, List<SendCommand<T>> commands) where T : IMethod
         {
             var frameMax = Math.Min(uint.MaxValue, connection.FrameMax);
             var frames = new List<OutboundFrame>(commands.Count * 3);
             var frameMaxEqualsZero = frameMax == UZERO;
             foreach (var cmd in commands)
             {
-                frames.Add(new MethodOutboundFrame(channelNumber, cmd.Method));
+                frames.Add(new MethodOutboundFrame<T>(channelNumber, cmd.Method));
                 if (cmd.Method.HasContent)
                 {
                     var body = cmd.Body;

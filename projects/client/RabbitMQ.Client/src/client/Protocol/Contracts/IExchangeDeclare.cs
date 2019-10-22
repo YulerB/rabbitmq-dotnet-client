@@ -53,6 +53,6 @@ namespace RabbitMQ.Client.Framing
         string Exchange { get; }
         string Type { get; }
         ExchangeDeclareFlags Flag { get; }
-        System.Collections.Generic.IDictionary<string, object> Arguments { get; }
+        System.Collections.Generic.Dictionary<string, object> Arguments { get; }
     }
 }

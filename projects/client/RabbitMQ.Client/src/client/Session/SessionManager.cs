@@ -60,7 +60,7 @@ namespace RabbitMQ.Client.Impl
         public readonly ushort ChannelMax;
         private readonly UIntAllocator UInts;
         private readonly Connection m_connection;
-        private readonly IDictionary<ushort, ISession> m_sessionMap = new Dictionary<ushort, ISession>();
+        private readonly Dictionary<ushort, ISession> m_sessionMap = new Dictionary<ushort, ISession>();
         private bool m_autoClose = false;
 
         public SessionManager(Connection connection, ushort channelMax)

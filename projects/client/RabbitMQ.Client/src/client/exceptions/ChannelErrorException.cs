@@ -57,7 +57,7 @@ namespace RabbitMQ.Client.Impl
         ///<summary>The channel number concerned.</summary>
         public int Channel { get; private set; }
 
-        public override ushort ReplyCode
+        public sealed override ushort ReplyCode
         {
             get { return Constants.ChannelError; }
         }

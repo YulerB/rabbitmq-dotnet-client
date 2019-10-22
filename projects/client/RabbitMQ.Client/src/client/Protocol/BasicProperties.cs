@@ -54,7 +54,7 @@ namespace RabbitMQ.Client.Framing
         private const long LZERO = 0L;
         private string m_contentType;
         private string m_contentEncoding;
-        private System.Collections.Generic.IDictionary<string, object> m_headers;
+        private System.Collections.Generic.Dictionary<string, object> m_headers;
         private byte m_deliveryMode;
         private byte m_priority;
         private string m_correlationId;
@@ -68,7 +68,7 @@ namespace RabbitMQ.Client.Framing
         private string m_clusterId;
         private PresenseFlags presenseFlags = PresenseFlags.None;
 
-        public override string ContentType
+        public sealed override string ContentType
         {
             get
             {
@@ -83,7 +83,7 @@ namespace RabbitMQ.Client.Framing
                 m_contentType = value;
             }
         }
-        public override string ContentEncoding
+        public sealed override string ContentEncoding
         {
             get
             {
@@ -98,7 +98,7 @@ namespace RabbitMQ.Client.Framing
                 m_contentEncoding = value;
             }
         }
-        public override System.Collections.Generic.IDictionary<string, object> Headers
+        public sealed override System.Collections.Generic.Dictionary<string, object> Headers
         {
             get
             {
@@ -113,7 +113,7 @@ namespace RabbitMQ.Client.Framing
                 m_headers = value;
             }
         }
-        public override byte DeliveryMode
+        public sealed override byte DeliveryMode
         {
             get
             {
@@ -130,7 +130,7 @@ namespace RabbitMQ.Client.Framing
                 m_deliveryMode = value;
             }
         }
-        public override byte Priority
+        public sealed override byte Priority
         {
             get
             {
@@ -145,7 +145,7 @@ namespace RabbitMQ.Client.Framing
                 m_priority = value;
             }
         }
-        public override string CorrelationId
+        public sealed override string CorrelationId
         {
             get
             {
@@ -160,7 +160,7 @@ namespace RabbitMQ.Client.Framing
                 m_correlationId = value;
             }
         }
-        public override string ReplyTo
+        public sealed override string ReplyTo
         {
             get
             {
@@ -175,7 +175,7 @@ namespace RabbitMQ.Client.Framing
                 m_replyTo = value;
             }
         }
-        public override string Expiration
+        public sealed override string Expiration
         {
             get
             {
@@ -190,7 +190,7 @@ namespace RabbitMQ.Client.Framing
                 m_expiration = value;
             }
         }
-        public override string MessageId
+        public sealed override string MessageId
         {
             get
             {
@@ -205,7 +205,7 @@ namespace RabbitMQ.Client.Framing
                 m_messageId = value;
             }
         }
-        public override AmqpTimestamp Timestamp
+        public sealed override AmqpTimestamp Timestamp
         {
             get
             {
@@ -220,7 +220,7 @@ namespace RabbitMQ.Client.Framing
                 m_timestamp = value;
             }
         }
-        public override string Type
+        public sealed override string Type
         {
             get
             {
@@ -235,7 +235,7 @@ namespace RabbitMQ.Client.Framing
                 m_type = value;
             }
         }
-        public override string UserId
+        public sealed override string UserId
         {
             get
             {
@@ -250,7 +250,7 @@ namespace RabbitMQ.Client.Framing
                 m_userId = value;
             }
         }
-        public override string AppId
+        public sealed override string AppId
         {
             get
             {
@@ -265,7 +265,7 @@ namespace RabbitMQ.Client.Framing
                 m_appId = value;
             }
         }
-        public override string ClusterId
+        public sealed override string ClusterId
         {
             get
             {
@@ -281,41 +281,41 @@ namespace RabbitMQ.Client.Framing
             }
         }
 
-        public override void ClearContentType() { presenseFlags = presenseFlags & ~PresenseFlags.HasContentType; }
-        public override void ClearContentEncoding() { presenseFlags = presenseFlags & ~PresenseFlags.HasContentEncoding; }
-        public override void ClearHeaders() { presenseFlags = presenseFlags & ~PresenseFlags.HasHeaders; }
-        public override void ClearDeliveryMode() { presenseFlags = presenseFlags & ~PresenseFlags.HasDeliveryMode; }
-        public override void ClearPriority() { presenseFlags = presenseFlags & ~PresenseFlags.HasPriority; }
-        public override void ClearCorrelationId() { presenseFlags = presenseFlags & ~PresenseFlags.HasCorrelationId; }
-        public override void ClearReplyTo() { presenseFlags = presenseFlags & ~PresenseFlags.HasReplyTo; }
-        public override void ClearExpiration() { presenseFlags = presenseFlags & ~PresenseFlags.HasExpiration; }
-        public override void ClearMessageId() { presenseFlags = presenseFlags & ~PresenseFlags.HasMessageId; }
-        public override void ClearTimestamp() { presenseFlags = presenseFlags & ~PresenseFlags.HasTimestamp; }
-        public override void ClearType() { presenseFlags = presenseFlags & ~PresenseFlags.HasType; }
-        public override void ClearUserId() { presenseFlags = presenseFlags & ~PresenseFlags.HasUserId; }
-        public override void ClearAppId() { presenseFlags = presenseFlags & ~PresenseFlags.HasAppId; }
-        public override void ClearClusterId() { presenseFlags = presenseFlags & ~PresenseFlags.HasClusterId; }
+        public sealed override void ClearContentType() { presenseFlags = presenseFlags & ~PresenseFlags.HasContentType; }
+        public sealed override void ClearContentEncoding() { presenseFlags = presenseFlags & ~PresenseFlags.HasContentEncoding; }
+        public sealed override void ClearHeaders() { presenseFlags = presenseFlags & ~PresenseFlags.HasHeaders; }
+        public sealed override void ClearDeliveryMode() { presenseFlags = presenseFlags & ~PresenseFlags.HasDeliveryMode; }
+        public sealed override void ClearPriority() { presenseFlags = presenseFlags & ~PresenseFlags.HasPriority; }
+        public sealed override void ClearCorrelationId() { presenseFlags = presenseFlags & ~PresenseFlags.HasCorrelationId; }
+        public sealed override void ClearReplyTo() { presenseFlags = presenseFlags & ~PresenseFlags.HasReplyTo; }
+        public sealed override void ClearExpiration() { presenseFlags = presenseFlags & ~PresenseFlags.HasExpiration; }
+        public sealed override void ClearMessageId() { presenseFlags = presenseFlags & ~PresenseFlags.HasMessageId; }
+        public sealed override void ClearTimestamp() { presenseFlags = presenseFlags & ~PresenseFlags.HasTimestamp; }
+        public sealed override void ClearType() { presenseFlags = presenseFlags & ~PresenseFlags.HasType; }
+        public sealed override void ClearUserId() { presenseFlags = presenseFlags & ~PresenseFlags.HasUserId; }
+        public sealed override void ClearAppId() { presenseFlags = presenseFlags & ~PresenseFlags.HasAppId; }
+        public sealed override void ClearClusterId() { presenseFlags = presenseFlags & ~PresenseFlags.HasClusterId; }
 
-        public override bool IsContentTypePresent() { return (presenseFlags & PresenseFlags.HasContentType) == PresenseFlags.HasContentType; }
-        public override bool IsContentEncodingPresent() { return (presenseFlags & PresenseFlags.HasContentEncoding) == PresenseFlags.HasContentEncoding; }
-        public override bool IsHeadersPresent() { return (presenseFlags & PresenseFlags.HasHeaders) == PresenseFlags.HasHeaders; }
-        public override bool IsDeliveryModePresent() { return (presenseFlags & PresenseFlags.HasDeliveryMode) == PresenseFlags.HasDeliveryMode; }
-        public override bool IsPriorityPresent() { return (presenseFlags & PresenseFlags.HasPriority) == PresenseFlags.HasPriority; }
-        public override bool IsCorrelationIdPresent() { return (presenseFlags & PresenseFlags.HasCorrelationId) == PresenseFlags.HasCorrelationId; }
-        public override bool IsReplyToPresent() { return (presenseFlags & PresenseFlags.HasReplyTo) == PresenseFlags.HasReplyTo; }
-        public override bool IsExpirationPresent() { return (presenseFlags & PresenseFlags.HasExpiration) == PresenseFlags.HasExpiration; }
-        public override bool IsMessageIdPresent() { return (presenseFlags & PresenseFlags.HasMessageId) == PresenseFlags.HasMessageId; }
-        public override bool IsTimestampPresent() { return (presenseFlags & PresenseFlags.HasTimestamp) == PresenseFlags.HasTimestamp; }
-        public override bool IsTypePresent() { return (presenseFlags & PresenseFlags.HasType) == PresenseFlags.HasType; }
-        public override bool IsUserIdPresent() { return (presenseFlags & PresenseFlags.HasUserId) == PresenseFlags.HasUserId ; }
-        public override bool IsAppIdPresent() { return (presenseFlags & PresenseFlags.HasAppId) == PresenseFlags.HasAppId; }
-        public override bool IsClusterIdPresent() { return (presenseFlags & PresenseFlags.HasClusterId) == PresenseFlags.HasClusterId; }
+        public sealed override bool IsContentTypePresent() { return (presenseFlags & PresenseFlags.HasContentType) == PresenseFlags.HasContentType; }
+        public sealed override bool IsContentEncodingPresent() { return (presenseFlags & PresenseFlags.HasContentEncoding) == PresenseFlags.HasContentEncoding; }
+        public sealed override bool IsHeadersPresent() { return (presenseFlags & PresenseFlags.HasHeaders) == PresenseFlags.HasHeaders; }
+        public sealed override bool IsDeliveryModePresent() { return (presenseFlags & PresenseFlags.HasDeliveryMode) == PresenseFlags.HasDeliveryMode; }
+        public sealed override bool IsPriorityPresent() { return (presenseFlags & PresenseFlags.HasPriority) == PresenseFlags.HasPriority; }
+        public sealed override bool IsCorrelationIdPresent() { return (presenseFlags & PresenseFlags.HasCorrelationId) == PresenseFlags.HasCorrelationId; }
+        public sealed override bool IsReplyToPresent() { return (presenseFlags & PresenseFlags.HasReplyTo) == PresenseFlags.HasReplyTo; }
+        public sealed override bool IsExpirationPresent() { return (presenseFlags & PresenseFlags.HasExpiration) == PresenseFlags.HasExpiration; }
+        public sealed override bool IsMessageIdPresent() { return (presenseFlags & PresenseFlags.HasMessageId) == PresenseFlags.HasMessageId; }
+        public sealed override bool IsTimestampPresent() { return (presenseFlags & PresenseFlags.HasTimestamp) == PresenseFlags.HasTimestamp; }
+        public sealed override bool IsTypePresent() { return (presenseFlags & PresenseFlags.HasType) == PresenseFlags.HasType; }
+        public sealed override bool IsUserIdPresent() { return (presenseFlags & PresenseFlags.HasUserId) == PresenseFlags.HasUserId ; }
+        public sealed override bool IsAppIdPresent() { return (presenseFlags & PresenseFlags.HasAppId) == PresenseFlags.HasAppId; }
+        public sealed override bool IsClusterIdPresent() { return (presenseFlags & PresenseFlags.HasClusterId) == PresenseFlags.HasClusterId; }
 
         public BasicProperties() { }
-        public override ushort ProtocolClassId { get { return 60; } }
-        public override string ProtocolClassName { get { return "basic"; } }
+        public sealed override ushort ProtocolClassId { get { return 60; } }
+        public sealed override string ProtocolClassName { get { return "basic"; } }
 
-        public override void ReadPropertiesFrom(ArraySegmentSequence stream)
+        public sealed override void ReadPropertiesFrom(ArraySegmentSequence stream)
         {
             presenseFlags = (PresenseFlags)stream.ReadUInt16();
 
@@ -336,7 +336,7 @@ namespace RabbitMQ.Client.Framing
         }
 
 
-        public override void WritePropertiesTo(Span<byte> writer, out int written)
+        public sealed override void WritePropertiesTo(Span<byte> writer, out int written)
         {
             NetworkBinaryWriter1.WriteUInt16(writer,(UInt16) presenseFlags, out int written1);
 
@@ -412,7 +412,7 @@ namespace RabbitMQ.Client.Framing
             }
         }
 
-        public override void AppendPropertyDebugStringTo(System.Text.StringBuilder sb)
+        public sealed override void AppendPropertyDebugStringTo(System.Text.StringBuilder sb)
         {
             sb.Append("(");
             //sb.Append("content-type="); sb.Append(m_contentType_present ? (m_contentType == null ? "(null)" : m_contentType.ToString()) : "_"); sb.Append(", ");
@@ -432,7 +432,7 @@ namespace RabbitMQ.Client.Framing
             sb.Append(")");
         }
 
-        internal override int EstimatePropertiesSize()
+        internal sealed override int EstimatePropertiesSize()
         {
             var total = 2;
 

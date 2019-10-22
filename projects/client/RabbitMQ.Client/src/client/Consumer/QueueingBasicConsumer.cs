@@ -126,19 +126,19 @@ namespace RabbitMQ.Client
         public SharedQueue<BasicDeliverEventArgs> Queue { get; protected set; }
 
         /// <summary>
-        /// Overrides <see cref="DefaultBasicConsumer"/>'s  <see cref="HandleBasicDeliver"/> implementation,
+        /// sealed overrides <see cref="DefaultBasicConsumer"/>'s  <see cref="HandleBasicDeliver"/> implementation,
         ///  building a <see cref="BasicDeliverEventArgs"/> instance and placing it in the Queue.
         /// </summary>
-        public override void HandleBasicDeliver(BasicDeliverEventArgs args)
+        public sealed override void HandleBasicDeliver(BasicDeliverEventArgs args)
         {
             Queue.Enqueue(args);
         }
 
         /// <summary>
-        /// Overrides <see cref="DefaultBasicConsumer"/>'s OnCancel implementation,
+        /// sealed overrides <see cref="DefaultBasicConsumer"/>'s OnCancel implementation,
         ///  extending it to call the Close() method of the <see cref="SharedQueue"/>.
         /// </summary>
-        public override void OnCancel()
+        public sealed override void OnCancel()
         {
             base.OnCancel();
             Queue.Close();

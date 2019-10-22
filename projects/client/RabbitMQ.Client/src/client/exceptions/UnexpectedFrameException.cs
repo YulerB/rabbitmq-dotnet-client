@@ -61,7 +61,7 @@ namespace RabbitMQ.Client.Impl
             get { return m_frame; }
         }
 
-        public override ushort ReplyCode
+        public sealed override ushort ReplyCode
         {
             get { return Constants.CommandInvalid; }
         }

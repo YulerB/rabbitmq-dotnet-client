@@ -365,7 +365,7 @@ namespace RabbitMQ.Client.Impl
             return m_delegate.SetCloseReason(reason);
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
             return m_delegate.ToString();
         }
@@ -626,7 +626,7 @@ namespace RabbitMQ.Client.Impl
         public void _Private_ExchangeDeclare(string exchange,
             string type,
               ExchangeDeclareFlags flag,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             _Private_ExchangeDeclare(exchange, type, flag, arguments);
         }
@@ -646,7 +646,7 @@ namespace RabbitMQ.Client.Impl
             string exchange,
             string routingKey,
             bool nowait,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             _Private_QueueBind(queue, exchange, routingKey,
                 nowait, arguments);
@@ -654,7 +654,7 @@ namespace RabbitMQ.Client.Impl
 
         public void _Private_QueueDeclare(string queue,
             QueueDeclareFlags flag,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             m_delegate._Private_QueueDeclare(queue, flag, arguments);
         }
@@ -715,7 +715,7 @@ namespace RabbitMQ.Client.Impl
             string queue,
             string consumerTag,
             BasicConsumeFlags settings,
-            IDictionary<string, object> arguments,
+            Dictionary<string, object> arguments,
             IBasicConsumer consumer)
         {
             var result = m_delegate.BasicConsume(queue, consumerTag, settings, arguments, consumer);
@@ -838,7 +838,7 @@ namespace RabbitMQ.Client.Impl
         }
 
         public void ExchangeDeclare(string exchange, string type, bool durable,
-            bool autoDelete, IDictionary<string, object> arguments)
+            bool autoDelete, Dictionary<string, object> arguments)
         {
             RecordedExchange rx = new RecordedExchange(this, exchange).
                 WithType(type).
@@ -854,7 +854,7 @@ namespace RabbitMQ.Client.Impl
             string type,
             bool durable,
             bool autoDelete,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             RecordedExchange rx = new RecordedExchange(this, exchange).
                 WithType(type).
@@ -905,7 +905,7 @@ namespace RabbitMQ.Client.Impl
         public void QueueBind(string queue,
             string exchange,
             string routingKey,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             var qb = new RecordedQueueBinding(this).
                 WithSource(exchange).
@@ -919,14 +919,14 @@ namespace RabbitMQ.Client.Impl
         public void QueueBindNoWait(string queue,
             string exchange,
             string routingKey,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             m_delegate.QueueBind(queue, exchange, routingKey, arguments);
         }
 
         public QueueDeclareOk QueueDeclare(string queue, bool durable,
                                            bool exclusive, bool autoDelete,
-                                           IDictionary<string, object> arguments)
+                                           Dictionary<string, object> arguments)
         {
             var result = m_delegate.QueueDeclare(queue, durable, exclusive,
                 autoDelete, arguments);
@@ -942,7 +942,7 @@ namespace RabbitMQ.Client.Impl
 
         public void QueueDeclareNoWait(string queue, bool durable,
                                        bool exclusive, bool autoDelete,
-                                       IDictionary<string, object> arguments)
+                                       Dictionary<string, object> arguments)
         {
             m_delegate.QueueDeclareNoWait(queue, durable, exclusive,
                 autoDelete, arguments);
@@ -995,7 +995,7 @@ namespace RabbitMQ.Client.Impl
         public void QueueUnbind(string queue,
             string exchange,
             string routingKey,
-            IDictionary<string, object> arguments)
+            Dictionary<string, object> arguments)
         {
             RecordedBinding qb = new RecordedQueueBinding(this).
                 WithSource(exchange).

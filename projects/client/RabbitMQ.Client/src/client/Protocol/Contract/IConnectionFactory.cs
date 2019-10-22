@@ -50,7 +50,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Dictionary of client properties to be sent to the server.
         /// </summary>
-        IDictionary<String, object> ClientProperties { get; set; }
+        Dictionary<String, object> ClientProperties { get; set; }
 
         /// <summary>
         /// Password to use when authenticating to the server.
@@ -142,7 +142,7 @@ namespace RabbitMQ.Client
 
         /// <summary>
         /// Create a connection using a list of endpoints.
-        /// The selection behaviour can be overriden by configuring the EndpointResolverFactory.
+        /// The selection behaviour can be sealed overriden by configuring the EndpointResolverFactory.
         /// </summary>
         /// <param name="endpoints">
         /// List of endpoints to use for the initial

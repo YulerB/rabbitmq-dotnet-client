@@ -285,7 +285,7 @@ namespace RabbitMQ.Client.Impl
         void _Private_ExchangeDeclare(string exchange,
             string type,
             ExchangeDeclareFlags flag,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         ///<summary>Used to send a Exchange.Delete method. Called by the
         ///public delete method.
@@ -307,7 +307,7 @@ namespace RabbitMQ.Client.Impl
             string exchange,
             string routingKey,
             [AmqpNowaitArgument(null)] bool nowait,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         ///<summary>Used to send a Queue.Declare method. Called by the
         ///public declare method.</summary>
@@ -315,7 +315,7 @@ namespace RabbitMQ.Client.Impl
         [AmqpForceOneWay]
         void _Private_QueueDeclare(string queue,
             QueueDeclareFlags flag,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         ///<summary>Used to send a Queue.Delete method. Called by the
         ///public delete method.</summary>

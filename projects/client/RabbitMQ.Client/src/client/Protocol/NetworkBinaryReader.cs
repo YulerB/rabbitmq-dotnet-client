@@ -47,6 +47,7 @@ using System.Buffers.Binary;
 using RabbitMQ.Client;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using RabbitMQ.Client.Framing;
 
 namespace RabbitMQ.Util
 {
@@ -329,9 +330,9 @@ namespace RabbitMQ.Util
         public static decimal ReadDecimal(this ArraySegmentSequence input, out long read)
         {
             byte scale = ReadByte(input);
-            if (scale > 28)
+            if (scale > TwentyEight)
             {
-                throw new SyntaxError("Unrepresentable AMQP decimal table field: scale=" + scale);
+                throw new SyntaxError("Unrepresentable AMQP decimal table field: scale=" + scale.ToString());
             }
             uint unsignedMantissa = ReadUInt32(input);
             read = 5;
@@ -348,7 +349,7 @@ namespace RabbitMQ.Util
             return new AmqpTimestamp(ReadInt64(input));
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDictionary<string, object> ReadTable(this ArraySegmentSequence input, out long read)
+        public static Dictionary<string, object> ReadTable(this ArraySegmentSequence input, out long read)
         {
             uint tableLength = ReadUInt32(input);
 
@@ -358,7 +359,7 @@ namespace RabbitMQ.Util
                 return null;
             }
 
-            IDictionary<string, object> table = new Dictionary<string, object>(Convert.ToInt32(tableLength / 4));
+            Dictionary<string, object> table = new Dictionary<string, object>(Convert.ToInt32(tableLength / 4));
             long left = tableLength;
             while (left> 0)
             {
@@ -375,7 +376,7 @@ namespace RabbitMQ.Util
             return table;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IDictionary<string, object> ReadTable(this ArraySegmentSequence input)
+        public static Dictionary<string, object> ReadTable(this ArraySegmentSequence input)
         {
             return ReadTable(input, out long read);
         }
@@ -400,6 +401,7 @@ namespace RabbitMQ.Util
             return array;
         }
 
+        private const byte TwentyEight = 28;
         private const uint UZERO = 0U;
         private const int ZERO = 0;
         private const long LZERO = 0L;

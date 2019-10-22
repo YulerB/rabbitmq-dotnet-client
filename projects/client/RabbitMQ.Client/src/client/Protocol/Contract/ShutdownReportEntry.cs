@@ -64,7 +64,7 @@ namespace RabbitMQ.Client
         /// </summary>
         public Exception Exception { get; set; }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
             string output = "Message: " + Description;
             return (Exception != null) ? output + " Exception: " + Exception : output;

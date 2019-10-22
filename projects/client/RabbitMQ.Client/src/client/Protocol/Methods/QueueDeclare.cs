@@ -56,19 +56,19 @@ namespace RabbitMQ.Client.Framing.Impl
         private ushort m_reserved1;
         private string m_queue;
         private QueueDeclareFlags flag;
-        private System.Collections.Generic.IDictionary<string, object> m_arguments;
+        private System.Collections.Generic.Dictionary<string, object> m_arguments;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Queue { get { return m_queue; } }
         public QueueDeclareFlags Flag { get { return flag; } }
-        public System.Collections.Generic.IDictionary<string, object> Arguments { get { return m_arguments; } }
+        public System.Collections.Generic.Dictionary<string, object> Arguments { get { return m_arguments; } }
 
         public QueueDeclare() { }
         public QueueDeclare(
           ushort initReserved1,
           string initQueue,
           QueueDeclareFlags flag,
-          System.Collections.Generic.IDictionary<string, object> initArguments)
+          System.Collections.Generic.Dictionary<string, object> initArguments)
         {
             m_reserved1 = initReserved1;
             m_queue = initQueue;

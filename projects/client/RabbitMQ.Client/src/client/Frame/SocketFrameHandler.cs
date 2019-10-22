@@ -181,11 +181,7 @@ namespace RabbitMQ.Client.Impl
 
         public void WriteFrame(OutboundFrame frame)
         {
-            //System.Diagnostics.Debug.WriteLine("Write Frame - " + frame.ToString());
-            //Console.WriteLine("Write Frame - " + frame.ToString());
-            
-            var size = frame.EstimatedSize();
-            using (var byteBuffer = MemoryPool<byte>.Shared.Rent(size))
+            using (var byteBuffer = MemoryPool<byte>.Shared.Rent(frame.EstimatedSize()))
             {
                 var mem = byteBuffer.Memory;
                 Span<byte> buffer = mem.Span;
@@ -193,7 +189,7 @@ namespace RabbitMQ.Client.Impl
                 m_socket.Write(new ArraySegment<byte>(mem.ToArray(), 0, written));
             }
         }
-        public void WriteFrameSet(IList<OutboundFrame> frames)
+        public void WriteFrameSet(List<OutboundFrame> frames)
         {
             var size = ZERO;
             foreach (var frame in frames) size += frame.EstimatedSize();
@@ -204,9 +200,6 @@ namespace RabbitMQ.Client.Impl
                 var total = ZERO;
                 foreach (var f in frames)
                 {
-                    //System.Diagnostics.Debug.WriteLine("Write Frame - " + f.ToString());
-                    //Console.WriteLine("Write Frame - " + f.ToString());
-
                     f.WriteTo(buffer.Slice(total), out int written);
                     total += written;
                 }

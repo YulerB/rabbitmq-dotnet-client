@@ -73,7 +73,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Message header field table.
         /// </summary>
-        IDictionary<string, object> Headers { get; set; }
+        Dictionary<string, object> Headers { get; set; }
 
         /// <summary>
         /// Message priority, 0 to 9.

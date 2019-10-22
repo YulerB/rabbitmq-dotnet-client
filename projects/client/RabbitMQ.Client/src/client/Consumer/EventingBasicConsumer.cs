@@ -65,28 +65,28 @@ namespace RabbitMQ.Client.Events
         public event EventHandler<ConsumerEventArgs> Unregistered;
 
         ///<summary>Fires the Unregistered event.</summary>
-        public override void HandleBasicCancelOk(string consumerTag)
+        public sealed override void HandleBasicCancelOk(string consumerTag)
         {
             base.HandleBasicCancelOk(consumerTag);
             Raise(Unregistered, new ConsumerEventArgs(consumerTag));
         }
 
         ///<summary>Fires the Registered event.</summary>
-        public override void HandleBasicConsumeOk(string consumerTag)
+        public sealed override void HandleBasicConsumeOk(string consumerTag)
         {
             base.HandleBasicConsumeOk(consumerTag);
             Raise(Registered, new ConsumerEventArgs(consumerTag));
         }
 
         ///<summary>Fires the Received event.</summary>
-        public override void HandleBasicDeliver(BasicDeliverEventArgs args)
+        public sealed override void HandleBasicDeliver(BasicDeliverEventArgs args)
         {
             base.HandleBasicDeliver(args);
             Raise(Received, args);
         }
 
         ///<summary>Fires the Shutdown event.</summary>
-        public override void HandleModelShutdown(object model, ShutdownEventArgs reason)
+        public sealed override void HandleModelShutdown(object model, ShutdownEventArgs reason)
         {
             base.HandleModelShutdown(model, reason);
             Raise(Shutdown, reason);

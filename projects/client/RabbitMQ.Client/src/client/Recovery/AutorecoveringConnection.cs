@@ -305,7 +305,7 @@ namespace RabbitMQ.Client.Framing.Impl
             get { return m_delegate.ConsumerWorkService; }
         }
 
-        public IDictionary<string, object> ClientProperties
+        public Dictionary<string, object> ClientProperties
         {
             get { return m_delegate.ClientProperties; }
         }
@@ -361,7 +361,7 @@ namespace RabbitMQ.Client.Framing.Impl
             get { return m_recordedQueues; }
         }
 
-        public IDictionary<string, object> ServerProperties
+        public Dictionary<string, object> ServerProperties
         {
             get { return m_delegate.ServerProperties; }
         }
@@ -587,7 +587,7 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
             return string.Format("AutorecoveringConnection({0},{1},{2})", m_delegate.Id, Endpoint, GetHashCode());
         }

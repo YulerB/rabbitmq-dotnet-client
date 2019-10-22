@@ -433,7 +433,7 @@
 //        ///correlation ID from our internal Subscription.</summary>
 //        ///<remarks>
 //        /// Currently requires replies to arrive in the same order as
-//        /// the requests were sent out. Subclasses may override this
+//        /// the requests were sent out. Subclasses may sealed override this
 //        /// to provide more sophisticated behaviour.
 //        ///</remarks>
 //        protected virtual BasicDeliverEventArgs RetrieveReply(string correlationId)

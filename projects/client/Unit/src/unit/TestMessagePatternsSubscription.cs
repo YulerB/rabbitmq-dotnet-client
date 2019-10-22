@@ -54,7 +54,7 @@ namespace RabbitMQ.Client.Unit
     {
         protected void TestConcurrentIterationWithDrainer(Action<Subscription> action)
         {
-            IDictionary<string, object> args = new Dictionary<string, object>
+            Dictionary<string, object> args = new Dictionary<string, object>
             {
                 {Headers.XMessageTTL, 5000}
             };
@@ -77,7 +77,7 @@ namespace RabbitMQ.Client.Unit
 
         protected void TestSequentialIterationWithDrainer(Action<Subscription> action)
         {
-            IDictionary<string, object> args = new Dictionary<string, object>
+            Dictionary<string, object> args = new Dictionary<string, object>
             {
                 {Headers.XMessageTTL, 5000}
             };
@@ -101,7 +101,7 @@ namespace RabbitMQ.Client.Unit
             Assert.IsNotNull(res);
             action(subscription);
             QueueDeclareOk ok = Model.QueueDeclarePassive(queueDeclare);
-            Assert.AreEqual(0, ok.MessageCount);
+            Assert.AreEqual(0U, ok.MessageCount);
         }
 
         protected class SubscriptionDrainer

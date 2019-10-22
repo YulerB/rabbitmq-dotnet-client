@@ -127,7 +127,7 @@ namespace RabbitMQ.Client
                 InternalClose("Write.NullReferenceException");
             }
         }
-        public void Write(IList<ArraySegment<byte>> data)
+        public void Write(List<ArraySegment<byte>> data)
         {
             try
             {

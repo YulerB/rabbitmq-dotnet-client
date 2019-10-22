@@ -63,7 +63,7 @@ namespace RabbitMQ.Client.Impl
             MaxSeenDeliveryTag = ULZERO;
         }
 
-        public override void HandleBasicGetOk(BasicGetResult args)
+        public sealed override void HandleBasicGetOk(BasicGetResult args)
         {
             if (args.DeliveryTag > MaxSeenDeliveryTag)
             {
@@ -76,7 +76,7 @@ namespace RabbitMQ.Client.Impl
                 args);
         }
 
-        public override void HandleBasicDeliver(BasicDeliverEventArgs args)
+        public sealed override void HandleBasicDeliver(BasicDeliverEventArgs args)
         {
             if (args.DeliveryTag > MaxSeenDeliveryTag)
             {
@@ -86,7 +86,7 @@ namespace RabbitMQ.Client.Impl
             base.HandleBasicDeliver(args);
         }
 
-        public override void BasicAck(ulong deliveryTag,
+        public sealed override void BasicAck(ulong deliveryTag,
             bool multiple)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
@@ -96,7 +96,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public override void BasicNack(ulong deliveryTag, BasicNackFlags settings)
+        public sealed override void BasicNack(ulong deliveryTag, BasicNackFlags settings)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;
             if (realTag > USZERO && realTag <= deliveryTag)
@@ -105,7 +105,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public override void BasicReject(ulong deliveryTag,
+        public sealed override void BasicReject(ulong deliveryTag,
             bool requeue)
         {
             ulong realTag = deliveryTag - ActiveDeliveryTagOffset;

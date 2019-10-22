@@ -53,6 +53,6 @@ namespace RabbitMQ.Client.Framing
         string Queue { get; }
         string ConsumerTag { get; }
         BasicConsumeFlags Settings{get;}
-        System.Collections.Generic.IDictionary<string, object> Arguments { get; }
+        System.Collections.Generic.Dictionary<string, object> Arguments { get; }
     }
 }

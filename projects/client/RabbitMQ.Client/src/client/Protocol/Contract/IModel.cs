@@ -201,7 +201,7 @@ namespace RabbitMQ.Client
             string queue,
             string consumerTag,
             BasicConsumeFlags settings,
-            IDictionary<string, object> arguments,
+            Dictionary<string, object> arguments,
             IBasicConsumer consumer);
 
         /// <summary>
@@ -318,14 +318,14 @@ namespace RabbitMQ.Client
         /// </remarks>
         [AmqpMethodDoNotImplement(null)]
         void ExchangeDeclare(string exchange, string type, bool durable, bool autoDelete,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         /// <summary>
         /// Same as ExchangeDeclare but sets nowait to true and returns void (as there
         /// will be no response from the server).
         /// </summary>
         void ExchangeDeclareNoWait(string exchange, string type, bool durable, bool autoDelete,
-            IDictionary<string, object> arguments);
+            Dictionary<string, object> arguments);
 
         /// <summary>
         /// Do a passive exchange declaration.
@@ -379,7 +379,7 @@ namespace RabbitMQ.Client
         ///   </para>
         /// </remarks>        
         [AmqpMethodDoNotImplement(null)]
-        void QueueBind(string queue, string exchange, string routingKey, IDictionary<string, object> arguments);
+        void QueueBind(string queue, string exchange, string routingKey, Dictionary<string, object> arguments);
 
         /// <summary>Same as QueueBind but sets nowait parameter to true.</summary>
         /// <remarks>
@@ -387,12 +387,12 @@ namespace RabbitMQ.Client
         ///     Routing key must be shorter than 255 bytes.
         ///   </para>
         /// </remarks>        
-        void QueueBindNoWait(string queue, string exchange, string routingKey, IDictionary<string, object> arguments);
+        void QueueBindNoWait(string queue, string exchange, string routingKey, Dictionary<string, object> arguments);
 
         /// <summary> Declare a queue.</summary>
         [AmqpMethodDoNotImplement(null)]
         QueueDeclareOk QueueDeclare(string queue, bool durable, bool exclusive,
-            bool autoDelete, IDictionary<string, object> arguments);
+            bool autoDelete, Dictionary<string, object> arguments);
 
         /// <summary>
         /// Same as QueueDeclare but sets nowait to true and returns void (as there
@@ -400,7 +400,7 @@ namespace RabbitMQ.Client
         /// </summary>
         void QueueDeclareNoWait(string queue, bool durable,
                                 bool exclusive, bool autoDelete,
-                                IDictionary<string, object> arguments);
+                                Dictionary<string, object> arguments);
 
         /// <summary>Declare a queue passively.</summary>
         /// <remarks>
@@ -462,7 +462,7 @@ namespace RabbitMQ.Client
         ///     Routing key must be shorter than 255 bytes.
         ///   </para>
         /// </remarks>        
-        void QueueUnbind(string queue, string exchange, string routingKey, IDictionary<string, object> arguments);
+        void QueueUnbind(string queue, string exchange, string routingKey, Dictionary<string, object> arguments);
 
         /// <summary>
         /// Commit this session's active TX transaction.

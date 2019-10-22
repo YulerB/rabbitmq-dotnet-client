@@ -46,7 +46,7 @@ namespace RabbitMQ.Client
 {
     /// <summary>
     /// Useful default/base implementation of <see cref="IBasicConsumer"/>.
-    /// Subclass and override <see cref="HandleBasicDeliver"/> in application code.
+    /// Subclass and sealed override <see cref="HandleBasicDeliver"/> in application code.
     /// </summary>
     /// <remarks>
     /// Note that the "Handle*" methods run in the connection's thread!

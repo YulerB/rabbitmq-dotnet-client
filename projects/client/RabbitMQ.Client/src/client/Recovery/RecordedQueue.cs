@@ -45,7 +45,7 @@ namespace RabbitMQ.Client.Impl
 {
     public class RecordedQueue : RecordedNamedEntity
     {
-        private IDictionary<string, object> arguments;
+        private Dictionary<string, object> arguments;
         private bool durable;
         private bool exclusive;
 
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Impl
             }
         }
 
-        public RecordedQueue Arguments(IDictionary<string, object> value)
+        public RecordedQueue Arguments(Dictionary<string, object> value)
         {
             arguments = value;
             return this;
@@ -109,10 +109,9 @@ namespace RabbitMQ.Client.Impl
             return this;
         }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return String.Format("{0}: name = '{1}', durable = {2}, exlusive = {3}, autoDelete = {4}, arguments = '{5}'",
-                GetType().Name, Name, durable, exclusive, IsAutoDelete, arguments);
+            return $"{GetType().Name}: name = '{Name}', durable = {durable.ToString()}, exlusive = {exclusive.ToString()}, autoDelete = {IsAutoDelete.ToString()}, arguments = '{arguments}'";
         }
     }
 }

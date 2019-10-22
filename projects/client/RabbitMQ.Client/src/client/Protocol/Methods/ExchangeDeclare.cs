@@ -56,13 +56,13 @@ namespace RabbitMQ.Client.Framing.Impl
         private ushort m_reserved1;
         private string m_exchange;
         private string m_type;
-        private System.Collections.Generic.IDictionary<string, object> m_arguments;
+        private System.Collections.Generic.Dictionary<string, object> m_arguments;
         private ExchangeDeclareFlags flag;
 
         public ushort Reserved1 { get { return m_reserved1; } }
         public string Exchange { get { return m_exchange; } }
         public string Type { get { return m_type; } }
-        public System.Collections.Generic.IDictionary<string, object> Arguments { get { return m_arguments; } }
+        public System.Collections.Generic.Dictionary<string, object> Arguments { get { return m_arguments; } }
         public ExchangeDeclareFlags Flag { get { return flag; } }
 
         public ExchangeDeclare() { }
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client.Framing.Impl
           string initExchange,
           string initType,
           ExchangeDeclareFlags flag,
-          System.Collections.Generic.IDictionary<string, object> initArguments)
+          System.Collections.Generic.Dictionary<string, object> initArguments)
         {
             m_reserved1 = initReserved1;
             m_exchange = initExchange;

@@ -61,7 +61,7 @@ namespace RabbitMQ.Client.Logging
             }
         }
 
-        public RabbitMqExceptionDetail(IDictionary<string, object> ex)
+        public RabbitMqExceptionDetail(Dictionary<string, object> ex)
         {
             this.Type = ex["Type"].ToString();
             this.Message = ex["Message"].ToString();
@@ -78,9 +78,9 @@ namespace RabbitMQ.Client.Logging
         public string StackTrace { get; private set; }
         public string InnerException { get; private set; }
 
-        public override string ToString()
+        public sealed override string ToString()
         {
-            return String.Format("Exception: {0}\r\n{1}\r\n\r\n{2}\r\nInnerException:\r\n{3}", Type, Message, StackTrace, InnerException);
+            return $"Exception: {Type}\r\n{Message}\r\n\r\n{StackTrace}\r\nInnerException:\r\n{InnerException}";
         }
     }
 }
