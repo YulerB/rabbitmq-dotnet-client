@@ -27,7 +27,7 @@ namespace RabbitMQ.Client
             sock = new Socket(settings.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
             sock.ReceiveTimeout = Math.Max(sock.ReceiveTimeout, settings.RequestedHeartbeat * 1000);
             sock.SendTimeout = Math.Max(sock.SendTimeout, settings.RequestedHeartbeat * 1000);
-            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 4);
+            ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 2);
             sEvent = new SocketAsyncEventArgs { AcceptSocket = sock };
             sEvent.Completed += SEvent_Completed;
         }

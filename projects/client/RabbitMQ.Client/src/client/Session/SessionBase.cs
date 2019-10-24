@@ -147,10 +147,7 @@ namespace RabbitMQ.Client.Impl
             {
                 lock (_shutdownLock)
                 {
-                    if (CloseReason == null)
-                    {
-                        CloseReason = reason;
-                    }
+                    CloseReason = CloseReason??reason;
                 }
             }
             if (notify)

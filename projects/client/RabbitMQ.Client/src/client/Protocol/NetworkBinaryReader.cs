@@ -100,7 +100,6 @@ namespace RabbitMQ.Util
             else
             {
                 //Think of ways to remove memory copying
-
                 byte[] bytes = new byte[payloadSize];
                 int offset = ZERO;
                 foreach (var segment in data)

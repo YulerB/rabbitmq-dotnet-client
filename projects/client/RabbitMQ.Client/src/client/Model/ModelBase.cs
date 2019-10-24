@@ -269,6 +269,7 @@ namespace RabbitMQ.Client.Impl
                         }
                     }
                 }
+
                 if (!ok)
                 {
                     value(this, CloseReason);
