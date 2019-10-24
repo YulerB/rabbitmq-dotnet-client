@@ -42,6 +42,14 @@ namespace RabbitMQ.Client
             //Console.WriteLine("HyperTcpClientAdapter.Close");
             sock?.Close();
         }
+        private void InternalClose(SocketError reason)
+        {
+            //System.Diagnostics.Debug.WriteLine("HyperTcpClientAdapter.InternalClose - " + reason);
+            //Console.WriteLine("HyperTcpClientAdapter.InternalClose - " + reason);
+
+            sock?.Close();
+            Closed?.Invoke(this, EventArgs.Empty);
+        }
         private void InternalClose(string reason)
         {
             //System.Diagnostics.Debug.WriteLine("HyperTcpClientAdapter.InternalClose - " + reason);
@@ -75,20 +83,25 @@ namespace RabbitMQ.Client
                 await Task.FromResult(0);
             }).ConfigureAwait(false);
         }
+        private object _syncObject = new object();
         private void SEvent_Completed(object sender, SocketAsyncEventArgs e)
         {
             try
             {
                 do
                 {
-                    if (e.BytesTransferred > 0) this.Receive?.Invoke(this, ringBuffer.Take(e.BytesTransferred));
+                    if (e.BytesTransferred > 0)
+                    {
+                        var x = ringBuffer.Take(e.BytesTransferred);
+                        this.Receive?.Invoke(this, x);
+                    }
                     var peeked = ringBuffer.Peek();
                     e.SetBuffer(peeked.Array, peeked.Offset, peeked.Count);
                 } while (sock.Connected && e.SocketError == SocketError.Success && !sock.ReceiveAsync(e));
 
                 if (!sock.Connected || e.SocketError != SocketError.Success)
                 {
-                    InternalClose(e.SocketError.ToString());
+                    InternalClose(e.SocketError);
                 }
             }
             catch (ObjectDisposedException)
