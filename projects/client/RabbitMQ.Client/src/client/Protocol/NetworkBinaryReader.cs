@@ -301,14 +301,14 @@ namespace RabbitMQ.Util
             int size = Convert.ToInt32(ReadUInt32(input));
             read = size + 4;
             if (size == ZERO) return string.Empty;
-            return System.Text.Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
+            return System.Text.Encoding.UTF8.GetString(ReadMemory(input,size).Span);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadLongString(this ArraySegmentSequence input)
         {
             int size = Convert.ToInt32(ReadUInt32(input));
             if (size == ZERO) return string.Empty;
-            return System.Text.Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
+            return System.Text.Encoding.UTF8.GetString(ReadMemory(input, size).Span);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadShortString(this ArraySegmentSequence input,out long read)
@@ -316,14 +316,14 @@ namespace RabbitMQ.Util
             int size = (int)ReadByte(input);
             read = size + 1;
             if (size == ZERO) return string.Empty;
-            return Encoding.UTF8.GetString(ReadMemory(input,size).ToArray());
+            return Encoding.UTF8.GetString(ReadMemory(input,size).Span);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadShortString(this ArraySegmentSequence input)
         {
             int size = (int)ReadByte(input);
             if (size == ZERO) return string.Empty;
-            return Encoding.UTF8.GetString(ReadMemory(input, size).ToArray());
+            return Encoding.UTF8.GetString(ReadMemory(input, size).Span);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static decimal ReadDecimal(this ArraySegmentSequence input, out long read)
