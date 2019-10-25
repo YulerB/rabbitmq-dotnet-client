@@ -55,8 +55,8 @@ namespace RabbitMQ.Client.Unit
             }
 
             Assert.AreEqual(buffer[0], stream.ReadByte(), "Test 3");
-            Assert.AreEqual(new byte[] { buffer[1], buffer[2], buffer[3] }, stream.ReadBytes(3), "Test 4");
-            Assert.AreEqual(new byte[] { buffer[4], buffer[0], buffer[1] }, stream.ReadBytes(3), "Test 5");
+            Assert.AreEqual(new byte[] { buffer[1], buffer[2], buffer[3] }, stream.ReadBytesMaybeZeroCopy(3), "Test 4");
+            Assert.AreEqual(new byte[] { buffer[4], buffer[0], buffer[1] }, stream.ReadBytesMaybeZeroCopy(3), "Test 5");
             Assert.AreEqual(BitConverter.ToUInt16(new byte[] { buffer[3], buffer[2] }, 0), stream.ReadUInt16(), "Test 6");
             Assert.AreEqual(buffer[4], stream.ReadByte(), "Test 7");
             Assert.AreEqual(BitConverter.ToDouble(new byte[] { buffer[2], buffer[1], buffer[0], buffer[4], buffer[3], buffer[2], buffer[1], buffer[0] }, 0), stream.ReadDouble(), "Test 8");
@@ -64,7 +64,7 @@ namespace RabbitMQ.Client.Unit
             Assert.AreEqual(BitConverter.ToInt64(new byte[] { buffer[2], buffer[1], buffer[0], buffer[4], buffer[3], buffer[2], buffer[1], buffer[0] }, 0), stream.ReadInt64(), "Test 10");
             Assert.AreEqual(BitConverter.ToSingle(new byte[] { buffer[1], buffer[0], buffer[4], buffer[3] }, 0), stream.ReadSingle(), "Test 11");
             Assert.AreEqual(BitConverter.ToUInt64(new byte[] { buffer[4], buffer[3], buffer[2], buffer[1], buffer[0], buffer[4], buffer[3], buffer[2] }, 0), stream.ReadUInt64(), "Test 12");
-            Assert.AreEqual(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3], buffer[4] }, stream.ReadBytes(5), "Test 13");
+            Assert.AreEqual(new byte[] { buffer[0], buffer[1], buffer[2], buffer[3], buffer[4] }, stream.ReadBytesMaybeZeroCopy(5), "Test 13");
             Assert.AreEqual(System.Text.Encoding.UTF8.GetString(ms.ToArray(), 1, buffer[0]), stream.ReadShortString(out long read), "Test 14");
 
             uint FiveHundred = 500;

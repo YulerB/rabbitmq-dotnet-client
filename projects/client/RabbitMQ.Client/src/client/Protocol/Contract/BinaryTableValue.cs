@@ -38,6 +38,8 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
+using System;
+
 namespace RabbitMQ.Client
 {
     /// <summary>Wrapper for a byte[]. May appear as values read from
@@ -73,9 +75,9 @@ namespace RabbitMQ.Client
         /// Creates a new instance of the <see cref="BinaryTableValue"/>.
         /// </summary>
         /// <param name="bytes">The wrapped byte array, as decoded or as to be encoded.</param>
-        public BinaryTableValue(byte[] bytes)
+        public BinaryTableValue(Span<byte> bytes)
         {
-            Bytes = bytes;
+            Bytes = bytes.ToArray();
         }
 
         /// <summary>

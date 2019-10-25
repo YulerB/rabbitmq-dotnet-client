@@ -333,7 +333,7 @@ namespace RabbitMQ.Client.Impl
             }
             else if (type == Constants.FrameBody)
             {
-                payload = reader.ReadBytes(Convert.ToInt32(payloadSize));
+                payload = reader.ReadBytesMaybeZeroCopy(Convert.ToInt32(payloadSize));
 
                 if (payload.Length != payloadSize)
                 {
