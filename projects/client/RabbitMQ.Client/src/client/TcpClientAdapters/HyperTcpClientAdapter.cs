@@ -90,11 +90,7 @@ namespace RabbitMQ.Client
             {
                 do
                 {
-                    if (e.BytesTransferred > 0)
-                    {
-                        var x = ringBuffer.Take(e.BytesTransferred);
-                        this.Receive?.Invoke(this, x);
-                    }
+                    if (e.BytesTransferred > 0) this.Receive?.Invoke(this, ringBuffer.Take(e.BytesTransferred));
                     var peeked = ringBuffer.Peek();
                     e.SetBuffer(peeked.Array, peeked.Offset, peeked.Count);
                 } while (sock.Connected && e.SocketError == SocketError.Success && !sock.ReceiveAsync(e));
