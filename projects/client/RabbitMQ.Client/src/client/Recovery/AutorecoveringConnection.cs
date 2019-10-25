@@ -55,7 +55,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public readonly object manuallyClosedLock = new object();
         protected Connection m_delegate;
-        protected ConnectionFactory m_factory;
+        protected readonly ConnectionFactory m_factory;
 
         // list of endpoints provided on initial connection.
         // on re-connection, the next host in the line is chosen using
@@ -77,13 +77,13 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private EventHandler<ConnectionBlockedEventArgs> m_recordedBlockedEventHandlers;
 
-        private IDictionary<string, RecordedConsumer> m_recordedConsumers =
+        private ConcurrentDictionary<string, RecordedConsumer> m_recordedConsumers =
             new ConcurrentDictionary<string, RecordedConsumer>();
 
-        private IDictionary<string, RecordedExchange> m_recordedExchanges =
+        private ConcurrentDictionary<string, RecordedExchange> m_recordedExchanges =
             new ConcurrentDictionary<string, RecordedExchange>();
 
-        private IDictionary<string, RecordedQueue> m_recordedQueues =
+        private ConcurrentDictionary<string, RecordedQueue> m_recordedQueues =
             new ConcurrentDictionary<string, RecordedQueue>();
 
         private EventHandler<ShutdownEventArgs> m_recordedShutdownEventHandlers;
@@ -93,10 +93,12 @@ namespace RabbitMQ.Client.Framing.Impl
         private EventHandler<EventArgs> m_recovery;
         private EventHandler<ConnectionRecoveryErrorEventArgs> m_connectionRecoveryError;
 
+        private readonly Func<AmqpTcpEndpoint, IFrameHandler> selector;
         public AutorecoveringConnection(ConnectionFactory factory, string clientProvidedName = null)
         {
             m_factory = factory;
             this.ClientProvidedName = clientProvidedName;
+            selector = m_factory.CreateHyperFrameHandler;
         }
 
         private bool ManuallyClosed
@@ -464,7 +466,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 if (m_recordedConsumers.ContainsKey(consumerTag))
                 {
                     rc = m_recordedConsumers[consumerTag];
-                    m_recordedConsumers.Remove(consumerTag);
+                    m_recordedConsumers.Remove(consumerTag, out _);
                 }
             }
 
@@ -475,7 +477,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             lock (m_recordedEntitiesLock)
             {
-                m_recordedExchanges.Remove(name);
+                m_recordedExchanges.Remove(name, out _);
 
                 // find bindings that need removal, check if some auto-delete exchanges
                 // might need the same
@@ -492,7 +494,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             lock (m_recordedEntitiesLock)
             {
-                m_recordedQueues.Remove(name);
+                m_recordedQueues.Remove(name, out _);
                 // find bindings that need removal, check if some auto-delete exchanges
                 // might need the same
                 var bs = m_recordedBindings.Keys.Where(b => name.Equals(b.Destination));
@@ -528,7 +530,7 @@ namespace RabbitMQ.Client.Framing.Impl
                     // if it is auto-deleted. See bug 26364.
                     if ((rx != null) && rx.IsAutoDelete)
                     {
-                        m_recordedExchanges.Remove(exchange);
+                        m_recordedExchanges.Remove(exchange, out _);
                     }
                 }
             }
@@ -545,7 +547,7 @@ namespace RabbitMQ.Client.Framing.Impl
                     // if it is auto-deleted. See bug 26364.
                     if ((rq != null) && rq.IsAutoDelete)
                     {
-                        m_recordedQueues.Remove(queue);
+                        m_recordedQueues.Remove(queue, out _);
                     }
                 }
             }
@@ -565,7 +567,7 @@ namespace RabbitMQ.Client.Framing.Impl
             {
                 if (!m_recordedConsumers.ContainsKey(name))
                 {
-                    m_recordedConsumers.Add(name, c);
+                    m_recordedConsumers.TryAdd(name, c);
                 }
             }
         }
@@ -588,7 +590,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public sealed override string ToString()
         {
-            return string.Format("AutorecoveringConnection({0},{1},{2})", m_delegate.Id, Endpoint, GetHashCode());
+            return string.Format("AutorecoveringConnection({0},{1},{2})", m_delegate.Id.ToString(), Endpoint, GetHashCode().ToString());
         }
 
         public void UnregisterModel(AutorecoveringModel model)
@@ -607,14 +609,13 @@ namespace RabbitMQ.Client.Framing.Impl
         public void Init(IEndpointResolver endpoints)
         {
             this.endpoints = endpoints;
-            var fh = endpoints.SelectOne(m_factory.CreateHyperFrameHandler);
+            var fh = endpoints.SelectOne(selector);
             this.Init(fh);
         }
 
         private void Init(IFrameHandler fh)
         {
-            m_delegate = new Connection(m_factory, false,
-                fh, this.ClientProvidedName);
+            m_delegate = new Connection(m_factory, false, fh, this.ClientProvidedName);
 
             AutorecoveringConnection self = this;
             void recoveryListener(object _, ShutdownEventArgs args)
@@ -773,7 +774,7 @@ namespace RabbitMQ.Client.Framing.Impl
             lock (m_recordedBindings)
             {
                 var bs = m_recordedBindings.Keys.Where(b => b.Destination.Equals(oldName));
-                foreach (RecordedBinding b in bs)
+                foreach (var b in bs)
                 {
                     b.Destination = newName;
                 }
@@ -784,9 +785,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             lock (m_recordedBindings)
             {
-                IEnumerable<KeyValuePair<string, RecordedConsumer>> cs = m_recordedConsumers.
-                    Where(pair => pair.Value.Queue.Equals(oldName));
-                foreach (KeyValuePair<string, RecordedConsumer> c in cs)
+                foreach (var c in m_recordedConsumers.Where(pair => pair.Value.Queue.Equals(oldName)))
                 {
                     c.Value.Queue = newName;
                 }
@@ -824,7 +823,7 @@ namespace RabbitMQ.Client.Framing.Impl
             {
                 try
                 {
-                    var fh = endpoints.SelectOne(m_factory.CreateHyperFrameHandler);
+                    var fh = endpoints.SelectOne(selector);
                     m_delegate = new Connection(m_factory, false, fh, this.ClientProvidedName);
                     return true;
                 }
@@ -874,7 +873,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         protected void RecoverConsumers()
         {
-            foreach (KeyValuePair<string, RecordedConsumer> pair in m_recordedConsumers)
+            foreach (var pair in m_recordedConsumers)
             {
                 string tag = pair.Key;
                 RecordedConsumer cons = pair.Value;
@@ -885,8 +884,8 @@ namespace RabbitMQ.Client.Framing.Impl
                     lock (m_recordedConsumers)
                     {
                         // make sure server-generated tags are re-added
-                        m_recordedConsumers.Remove(tag);
-                        m_recordedConsumers.Add(newTag, cons);
+                        m_recordedConsumers.Remove(tag, out _);
+                        m_recordedConsumers.TryAdd(newTag, cons);
                     }
 
                     if (m_consumerTagChange != null)
@@ -931,7 +930,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         protected void RecoverExchanges()
         {
-            foreach (RecordedExchange rx in m_recordedExchanges.Values)
+            foreach (var rx in m_recordedExchanges.Values)
             {
                 try
                 {
@@ -950,7 +949,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             lock (m_models)
             {
-                foreach (AutorecoveringModel m in m_models)
+                foreach (var m in m_models)
                 {
                     m.AutomaticallyRecover(this, m_delegate);
                 }
@@ -961,7 +960,7 @@ namespace RabbitMQ.Client.Framing.Impl
         {
             lock (m_recordedQueues)
             {
-                foreach (KeyValuePair<string, RecordedQueue> pair in m_recordedQueues)
+                foreach (var pair in m_recordedQueues)
                 {
                     string oldName = pair.Key;
                     RecordedQueue rq = pair.Value;

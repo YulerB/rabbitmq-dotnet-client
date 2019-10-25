@@ -15,6 +15,7 @@ namespace RabbitMQ.Client
         private Socket sock;
         private StreamRingBuffer ringBuffer;
         private SocketAsyncEventArgs sEvent;
+        private readonly Action<byte[], int, int> sEventSetBuffer;
 
         public HyperTcpClientAdapter(HyperTcpClientSettings settings)
         {
@@ -25,6 +26,7 @@ namespace RabbitMQ.Client
             ringBuffer = new StreamRingBuffer(sock.ReceiveBufferSize * 2);
             sEvent = new SocketAsyncEventArgs { AcceptSocket = sock };
             sEvent.Completed += SEvent_Completed;
+            sEventSetBuffer = sEvent.SetBuffer;
         }
 
         public virtual void BufferUsed(int size)
@@ -70,7 +72,7 @@ namespace RabbitMQ.Client
 #endif
 
 
-            ringBuffer.InitialFill(sEvent.SetBuffer);
+            ringBuffer.InitialFill(sEventSetBuffer);
 
             await Task.Run(async () =>
             {

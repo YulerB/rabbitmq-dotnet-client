@@ -114,7 +114,7 @@ namespace RabbitMQ.Client.Impl
 
         public override string ToString()
         {
-            return $"( type={Type}, channel={Channel.ToString()}, bodyLength={data.Count.ToString()} )";
+            return $"( type=FrameBody, channel={Channel.ToString()}, bodyLength={data.Count.ToString()} )";
         }
     }
 
@@ -143,7 +143,7 @@ namespace RabbitMQ.Client.Impl
         }
         public sealed override string ToString()
         {
-            return $"( type={Type}, channel={Channel.ToString()}, method={method} )";
+            return $"( type=FrameMethod, channel={Channel.ToString()}, method={method} )";
         }
     }
 
@@ -216,16 +216,16 @@ namespace RabbitMQ.Client.Impl
         {
             if (Type == FrameType.FrameMethod)
             {
-                return $"( type={Type}, channel={Channel.ToString()}, method={Method} )";
+                return $"( type=FrameMethod, channel={Channel.ToString()}, method={Method} )";
             }
             else if (Type == FrameType.FrameBody)
             {
                 var len = Payload == null ? "null" : Payload.Length.ToString();
-                return $"( type={Type}, channel={Channel.ToString()}, Payload={len} )";
+                return $"( type=FrameBody, channel={Channel.ToString()}, Payload={len} )";
             }
             else if (Type == FrameType.FrameHeader)
             {
-                return $"( type={Type}, channel={Channel.ToString()}, TotalBodyBytes={TotalBodyBytes.ToString()} )";
+                return $"( type=FrameHeader, channel={Channel.ToString()}, TotalBodyBytes={TotalBodyBytes.ToString()} )";
             }
             else if (Type == FrameType.FrameHeartbeat)
             {

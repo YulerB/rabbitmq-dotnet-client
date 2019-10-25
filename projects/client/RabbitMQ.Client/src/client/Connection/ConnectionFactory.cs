@@ -101,11 +101,13 @@ namespace RabbitMQ.Client
     ///hosts with an empty name are not addressable. </para></remarks>
     public class ConnectionFactory :  IAsyncConnectionFactory
     {
+        private readonly Func<AmqpTcpEndpoint, IFrameHandler> selector;
         public ConnectionFactory() 
         {
             HandshakeContinuationTimeout = TimeSpan.FromSeconds(10);
             ContinuationTimeout = TimeSpan.FromSeconds(20);
             ClientProperties = Connection.DefaultClientProperties();
+            selector = CreateHyperFrameHandler;
         }
 
         /// <summary>
@@ -481,9 +483,7 @@ namespace RabbitMQ.Client
                 }
                 else
                 {
-                    conn = Protocols.DefaultProtocol.CreateConnection(this, false, endpointResolver.SelectOne(
-                        this.CreateHyperFrameHandler
-                    ), clientProvidedName);
+                    conn = Protocols.DefaultProtocol.CreateConnection(this, false, endpointResolver.SelectOne(selector), clientProvidedName);
                 }
             }
             catch (Exception e)

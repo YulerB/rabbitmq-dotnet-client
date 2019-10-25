@@ -61,13 +61,18 @@ namespace RabbitMQ.Client.Impl
         private int originalSize = ZERO;
         private readonly List<Memory<byte>> result = new List<Memory<byte>>(10);
 
+        private Func<bool> ContinueD ;
+
         #region Constructor
         public ArraySegmentSequence(byte[] buffer)
         {
             data.Enqueue(new ArraySegment<byte>(buffer, 0, buffer.Length));
             length = buffer.Length;
+            ContinueD = Continue;
         }
-        public ArraySegmentSequence() { }
+        public ArraySegmentSequence() {
+            ContinueD = Continue;
+        }
         #endregion
 
         private static readonly byte[] peekedEmpty = new byte[ZERO];
@@ -232,7 +237,7 @@ namespace RabbitMQ.Client.Impl
                 if (top.IsEmpty)
                 {
                     if (data.IsEmpty && !addingComplete)
-                        SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
+                        SpinWait.SpinUntil(ContinueD);
 
                     if (!data.TryDequeue(out top) && addingComplete)
                     {
@@ -311,6 +316,10 @@ namespace RabbitMQ.Client.Impl
             }
             return result;
         }
+        private bool Continue()
+        {
+            return addingComplete || data.Count > ZERO;
+        }
 
         public void Skip(int count)
         {
@@ -319,7 +328,7 @@ namespace RabbitMQ.Client.Impl
                 if (top.IsEmpty)
                 {
                     if (data.IsEmpty && !addingComplete)
-                        SpinWait.SpinUntil(() => addingComplete || data.Count > ZERO);
+                        SpinWait.SpinUntil(ContinueD);
 
                     if (!data.TryDequeue(out top) && addingComplete)
                     {
