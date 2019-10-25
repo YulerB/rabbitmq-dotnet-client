@@ -40,14 +40,11 @@
 
 using RabbitMQ.Client.Impl;
 using System;
-using System.IO;
 using System.Text;
-using System.Threading;
 using System.Buffers.Binary;
 using RabbitMQ.Client;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using RabbitMQ.Client.Framing;
 
 namespace RabbitMQ.Util
 {

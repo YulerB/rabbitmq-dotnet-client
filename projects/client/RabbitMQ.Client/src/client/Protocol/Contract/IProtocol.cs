@@ -41,7 +41,6 @@
 using System;
 
 #if !NETFX_CORE
-using System.Net.Sockets;
 #else
 using Windows.Networking.Sockets;
 #endif

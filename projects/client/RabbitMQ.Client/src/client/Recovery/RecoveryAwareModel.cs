@@ -38,7 +38,6 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
-using System;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Framing.Impl;
 

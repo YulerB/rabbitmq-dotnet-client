@@ -40,16 +40,10 @@
 
 #if !NETFX_CORE
 using RabbitMQ.Client.Exceptions;
-using RabbitMQ.Util;
 using System;
-using System.IO;
-using System.Net;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
-using System.Threading;
-using System.Collections.Concurrent;
 using System.Buffers;
 using System.Buffers.Binary;
 

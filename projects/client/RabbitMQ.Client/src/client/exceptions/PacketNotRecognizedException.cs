@@ -38,8 +38,6 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
-using System;
-using System.Net;
 
 namespace RabbitMQ.Client.Exceptions
 {

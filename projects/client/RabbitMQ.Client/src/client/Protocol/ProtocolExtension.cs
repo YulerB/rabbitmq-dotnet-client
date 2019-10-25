@@ -1,10 +1,5 @@
 ﻿using RabbitMQ.Client.Framing.Impl;
 using RabbitMQ.Client.Impl;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Framing

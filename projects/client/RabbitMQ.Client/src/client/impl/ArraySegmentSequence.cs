@@ -44,7 +44,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Threading;
 using System.Collections.Concurrent;
-using System.Collections;
 
 namespace RabbitMQ.Client.Impl
 {

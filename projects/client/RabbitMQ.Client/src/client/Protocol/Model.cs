@@ -44,7 +44,6 @@ using RabbitMQ.Client.Exceptions;
 namespace RabbitMQ.Client.Framing.Impl
 {
     using RabbitMQ.Client.Events;
-    using RabbitMQ.Client.Framing;
     using RabbitMQ.Client.Impl;
 
     public class Model : RabbitMQ.Client.Impl.ModelBase

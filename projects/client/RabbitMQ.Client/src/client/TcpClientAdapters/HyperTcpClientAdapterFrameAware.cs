@@ -4,15 +4,9 @@ using System.Net.Sockets;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Authentication;
-using System.IO;
 using System.Collections.Generic;
-using RabbitMQ.Client.Framing;
 using System.Buffers.Binary;
 using System.Collections.Concurrent;
-using System.Buffers;
 
 namespace RabbitMQ.Client
 {

@@ -40,10 +40,7 @@
 
 #if !NETFX_CORE
 using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Threading;
-using System.Collections.Concurrent;
 
 namespace RabbitMQ.Client.Impl
 {

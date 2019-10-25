@@ -38,9 +38,7 @@
 //  Copyright (c) 2007-2016 Pivotal Software, Inc.  All rights reserved.
 //---------------------------------------------------------------------------
 
-using System;
 using RabbitMQ.Util;
-using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace RabbitMQ.Client

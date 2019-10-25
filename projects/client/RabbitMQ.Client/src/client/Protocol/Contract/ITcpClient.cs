@@ -3,11 +3,7 @@ using System;
 using System.Threading.Tasks;
 
 using System.Net.Sockets;
-using System.Threading;
-using System.IO;
 using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
 using System.Collections.Generic;
 
 namespace RabbitMQ.Client

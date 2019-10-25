@@ -43,7 +43,6 @@ namespace RabbitMQ.Client.Impl
     using System.Collections.Generic;
     using RabbitMQ.Client;
     using RabbitMQ.Client.Framing.Impl;
-    using RabbitMQ.Client.Impl;
 
     public class BasicPublishBatch : IBasicPublishBatch
     {

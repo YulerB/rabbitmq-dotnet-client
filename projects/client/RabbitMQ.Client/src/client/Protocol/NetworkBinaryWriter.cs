@@ -40,12 +40,10 @@
 
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
-using RabbitMQ.Client.Impl;
 using System;
 using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 

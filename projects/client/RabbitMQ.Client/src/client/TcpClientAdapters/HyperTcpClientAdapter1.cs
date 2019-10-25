@@ -1,12 +1,8 @@
 ﻿#if !NETFX_CORE
 using System;
-using System.Linq;
 using System.Net.Sockets;
 using System.Net;
 using System.Threading.Tasks;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Security.Authentication;
 using System.IO;
 using System.Collections.Generic;
 using RabbitMQ.Client.Impl;

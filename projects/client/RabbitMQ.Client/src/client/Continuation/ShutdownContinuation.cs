@@ -40,7 +40,6 @@
 
 using System;
 using System.Threading.Tasks;
-using RabbitMQ.Util;
 
 namespace RabbitMQ.Client.Impl
 {

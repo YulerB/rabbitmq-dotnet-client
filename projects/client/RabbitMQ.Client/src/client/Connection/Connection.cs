@@ -53,14 +53,11 @@ using Windows.Networking.Sockets;
 using Windows.ApplicationModel;
 
 #else
-using System.Net;
-using System.Net.Sockets;
 #endif
 
 using System.Text;
 using System.Threading;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace RabbitMQ.Client.Framing.Impl
 {

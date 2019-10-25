@@ -40,10 +40,8 @@
 
 using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.Framing;
-using RabbitMQ.Client.Framing.Impl;
 using RabbitMQ.Util;
 using System;
-using System.Buffers;
 using System.IO;
 
 #if NETFX_CORE

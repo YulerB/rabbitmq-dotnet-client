@@ -39,7 +39,6 @@
 //---------------------------------------------------------------------------
 
 using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.Impl;
 using System;
 using System.Collections.Generic;
