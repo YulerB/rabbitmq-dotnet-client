@@ -89,16 +89,18 @@ namespace RabbitMQ.Client
         private CancellationTokenSource tokenSource;
         private ModelBase model;
         private Task task;
+        private readonly Func<Task> loop;
 
         public TestWorkPool(ModelBase model)
         {
             this.model = model;
+            loop = Loop;
         }
 
         public void Start()
         {
             tokenSource = new CancellationTokenSource();
-            task = Task.Run(Loop, tokenSource.Token);
+            task = Task.Run(loop, tokenSource.Token);
         }
 
         public void Enqueue(Work work)
@@ -163,7 +165,7 @@ namespace RabbitMQ.Client
         ModelBase model;
         TaskCompletionSource<bool> messageArrived;
         private Task task;
-
+        private readonly Func<Task> loop;
         public WorkPool(ModelBase model)
         {
             this.model = model;
@@ -171,11 +173,12 @@ namespace RabbitMQ.Client
             messageArrived = new TaskCompletionSource<bool>();
             waitTime = TimeSpan.FromMilliseconds(100);
             tokenSource = new CancellationTokenSource();
+            loop = Loop;
         }
 
         public void Start()
         {
-            task = Task.Run(Loop, CancellationToken.None);
+            task = Task.Run(loop, CancellationToken.None);
         }
 
         public void Enqueue(Work work)

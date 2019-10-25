@@ -47,7 +47,6 @@ namespace RabbitMQ.Client
     public class DefaultEndpointResolver : IEndpointResolver
     {
         private readonly List<AmqpTcpEndpoint> endpoints;
-        private readonly Random rnd = new Random();
 
         public DefaultEndpointResolver (IEnumerable<AmqpTcpEndpoint> tcpEndpoints)
         {
@@ -56,7 +55,10 @@ namespace RabbitMQ.Client
 
         public IEnumerable<AmqpTcpEndpoint> All()
         {
-            return endpoints.OrderBy(item => rnd.Next());
+            return endpoints.OrderBy(item => {
+                Random rnd = new Random();
+                return rnd.Next();
+            });
         }
     }
 }
