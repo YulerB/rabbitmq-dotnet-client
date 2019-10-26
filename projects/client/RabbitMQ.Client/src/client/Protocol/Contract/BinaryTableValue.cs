@@ -79,6 +79,14 @@ namespace RabbitMQ.Client
         {
             Bytes = bytes.ToArray();
         }
+        public BinaryTableValue(byte[] bytes)
+        {
+            Bytes = bytes;
+        }
+        public BinaryTableValue(Memory<byte> bytes)
+        {
+            Bytes = bytes.ToArray();
+        }
 
         /// <summary>
         /// The wrapped byte array, as decoded or as to be encoded.

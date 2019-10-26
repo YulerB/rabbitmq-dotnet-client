@@ -53,12 +53,6 @@ namespace RabbitMQ.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte ReadByte(this ArraySegmentSequence input)
         {
-            var data = input.Read(1);
-            return data[ZERO].Span[ZERO];
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static byte ReadFirstByte(this ArraySegmentSequence input)
-        {
             return input.Read(1)[ZERO].Span[ZERO];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

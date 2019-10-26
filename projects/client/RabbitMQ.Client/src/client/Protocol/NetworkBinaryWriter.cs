@@ -51,6 +51,7 @@ namespace RabbitMQ.Util
 {
     public static class NetworkBinaryWriter1
     {
+        private const int ONE = 1;
         private const int ZERO = 0;
         private const uint UZERO = 0U;
 
@@ -58,7 +59,7 @@ namespace RabbitMQ.Util
         public static void WriteByte(Span<byte> output, byte buffer, out int written)
         {
             output[ZERO] = buffer;
-            written = 1;
+            written = ONE;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Write(Span<byte> output, byte[] buffer, out int written)
@@ -126,15 +127,15 @@ namespace RabbitMQ.Util
             if (string.IsNullOrEmpty(val))
             {
                 output[ZERO] = bZero;
-                written = 1;
+                written = ONE;
                 return;
             }
 
             byte[] bytes = Encoding.UTF8.GetBytes(val);
             if (bytes.Length > 255) throw new WireFormattingException($"Short string too long; UTF-8 encoded length={bytes.Length.ToString()}, max=255");
             output[ZERO] = Convert.ToByte(bytes.Length);
-            bytes.AsSpan().CopyTo(output.Slice(1));
-            written = bytes.Length + 1;
+            bytes.AsSpan().CopyTo(output.Slice(ONE));
+            written = bytes.Length + ONE;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteFloat(Span<byte> output, float f, out int written)
@@ -143,7 +144,7 @@ namespace RabbitMQ.Util
             new byte[4]{
                     bytes[3],
                     bytes[2],
-                    bytes[1],
+                    bytes[ONE],
                     bytes[ZERO]
                 }.AsSpan().CopyTo(output);
             written = 4;
@@ -159,7 +160,7 @@ namespace RabbitMQ.Util
                     bytes[4],
                     bytes[3],
                     bytes[2],
-                    bytes[1],
+                    bytes[ONE],
                     bytes[ZERO]
                 }.AsSpan().CopyTo(output);
             written = 8;
@@ -189,7 +190,7 @@ namespace RabbitMQ.Util
         public static void WriteSByte(Span<byte> output, sbyte val, out int written)
         {
             output[ZERO] = (byte)val;
-            written = 1;
+            written = ONE;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -269,7 +270,7 @@ namespace RabbitMQ.Util
             // only take 31 bits worth of it, since the sign bit needs to
             // fit in there too.
             int[] bitRepresentation = decimal.GetBits(value);
-            if (bitRepresentation[1] != ZERO || // mantissa extends into middle word
+            if (bitRepresentation[ONE] != ZERO || // mantissa extends into middle word
                 bitRepresentation[2] != ZERO || // mantissa extends into top word
                 bitRepresentation[ZERO] < ZERO) // mantissa extends beyond 31 bits
             {
@@ -303,7 +304,7 @@ namespace RabbitMQ.Util
         {
             DecimalToAmqp(value, out byte scale, out int mantissa);
             output[ZERO] = scale;
-            BinaryPrimitives.WriteUInt32BigEndian(output.Slice(1), (uint)mantissa);
+            BinaryPrimitives.WriteUInt32BigEndian(output.Slice(ONE), (uint)mantissa);
             written = 5;
         }
 
@@ -329,118 +330,118 @@ namespace RabbitMQ.Util
             if (value == null)
             {
                 output[ZERO] = V;
-                written = 1;
+                written = ONE;
             }
             else if (value is string)
             {
                 output[ZERO] = S;
                 var val = Encoding.UTF8.GetBytes(value as string);
-                WriteLongString(output.Slice(1), val, out int written1);
-                written = written1 + 1;
+                WriteLongString(output.Slice(ONE), val, out int written1);
+                written = written1 + ONE;
             }
             else if (value is byte[])
             {
                 output[ZERO] = S;
                 var val = value as byte[];
-                WriteLongString(output.Slice(1), val, out int written1);
-                written = written1 + 1;
+                WriteLongString(output.Slice(ONE), val, out int written1);
+                written = written1 + ONE;
             }
             else if (value is int)
             {
                 output[ZERO] = I;
-                BinaryPrimitives.WriteInt32BigEndian(output.Slice(1), (int)value);
+                BinaryPrimitives.WriteInt32BigEndian(output.Slice(ONE), (int)value);
                 written = 5;
             }
             else if (value is decimal)
             {
                 output[ZERO] = D;
-                WriteDecimal(output.Slice(1), (decimal)value, out int written1);
-                written = written1 + 1;
+                WriteDecimal(output.Slice(ONE), (decimal)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is AmqpTimestamp)
             {
                 output[ZERO] = T;
-                WriteTimestamp(output.Slice(1), (AmqpTimestamp)value, out int written1);
-                written = written1 + 1;
+                WriteTimestamp(output.Slice(ONE), (AmqpTimestamp)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is Dictionary<string, bool>)
             {
                 output[ZERO] = F;
-                WriteTable(output.Slice(1), value as Dictionary<string, bool>, out int written1);
-                written = written1 + 1;
+                WriteTable(output.Slice(ONE), value as Dictionary<string, bool>, out int written1);
+                written = written1 + ONE;
             }
             else if (value is Dictionary<string, object>)
             {
                 output[ZERO] = F;
-                WriteTable(output.Slice(1), value as Dictionary<string, object>, out int written1);
-                written = written1 + 1;
+                WriteTable(output.Slice(ONE), value as Dictionary<string, object>, out int written1);
+                written = written1 + ONE;
             }
             else if (value is IList)
             {
                 output[ZERO] = A;
-                WriteArray(output.Slice(1), value as IList, out int written1);
-                written = written1 + 1;
+                WriteArray(output.Slice(ONE), value as IList, out int written1);
+                written = written1 + ONE;
             }
             else if (value is sbyte)
             {
                 output[ZERO] = b;
-                WriteSByte(output.Slice(1), (sbyte)value, out int written1);
-                written = written1 + 1;
+                WriteSByte(output.Slice(ONE), (sbyte)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is double)
             {
                 output[ZERO] = d;
-                WriteDouble(output.Slice(1), (double)value, out int written1);
-                written = written1 + 1;
+                WriteDouble(output.Slice(ONE), (double)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is float)
             {
                 output[ZERO] = f;
-                WriteFloat(output.Slice(1), (float)value, out int written1);
-                written = written1 + 1;
+                WriteFloat(output.Slice(ONE), (float)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is long)
             {
                 output[ZERO] = l;
-                WriteInt64(output.Slice(1), (long)value, out int written1);
-                written = written1 + 1;
+                WriteInt64(output.Slice(ONE), (long)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is ulong)
             {
                 output[ZERO] = l;
-                WriteUInt64(output.Slice(1), (ulong)value, out int written1);
-                written = written1 + 1;
+                WriteUInt64(output.Slice(ONE), (ulong)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is uint)
             {
                 output[ZERO] = I;
-                WriteUInt32(output.Slice(1), (uint)value, out int written1);
-                written = written1 + 1;
+                WriteUInt32(output.Slice(ONE), (uint)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is short)
             {
                 output[ZERO] = s;
-                WriteInt16(output.Slice(1), (short)value, out int written1);
-                written = written1 + 1;
+                WriteInt16(output.Slice(ONE), (short)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is ushort)
             {
                 output[ZERO] = s;
-                WriteUInt16(output.Slice(1), (ushort)value, out int written1);
-                written = written1 + 1;
+                WriteUInt16(output.Slice(ONE), (ushort)value, out int written1);
+                written = written1 + ONE;
             }
             else if (value is bool)
             {
                 output[ZERO] = t;
-                output[1] = (bool)value ? bOne : bZero;
+                output[ONE] = (bool)value ? bOne : bZero;
                 written = 2;
             }
             else if (value is BinaryTableValue)
             {
                 output[ZERO] = x;
                 var val = ((BinaryTableValue)value).Bytes;
-                val.AsSpan().CopyTo(output.Slice(1));
-                written = val.Length + 1;
+                val.AsSpan().CopyTo(output.Slice(ONE));
+                written = val.Length + ONE;
             }
             else
             {
@@ -450,7 +451,7 @@ namespace RabbitMQ.Util
         private static void WriteFieldValue(Span<byte> output, bool value, out int written)
         {
             output[ZERO] = t;
-            output[1] = (bool)value ? bOne : bZero;
+            output[ONE] = (bool)value ? bOne : bZero;
             written = 2;
         }
 
@@ -475,7 +476,7 @@ namespace RabbitMQ.Util
 
             foreach (var entry in val)
             {
-                size += 1 + System.Text.Encoding.UTF8.GetByteCount(entry.Key) + EstimateFieldValueSize(entry.Value);
+                size += ONE + System.Text.Encoding.UTF8.GetByteCount(entry.Key) + EstimateFieldValueSize(entry.Value);
             }
             return size;
         }
@@ -493,7 +494,7 @@ namespace RabbitMQ.Util
         {
             if (value == null)
             {
-                return 1;
+                return ONE;
             }
             else if (value is string)
             {
@@ -517,15 +518,15 @@ namespace RabbitMQ.Util
             }
             else if (value is Dictionary<string, bool>)
             {
-                return 1 + EstimateTableSize(value as Dictionary<string, bool>);
+                return ONE + EstimateTableSize(value as Dictionary<string, bool>);
             }
             else if (value is Dictionary<string, object>)
             {
-                return 1 + EstimateTableSize(value as Dictionary<string, object>);
+                return ONE + EstimateTableSize(value as Dictionary<string, object>);
             }
             else if (value is IList)
             {
-                return 1 + EstimateArraySize(value as IList);
+                return ONE + EstimateArraySize(value as IList);
             }
             else if (value is sbyte)
             {
@@ -565,7 +566,7 @@ namespace RabbitMQ.Util
             }
             else if (value is BinaryTableValue)
             {
-                return 1 + ((BinaryTableValue)value).Bytes.Length;
+                return ONE + ((BinaryTableValue)value).Bytes.Length;
             }
             else
             {
